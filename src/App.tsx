@@ -416,12 +416,20 @@ const SpecialistsList = () => {
                     <span className="block text-[10px] font-black text-[#8B7361] uppercase mb-1">Стоимость</span>
                     <span className="text-2xl font-black text-[#2D241E]">{sp.price} ₽</span>
                   </div>
-                  <Link 
-                    to={`/book/${sp.id}`}
-                    className="bg-black text-white px-8 py-3 rounded-2xl text-sm font-bold hover:bg-primary transition-all shadow-lg shadow-black/10 whitespace-nowrap"
-                  >
-                    Записаться
-                  </Link>
+                  <div className="flex gap-3">
+                    <Link 
+                      to={`/specialist/${sp.id}`}
+                      className="bg-[#FAF3ED] text-[#8B7361] px-6 py-3 rounded-2xl text-sm font-bold hover:bg-[#F5E6DA] transition-all whitespace-nowrap"
+                    >
+                      Подробнее
+                    </Link>
+                    <Link 
+                      to={`/book/${sp.id}`}
+                      className="bg-black text-white px-8 py-3 rounded-2xl text-sm font-bold hover:bg-primary transition-all shadow-lg shadow-black/10 whitespace-nowrap"
+                    >
+                      Записаться
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))
@@ -643,6 +651,166 @@ const AITools = () => {
     </div>
   </div>
 )
+}
+
+const SpecialistProfile = () => {
+  const { id } = useParams()
+  const [specialist, setSpecialist] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch(`${API_URL}/specialists`)
+      .then(res => res.json())
+      .then(data => {
+        const found = data.find((s: any) => s.id === parseInt(id || '0'))
+        setSpecialist(found)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [id])
+
+  if (loading) return <div className="p-20 text-center">Загрузка профиля...</div>
+  if (!specialist) return <div className="p-20 text-center">Специалист не найден</div>
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-12 md:py-20">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        {/* Left Column: Photo & Base Info */}
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-[3rem] border border-[#F5E6DA] p-8 shadow-xl shadow-black/5 sticky top-24">
+            <div className="h-64 w-full rounded-[2.5rem] overflow-hidden mb-8 border-4 border-primary/10">
+              <img 
+                src={getImageUrl(specialist.image)} 
+                alt={specialist.name} 
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <h1 className="text-3xl font-black text-[#2D241E] mb-2">{specialist.name}</h1>
+            <p className="text-primary font-bold mb-6">{specialist.specialty}</p>
+            
+            <div className="flex items-center gap-2 mb-8">
+              <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+              <span className="text-xl font-black">{specialist.rating}</span>
+              <span className="text-sm text-[#8B7361] font-medium">({specialist.reviews} отзывов)</span>
+            </div>
+
+            <div className="space-y-4 mb-8">
+              <div className="flex justify-between items-center py-3 border-b border-[#F5E6DA]">
+                <span className="text-[10px] font-black uppercase text-[#8B7361]">Стоимость</span>
+                <span className="font-black text-xl">{specialist.price} ₽</span>
+              </div>
+              <div className="flex justify-between items-center py-3 border-b border-[#F5E6DA]">
+                <span className="text-[10px] font-black uppercase text-[#8B7361]">Формат</span>
+                <span className="font-bold text-sm">{specialist.format}</span>
+              </div>
+              <div className="flex justify-between items-center py-3 border-b border-[#F5E6DA]">
+                <span className="text-[10px] font-black uppercase text-[#8B7361]">Город</span>
+                <span className="font-bold text-sm">{specialist.location}</span>
+              </div>
+            </div>
+
+            <Link 
+              to={`/book/${specialist.id}`}
+              className="w-full bg-primary text-white py-5 rounded-2xl font-black shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+            >
+              Записаться на сессию
+            </Link>
+          </div>
+        </div>
+
+        {/* Right Column: Detailed Content */}
+        <div className="lg:col-span-2 space-y-12">
+          <section>
+            <h2 className="text-2xl font-black text-[#2D241E] mb-6 flex items-center gap-3">
+              <User className="h-6 w-6 text-primary" />
+              О специалисте
+            </h2>
+            <div className="bg-white rounded-[2.5rem] border border-[#F5E6DA] p-10 shadow-sm leading-relaxed text-[#2D241E]/80 font-medium">
+              <p className="mb-6">{specialist.fullDescription || specialist.description}</p>
+              
+              <div className="flex flex-wrap gap-2 mt-8">
+                {specialist.tags.map((tag: string) => (
+                  <span key={tag} className="text-[11px] font-black bg-[#FAF3ED] px-4 py-2 rounded-xl text-[#8B7361] uppercase border border-[#F5E6DA]">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {specialist.education && (
+            <section>
+              <h2 className="text-2xl font-black text-[#2D241E] mb-6 flex items-center gap-3">
+                <Briefcase className="h-6 w-6 text-primary" />
+                Образование
+              </h2>
+              <div className="bg-white rounded-[2.5rem] border border-[#F5E6DA] p-10 shadow-sm space-y-4">
+                {specialist.education.map((edu: string, i: number) => (
+                  <div key={i} className="flex gap-4">
+                    <div className="h-2 w-2 rounded-full bg-primary mt-2" />
+                    <p className="font-bold text-[#2D241E]/70">{edu}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-black text-[#2D241E] flex items-center gap-3">
+                <Smile className="h-6 w-6 text-primary" />
+                Отзывы клиентов
+              </h2>
+              <span className="bg-primary/10 text-primary text-[10px] font-black uppercase px-4 py-2 rounded-full">
+                {specialist.reviews} отзывов
+              </span>
+            </div>
+            
+            <div className="space-y-6">
+              {(specialist.detailedReviews || [
+                { id: 1, author: 'Клиент', text: 'Замечательный специалист, очень помог.', rating: 5 },
+                { id: 2, author: 'Клиент', text: 'Профессионально и комфортно.', rating: 5 }
+              ]).map((review: any) => (
+                <div key={review.id} className="bg-white rounded-[2.5rem] border border-[#F5E6DA] p-8 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center font-black text-primary">
+                        {review.author[0]}
+                      </div>
+                      <span className="font-black text-[#2D241E]">{review.author}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[...Array(review.rating)].map((_, i) => (
+                        <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-sm font-medium text-[#8B7361] leading-relaxed italic">
+                    «{review.text}»
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <div className="bg-primary text-white p-10 rounded-[3rem] shadow-xl shadow-primary/20 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="max-w-md text-center md:text-left">
+              <h3 className="text-2xl font-black mb-2">Готовы начать работу?</h3>
+              <p className="text-primary-foreground/80 font-medium">
+                Выберите удобное время в календаре {specialist.name.split(' ')[0]} и запишитесь на первую сессию.
+              </p>
+            </div>
+            <Link 
+              to={`/book/${specialist.id}`}
+              className="bg-white text-primary px-10 py-5 rounded-2xl font-black hover:scale-105 transition-all shadow-xl shadow-black/10 whitespace-nowrap"
+            >
+              Записаться сейчас
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 const Booking = () => {
@@ -1288,6 +1456,7 @@ const App = () => {
           <Route path="/diagnostic" element={<Diagnostic />} />
           <Route path="/tools" element={<AITools />} />
           <Route path="/book/:id" element={<Booking />} />
+          <Route path="/specialist/:id" element={<SpecialistProfile />} />
           <Route path="/dashboard" element={<SpecialistDashboard />} />
         </Routes>
       </Layout>
