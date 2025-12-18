@@ -4,35 +4,35 @@
 
 @layer base {
   :root {
-    --background: 30 30% 99%;
-    --foreground: 20 40% 10%;
+    --background: 30 10% 98%; /* Очень светлый нейтральный беж */
+    --foreground: 20 15% 15%; /* Глубокий мягкий черный */
 
     --card: 0 0% 100%;
-    --card-foreground: 20 40% 10%;
+    --card-foreground: 20 15% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 20 40% 10%;
+    --popover-foreground: 20 15% 15%;
 
-    --primary: 16 80% 60%;
+    --primary: 25 10% 35%; /* Сдержанный серо-коричневый (Антрацитовый теплый) */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 30 30% 96%;
-    --secondary-foreground: 20 40% 15%;
+    --secondary: 30 10% 94%; /* Светло-серый с теплым подтоном */
+    --secondary-foreground: 20 15% 20%;
 
-    --muted: 30 20% 94%;
-    --muted-foreground: 20 20% 45%;
+    --muted: 30 10% 94%;
+    --muted-foreground: 25 10% 50%;
 
-    --accent: 16 70% 95%;
-    --accent-foreground: 16 80% 40%;
+    --accent: 25 15% 96%;
+    --accent-foreground: 25 10% 30%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 0% 30%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 30 20% 90%;
-    --input: 30 20% 90%;
-    --ring: 16 80% 60%;
+    --border: 30 10% 88%;
+    --input: 30 10% 88%;
+    --ring: 25 10% 35%;
 
-    --radius: 1.5rem;
+    --radius: 1.25rem;
   }
 
   .dark {
