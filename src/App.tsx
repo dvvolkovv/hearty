@@ -939,9 +939,10 @@ const SpecialistDashboard = () => {
   const [bookings, setBookings] = useState<any[]>([])
   const [specialist, setSpecialist] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'overview' | 'schedule'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'profile'>('overview')
   const [editingDate, setEditingDate] = useState<string>(new Date().toISOString().split('T')[0])
   const [savingSlots, setSavingSlots] = useState(false)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
 
   const timeSlots = [
     '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', 
@@ -998,6 +999,32 @@ const SpecialistDashboard = () => {
     }
   }
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !specialist) return
+
+    const formData = new FormData()
+    formData.append('photo', file)
+
+    setUploadingPhoto(true)
+    try {
+      const res = await fetch(`${API_URL}/specialists/1/upload-photo`, {
+        method: 'POST',
+        body: formData
+      })
+      const data = await res.json()
+      if (data.success) {
+        setSpecialist({ ...specialist, image: data.image })
+        alert('Фото успешно обновлено!')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Ошибка при загрузке фото')
+    } finally {
+      setUploadingPhoto(false)
+    }
+  }
+
   if (loading || !specialist) return <div className="p-20 text-center">Загрузка кабинета...</div>
 
   return (
@@ -1020,6 +1047,12 @@ const SpecialistDashboard = () => {
               className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'schedule' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-[#8B7361] hover:text-primary'}`}
             >
               Расписание
+            </button>
+            <button 
+              onClick={() => setActiveTab('profile')}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'profile' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-[#8B7361] hover:text-primary'}`}
+            >
+              Профиль
             </button>
           </div>
           <Link to="/tools" className="flex items-center gap-2 bg-white border border-[#F5E6DA] px-6 py-3 rounded-2xl font-bold text-sm hover:bg-[#FAF3ED] transition-all">
@@ -1100,6 +1133,73 @@ const SpecialistDashboard = () => {
             </div>
           </div>
         </>
+      ) : activeTab === 'profile' ? (
+        <div className="bg-white rounded-[3rem] border border-[#F5E6DA] p-12 shadow-sm max-w-2xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-black text-[#2D241E] mb-4">Ваш профиль</h2>
+            <p className="text-[#8B7361] font-medium">Здесь вы можете обновить свою фотографию и личные данные.</p>
+          </div>
+
+          <div className="flex flex-col items-center gap-8">
+            <div className="relative group">
+              <div className="h-48 w-48 rounded-[2.5rem] overflow-hidden border-4 border-primary/20 shadow-xl">
+                <img 
+                  src={getImageUrl(specialist.image)} 
+                  alt={specialist.name} 
+                  className="h-full w-full object-cover transition-transform group-hover:scale-110 duration-500"
+                />
+              </div>
+              <label className="absolute bottom-[-10px] right-[-10px] bg-primary text-white p-4 rounded-2xl shadow-lg cursor-pointer hover:scale-110 transition-all hover:bg-primary/90">
+                <Upload className="h-5 w-5" />
+                <input 
+                  type="file" 
+                  className="hidden" 
+                  accept="image/*" 
+                  onChange={handlePhotoUpload}
+                  disabled={uploadingPhoto}
+                />
+              </label>
+              {uploadingPhoto && (
+                <div className="absolute inset-0 bg-white/60 backdrop-blur-sm rounded-[2.5rem] flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-[10px] font-black uppercase text-primary">Загрузка...</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="w-full space-y-6 pt-6">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-[#8B7361] ml-4">Имя специалиста</label>
+                  <div className="bg-[#FAF3ED] p-4 rounded-2xl border border-[#F5E6DA] font-bold text-[#2D241E]">
+                    {specialist.name}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-[#8B7361] ml-4">Специализация</label>
+                  <div className="bg-[#FAF3ED] p-4 rounded-2xl border border-[#F5E6DA] font-bold text-[#2D241E]">
+                    {specialist.specialty}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-[#8B7361] ml-4">О себе</label>
+                <div className="bg-[#FAF3ED] p-6 rounded-3xl border border-[#F5E6DA] font-medium text-[#2D241E] leading-relaxed text-sm">
+                  {specialist.description}
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button className="flex-1 bg-primary text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">
+                  Редактировать данные
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       ) : (
         <div className="bg-white rounded-[3rem] border border-[#F5E6DA] overflow-hidden shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-3">

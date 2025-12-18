@@ -1,16 +1,36 @@
 const express = require('express');
 const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Storage configuration
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = './public/images';
+    if (!fs.existsSync(dir)){
+        fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const specialistId = req.params.id;
+    const ext = path.extname(file.originalname);
+    cb(null, `spec-${specialistId}-custom-${Date.now()}${ext}`);
+  }
+});
+
+const upload = multer({ storage });
+
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Mock Data
-let specialists = [
+// specialists array...
   {
     id: 1,
     name: 'Алексей Иванов',
@@ -245,6 +265,19 @@ app.post('/api/ai/ekaterina', (req, res) => {
   res.json({ 
     post: `Вот набросок поста на тему "${topic}":\n\nЧасто мы забываем, что наше ментальное здоровье — это фундамент...` 
   });
+});
+
+app.post('/api/specialists/:id/upload-photo', upload.single('photo'), (req, res) => {
+  const { id } = req.params;
+  const specialist = specialists.find(s => s.id === parseInt(id));
+  
+  if (specialist && req.file) {
+    const photoPath = `/images/${req.file.filename}`;
+    specialist.image = photoPath;
+    res.json({ success: true, image: photoPath });
+  } else {
+    res.status(404).json({ error: 'Specialist not found or no file uploaded' });
+  }
 });
 
 app.listen(PORT, () => {
