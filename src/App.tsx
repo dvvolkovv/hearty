@@ -22,7 +22,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </Link>
             
             <div className="hidden md:flex items-center gap-8">
-              <Link to="/" className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">Витрина</Link>
+              <Link to="/specialists" className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">Витрина</Link>
               <Link to="/onboarding" className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">Стать специалистом</Link>
               <Link 
                 to="/dashboard"
@@ -43,7 +43,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         {/* Mobile menu */}
         {isMenuOpen && (
           <div className="md:hidden border-t bg-white px-4 py-6 flex flex-col gap-4 animate-in slide-in-from-top duration-300">
-            <Link to="/" className="text-lg font-bold" onClick={() => setIsMenuOpen(false)}>Витрина</Link>
+            <Link to="/specialists" className="text-lg font-bold" onClick={() => setIsMenuOpen(false)}>Витрина</Link>
             <Link to="/onboarding" className="text-lg font-bold" onClick={() => setIsMenuOpen(false)}>Для специалистов</Link>
             <Link 
               to="/dashboard" 
