@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { Search, User, MessageSquare, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Zap, Target, FileText, Upload, Briefcase, Rocket, Compass, BatteryCharging, CloudLightning, Users, Smile, Anchor, LayoutDashboard, Wallet, CheckCircle2, Clock } from 'lucide-react'
+import { Search, User, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Zap, Target, FileText, Upload, Briefcase, Rocket, Compass, BatteryCharging, CloudLightning, Users, Smile, Anchor, Wallet, CheckCircle2, Clock } from 'lucide-react'
 
 // Constants
 const API_URL = 'http://localhost:3001/api'
@@ -82,7 +82,7 @@ const Landing = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-20">
+  <div className="max-w-7xl mx-auto px-4 py-20">
       <div className="text-center max-w-4xl mx-auto mb-20">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold mb-6">
           <Sparkles className="h-4 w-4" />
@@ -91,7 +91,7 @@ const Landing = () => {
         <h1 className="text-6xl font-black tracking-tight mb-8 leading-[1.1]">
           Найдите своего идеального <br />
           психолога или коуча
-        </h1>
+      </h1>
         <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
           Анонимный поиск специалистов на основе глубокого профилирования Linkeon. 
           Ваше ментальное здоровье — наш приоритет.
@@ -101,17 +101,17 @@ const Landing = () => {
           <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4 p-3 bg-white rounded-3xl shadow-2xl border-[#F5E6DA] border">
             <div className="flex-1 flex items-center px-4 gap-3 bg-[#FAF3ED] rounded-2xl">
               <Search className="text-[#8B7361] h-5 w-5" />
-              <input 
-                type="text" 
+          <input 
+            type="text" 
                 placeholder="Что вас беспокоит? (напр. стресс, выгорание)" 
                 className="w-full py-4 bg-transparent outline-none text-sm font-medium text-[#4A3B2F]"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+          />
+        </div>
             <button type="submit" className="bg-primary text-white px-10 py-4 rounded-2xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-primary/30">
-              Найти
-            </button>
+          Найти
+        </button>
           </form>
           
           <div className="flex items-center justify-center gap-3 py-2 px-4 rounded-2xl bg-white/50 backdrop-blur-sm border border-[#F5E6DA] w-fit mx-auto animate-in fade-in slide-in-from-top duration-700">
@@ -338,7 +338,7 @@ const SpecialistsList = () => {
           )}
         </div>
         <div className="h-px flex-1 bg-[#F5E6DA] mx-8 hidden md:block"></div>
-      </div>
+    </div>
 
       {specialists.length === 0 && !loading ? (
         <div className="text-center py-20">
@@ -497,8 +497,8 @@ const Onboarding = () => {
                 </div>
               </div>
             </div>
-          </div>
-          
+    </div>
+
           <div className="flex-1 p-8 overflow-y-auto space-y-6">
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -612,7 +612,7 @@ const AITools = () => {
             </p>
           </div>
         )}
-      </div>
+    </div>
   </div>
 )
 }
