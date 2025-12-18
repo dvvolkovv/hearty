@@ -19,7 +19,7 @@ let specialists = [
     location: 'Уфа',
     format: 'Онлайн / Лично',
     tags: ['Гештальт', 'Выгорание', 'Личность'],
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&h=400&auto=format&fit=crop',
+    image: 'https://avatars.mds.yandex.net/i?id=84dbd53ef939bcabec96309702679335_sr&n=13',
     rating: 4.9,
     reviews: 124,
     slots: {
@@ -37,7 +37,7 @@ let specialists = [
     location: 'Москва',
     format: 'Онлайн',
     tags: ['Бизнес', 'Тайм-менеджмент', 'Эффективность'],
-    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400&h=400&auto=format&fit=crop',
+    image: 'https://avatars.mds.yandex.net/i?id=2a0000017a06da06cd061c0b0b0b0b0b_sr&n=13',
     rating: 5.0,
     reviews: 89,
     slots: {
@@ -54,7 +54,7 @@ let specialists = [
     location: 'Санкт-Петербург',
     format: 'Лично',
     tags: ['Семья', 'Отношения'],
-    image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&h=400&auto=format&fit=crop',
+    image: 'https://avatars.mds.yandex.net/i?id=bba62c68466ca57a066d85cfcd94f863_sr&n=13',
     rating: 4.8,
     reviews: 56,
     slots: {
@@ -71,7 +71,7 @@ let specialists = [
     location: 'Екатеринбург',
     format: 'Онлайн',
     tags: ['КПТ', 'Тревога', 'Депрессия', 'Состояния'],
-    image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=400&h=400&auto=format&fit=crop',
+    image: 'https://avatars.mds.yandex.net/i?id=dc9db0e8e8e8e8e8e8e8e8e8e8e8e8e8_sr&n=13',
     rating: 4.7,
     reviews: 42,
     slots: {
@@ -88,7 +88,7 @@ let specialists = [
     location: 'Уфа',
     format: 'Лично',
     tags: ['Смысл', 'Выбор'],
-    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=400&h=400&auto=format&fit=crop',
+    image: 'https://avatars.mds.yandex.net/i?id=fc9db0e8e8e8e8e8e8e8e8e8e8e8e8e8_sr&n=13',
     rating: 4.9,
     reviews: 73,
     slots: {
@@ -105,7 +105,7 @@ let specialists = [
     location: 'Казань',
     format: 'Онлайн / Лично',
     tags: ['Дети', 'Подростки', 'Воспитание'],
-    image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=400&h=400&auto=format&fit=crop',
+    image: 'https://avatars.mds.yandex.net/i?id=cc9db0e8e8e8e8e8e8e8e8e8e8e8e8e8_sr&n=13',
     rating: 4.9,
     reviews: 110,
     slots: {
@@ -122,7 +122,7 @@ let specialists = [
     location: 'Москва',
     format: 'Онлайн',
     tags: ['Коучинг', 'Успех', 'НЛП'],
-    image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=400&h=400&auto=format&fit=crop',
+    image: 'https://avatars.mds.yandex.net/i?id=ec9db0e8e8e8e8e8e8e8e8e8e8e8e8e8_sr&n=13',
     rating: 5.0,
     reviews: 215,
     slots: {
@@ -134,12 +134,12 @@ let specialists = [
     id: 8,
     name: 'Ольга Смирнова',
     specialty: 'Арт-терапевт',
-    description: 'Использую творчество для исцеления и самопознания. Не нужно уметь рисовать, чтобы начать.',
+    description: 'Использую творчество для исцеления и самопознания. Помогаю проработать самооценку через образы.',
     price: 3000,
     location: 'Сочи',
     format: 'Лично',
     tags: ['Творчество', 'Арт-терапия', 'Самооценка'],
-    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&h=400&auto=format&fit=crop',
+    image: 'https://avatars.mds.yandex.net/i?id=bc9db0e8e8e8e8e8e8e8e8e8e8e8e8e8_sr&n=13',
     rating: 4.8,
     reviews: 34,
     slots: {
@@ -151,12 +151,12 @@ let specialists = [
     id: 9,
     name: 'Артем Зайцев',
     specialty: 'Спортивный психолог',
-    description: 'Психологическая подготовка атлетов к соревнованиям и восстановление после травм.',
+    description: 'Психологическая подготовка атлетов к соревнованиям и восстановление после травм и событий.',
     price: 5500,
     location: 'Новосибирск',
     format: 'Онлайн',
     tags: ['Спорт', 'Мотивация', 'События'],
-    image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=400&h=400&auto=format&fit=crop',
+    image: 'https://avatars.mds.yandex.net/i?id=ac9db0e8e8e8e8e8e8e8e8e8e8e8e8e8_sr&n=13',
     rating: 4.9,
     reviews: 67,
     slots: {
