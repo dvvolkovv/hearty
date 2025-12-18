@@ -3,7 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, u
 import { Search, User, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Zap, Target, FileText, Upload, Briefcase, Rocket, Compass, BatteryCharging, CloudLightning, Users, Smile, Anchor, Wallet, CheckCircle2, Clock } from 'lucide-react'
 
 // Constants
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+const API_URL = import.meta.env.VITE_API_URL || 'https://backendhearty-test.up.railway.app/api'
+console.log('Using API URL:', API_URL)
 
 // Layout Component
 const Layout = ({ children }: { children: React.ReactNode }) => {
