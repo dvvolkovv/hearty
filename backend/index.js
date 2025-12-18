@@ -30,7 +30,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// specialists array...
+let specialists = [
   {
     id: 1,
     name: 'Алексей Иванов',
