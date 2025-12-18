@@ -9,7 +9,13 @@ const getApiUrl = () => {
   return `https://${url}`
 }
 const API_URL = getApiUrl()
+const BASE_URL = API_URL.replace('/api', '')
 console.log('Final API URL:', API_URL)
+
+const getImageUrl = (imagePath: string) => {
+  if (imagePath.startsWith('http')) return imagePath
+  return `${BASE_URL}${imagePath}`
+}
 
 // Layout Component
 const Layout = ({ children }: { children: React.ReactNode }) => {
@@ -383,7 +389,7 @@ const SpecialistsList = () => {
                 </div>
                 <div className="h-20 w-20 rounded-2xl overflow-hidden mb-8 group-hover:scale-110 transition-transform">
                   {sp.image ? (
-                    <img src={sp.image} alt={sp.name} className="h-full w-full object-cover" />
+                    <img src={getImageUrl(sp.image)} alt={sp.name} className="h-full w-full object-cover" />
                   ) : (
                     <div className="h-full w-full bg-primary/10 flex items-center justify-center">
                       <User className="h-10 w-10 text-primary" />
@@ -715,7 +721,7 @@ const Booking = () => {
           <div className="lg:col-span-2 p-12 bg-primary text-white">
             <div className="h-24 w-24 rounded-3xl overflow-hidden mb-8 border-4 border-white/20 shadow-xl">
               {specialist.image ? (
-                <img src={specialist.image} alt={specialist.name} className="h-full w-full object-cover" />
+                <img src={getImageUrl(specialist.image)} alt={specialist.name} className="h-full w-full object-cover" />
               ) : (
                 <div className="h-full w-full bg-white/20 flex items-center justify-center">
                   <User className="h-10 w-10 text-white" />
