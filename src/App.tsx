@@ -307,11 +307,15 @@ const SpecialistsList = () => {
       .then(res => res.json())
       .then(data => {
         if (filter) {
-          const filtered = data.filter((sp: any) => 
-            sp.specialty.toLowerCase().includes(filter.toLowerCase()) || 
-            sp.tags.some((tag: string) => tag.toLowerCase().includes(filter.toLowerCase())) ||
-            sp.description.toLowerCase().includes(filter.toLowerCase())
-          )
+          const filtered = data.filter((sp: any) => {
+            const searchStr = filter.toLowerCase()
+            return (
+              sp.specialty.toLowerCase().includes(searchStr) || 
+              sp.tags.some((tag: string) => tag.toLowerCase().includes(searchStr)) ||
+              sp.description.toLowerCase().includes(searchStr) ||
+              sp.format.toLowerCase().includes(searchStr)
+            )
+          })
           setSpecialists(filtered)
         } else {
           setSpecialists(data)
@@ -326,19 +330,31 @@ const SpecialistsList = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-20">
-      <div className="flex items-center justify-between mb-12">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
         <div>
           <h2 className="text-4xl font-black text-[#2D241E]">
             {filter ? `Специалисты: ${filter}` : 'Наши специалисты'}
           </h2>
-          {filter && (
-            <Link to="/specialists" className="text-sm font-bold text-primary hover:underline mt-2 inline-block">
-              Показать всех
-            </Link>
-          )}
-        </div>
-        <div className="h-px flex-1 bg-[#F5E6DA] mx-8 hidden md:block"></div>
+          <p className="text-[#8B7361] font-medium mt-2">Подобраны на основе ваших ценностей и запросов.</p>
     </div>
+
+        {/* Filter Tags */}
+        <div className="flex flex-wrap gap-2">
+          {["Все", "Онлайн", "Лично", "Бизнес", "Эффективность", "Личность", "Выгорание", "Тревога", "Отношения", "Самооценка"].map(tag => (
+            <Link
+              key={tag}
+              to={tag === "Все" ? "/specialists" : `/specialists?filter=${tag}`}
+              className={`px-6 py-2 rounded-full text-xs font-black uppercase transition-all border-2 ${
+                (tag === "Все" && !filter) || filter === tag
+                  ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20'
+                  : 'bg-white border-[#F5E6DA] text-[#8B7361] hover:border-primary/30'
+              }`}
+            >
+          {tag}
+            </Link>
+          ))}
+        </div>
+      </div>
 
       {specialists.length === 0 && !loading ? (
         <div className="text-center py-20">
