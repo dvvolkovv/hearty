@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { Search, User, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Zap, Target, FileText, Upload, Briefcase, Rocket, Compass, BatteryCharging, CloudLightning, Users, Smile, Anchor, Wallet, CheckCircle2, Clock } from 'lucide-react'
+import { Search, User, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Zap, Target, FileText, Upload, Briefcase, Rocket, Compass, BatteryCharging, CloudLightning, Users, Smile, Anchor, Wallet, CheckCircle2, Clock, ArrowLeft } from 'lucide-react'
 
 // Constants
 const getApiUrl = () => {
@@ -679,6 +679,13 @@ const SpecialistProfile = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12 md:py-20">
+      <Link 
+        to="/specialists" 
+        className="inline-flex items-center gap-2 text-[#8B7361] font-bold hover:text-primary transition-all mb-8 group"
+      >
+        <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+        Назад в витрину
+      </Link>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* Left Column: Photo & Base Info */}
         <div className="lg:col-span-1">
