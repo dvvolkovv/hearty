@@ -4,33 +4,33 @@
 
 @layer base {
   :root {
-    --background: 30 10% 98%; /* Очень светлый нейтральный беж */
-    --foreground: 20 15% 15%; /* Глубокий мягкий черный */
+    --background: 120 15% 98%; /* Светлый с легким зеленым подтоном */
+    --foreground: 160 20% 12%; /* Очень темный хвойный */
 
     --card: 0 0% 100%;
-    --card-foreground: 20 15% 15%;
+    --card-foreground: 160 20% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 20 15% 15%;
+    --popover-foreground: 160 20% 12%;
 
-    --primary: 25 10% 35%; /* Сдержанный серо-коричневый (Антрацитовый теплый) */
+    --primary: 160 25% 25%; /* Глубокий хвойно-зеленый (сдержанный) */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 30 10% 94%; /* Светло-серый с теплым подтоном */
-    --secondary-foreground: 20 15% 20%;
+    --secondary: 120 10% 94%; /* Мягкий серо-зеленый */
+    --secondary-foreground: 160 20% 15%;
 
-    --muted: 30 10% 94%;
-    --muted-foreground: 25 10% 50%;
+    --muted: 120 10% 94%;
+    --muted-foreground: 160 10% 45%;
 
-    --accent: 25 15% 96%;
-    --accent-foreground: 25 10% 30%;
+    --accent: 140 15% 96%;
+    --accent-foreground: 160 25% 20%;
 
     --destructive: 0 0% 30%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 30 10% 88%;
-    --input: 30 10% 88%;
-    --ring: 25 10% 35%;
+    --border: 120 10% 88%;
+    --input: 120 10% 88%;
+    --ring: 160 25% 25%;
 
     --radius: 1.25rem;
   }
