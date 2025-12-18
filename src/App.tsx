@@ -381,53 +381,58 @@ const SpecialistsList = () => {
             [1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-96 bg-[#FAF3ED] animate-pulse rounded-[2.5rem]" />)
           ) : (
             specialists.map(sp => (
-              <div key={sp.id} className="bg-white border-white border-2 rounded-[2.5rem] p-8 hover:shadow-2xl transition-all group relative overflow-hidden shadow-xl shadow-black/5">
-                <div className="absolute top-0 right-0 p-6">
-                  <div className="bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full">
-                    Доступен
-                  </div>
-                </div>
-                <div className="h-20 w-20 rounded-2xl overflow-hidden mb-8 group-hover:scale-110 transition-transform">
-                  {sp.image ? (
-                    <img src={getImageUrl(sp.image)} alt={sp.name} className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="h-full w-full bg-primary/10 flex items-center justify-center">
-                      <User className="h-10 w-10 text-primary" />
+              <div key={sp.id} className="bg-white border-white border-2 rounded-[2.5rem] p-8 hover:shadow-2xl transition-all group relative flex flex-col shadow-xl shadow-black/5">
+                <Link to={`/specialist/${sp.id}`} className="flex-1">
+                  <div className="absolute top-0 right-0 p-6">
+                    <div className="bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full">
+                      Доступен
                     </div>
-                  )}
-                </div>
-                <h3 className="text-2xl font-black mb-1">{sp.name}</h3>
-                <div className="flex items-center gap-1 mb-4">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span className="text-sm font-bold">{sp.rating}</span>
-                  <span className="text-xs text-muted-foreground font-medium">({sp.reviews} отзывов)</span>
-                </div>
-                <p className="text-sm text-primary font-bold mb-4">{sp.specialty}</p>
-                <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
-                  {sp.description}
-                </p>
-                <div className="flex flex-wrap gap-2 mb-8">
-                  {sp.tags.map((tag: string) => (
-                    <span key={tag} className="text-[11px] font-bold bg-muted px-2 py-1 rounded-md text-muted-foreground uppercase">{tag}</span>
-                  ))}
-                </div>
-                <div className="flex flex-wrap items-center justify-between gap-4 border-t pt-8">
-                  <div>
-                    <span className="block text-[10px] font-black text-[#8B7361] uppercase mb-1">Стоимость</span>
-                    <span className="text-2xl font-black text-[#2D241E]">{sp.price} ₽</span>
                   </div>
-                  <div className="flex gap-3">
-                    <Link 
-                      to={`/specialist/${sp.id}`}
-                      className="bg-[#FAF3ED] text-[#8B7361] px-6 py-3 rounded-2xl text-sm font-bold hover:bg-[#F5E6DA] transition-all whitespace-nowrap"
-                    >
-                      Подробнее
-                    </Link>
+                  <div className="h-20 w-20 rounded-2xl overflow-hidden mb-8 group-hover:scale-110 transition-transform">
+                    {sp.image ? (
+                      <img src={getImageUrl(sp.image)} alt={sp.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full bg-primary/10 flex items-center justify-center">
+                        <User className="h-10 w-10 text-primary" />
+                      </div>
+                    )}
+                  </div>
+                  <h3 className="text-2xl font-black mb-1 group-hover:text-primary transition-colors">{sp.name}</h3>
+                  <div className="flex items-center gap-1 mb-4">
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <span className="text-sm font-bold">{sp.rating}</span>
+                    <span className="text-xs text-muted-foreground font-medium">({sp.reviews} отзывов)</span>
+                  </div>
+                  <p className="text-sm text-primary font-bold mb-4">{sp.specialty}</p>
+                  <p className="text-sm text-muted-foreground mb-8 leading-relaxed line-clamp-3">
+                    {sp.description}
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-8">
+                    {sp.tags.slice(0, 3).map((tag: string) => (
+                      <span key={tag} className="text-[11px] font-bold bg-muted px-2 py-1 rounded-md text-muted-foreground uppercase">{tag}</span>
+                    ))}
+                  </div>
+                </Link>
+
+                <div className="border-t pt-8 mt-auto">
+                  <div className="flex flex-col gap-6">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <span className="block text-[10px] font-black text-[#8B7361] uppercase mb-1">Стоимость</span>
+                        <span className="text-2xl font-black text-[#2D241E]">{sp.price} ₽</span>
+                      </div>
+                      <Link 
+                        to={`/specialist/${sp.id}`}
+                        className="text-primary font-black text-xs uppercase tracking-widest hover:underline"
+                      >
+                        Подробнее
+                      </Link>
+                    </div>
                     <Link 
                       to={`/book/${sp.id}`}
-                      className="bg-black text-white px-8 py-3 rounded-2xl text-sm font-bold hover:bg-primary transition-all shadow-lg shadow-black/10 whitespace-nowrap"
+                      className="w-full bg-black text-white py-4 rounded-2xl text-center text-sm font-black hover:bg-primary transition-all shadow-lg shadow-black/10"
                     >
-                      Записаться
+                      Записаться на сессию
                     </Link>
                   </div>
                 </div>
