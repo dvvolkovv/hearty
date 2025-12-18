@@ -319,16 +319,21 @@ const SpecialistsList = () => {
       .then(res => res.json())
       .then(data => {
         if (filter) {
-          const filtered = data.filter((sp: any) => {
-            const searchStr = filter.toLowerCase()
-            return (
-              sp.specialty.toLowerCase().includes(searchStr) || 
-              sp.tags.some((tag: string) => tag.toLowerCase().includes(searchStr)) ||
-              sp.description.toLowerCase().includes(searchStr) ||
-              sp.format.toLowerCase().includes(searchStr)
-            )
-          })
-          setSpecialists(filtered)
+          if (filter === 'Для вас') {
+            // Simulate "For You" by showing high rated specialists (>= 4.9)
+            setSpecialists(data.filter((sp: any) => sp.rating >= 4.9))
+          } else {
+            const filtered = data.filter((sp: any) => {
+              const searchStr = filter.toLowerCase()
+              return (
+                sp.specialty.toLowerCase().includes(searchStr) || 
+                sp.tags.some((tag: string) => tag.toLowerCase().includes(searchStr)) ||
+                sp.description.toLowerCase().includes(searchStr) ||
+                sp.format.toLowerCase().includes(searchStr)
+              )
+            })
+            setSpecialists(filtered)
+          }
         } else {
           setSpecialists(data)
         }
@@ -345,24 +350,29 @@ const SpecialistsList = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
         <div>
           <h2 className="text-4xl font-black text-[#2D241E]">
-            {filter ? `Специалисты: ${filter}` : 'Наши специалисты'}
+            {filter === 'Для вас' ? 'Персональные рекомендации' : filter ? `Специалисты: ${filter}` : 'Наши специалисты'}
           </h2>
-          <p className="text-[#8B7361] font-medium mt-2">Подобраны на основе ваших ценностей и запросов.</p>
+          <p className="text-[#8B7361] font-medium mt-2">
+            {filter === 'Для вас' ? 'Специалисты, которые лучше всего подходят под ваш профиль.' : 'Подобраны на основе ваших ценностей и запросов.'}
+          </p>
     </div>
 
         {/* Filter Tags */}
         <div className="flex flex-wrap gap-2">
-          {["Все", "Онлайн", "Лично", "Бизнес", "Эффективность", "Личность", "Выгорание", "Тревога", "Отношения", "Самооценка"].map(tag => (
+          {["Для вас", "Все", "Онлайн", "Лично", "Бизнес", "Эффективность", "Личность", "Выгорание", "Тревога", "Отношения", "Самооценка"].map(tag => (
             <Link
               key={tag}
               to={tag === "Все" ? "/specialists" : `/specialists?filter=${tag}`}
-              className={`px-6 py-2 rounded-full text-xs font-black uppercase transition-all border-2 ${
+              className={`px-6 py-2 rounded-full text-xs font-black uppercase transition-all border-2 flex items-center gap-2 ${
                 (tag === "Все" && !filter) || filter === tag
                   ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20'
-                  : 'bg-white border-[#F5E6DA] text-[#8B7361] hover:border-primary/30'
+                  : tag === "Для вас" 
+                    ? 'bg-primary/5 border-primary/20 text-primary hover:bg-primary/10'
+                    : 'bg-white border-[#F5E6DA] text-[#8B7361] hover:border-primary/30'
               }`}
             >
-          {tag}
+              {tag === "Для вас" && <Heart className={`h-3 w-3 ${filter === tag ? 'fill-white' : 'fill-primary/20'}`} />}
+              {tag}
             </Link>
           ))}
         </div>
