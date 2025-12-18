@@ -4,35 +4,35 @@
 
 @layer base {
   :root {
-    --background: 120 15% 98%; /* Светлый с легким зеленым подтоном */
-    --foreground: 160 20% 12%; /* Очень темный хвойный */
+    --background: 0 0% 100%; /* Чистый белый для свежести */
+    --foreground: 160 30% 15%; /* Темный хвойный для контраста */
 
     --card: 0 0% 100%;
-    --card-foreground: 160 20% 12%;
+    --card-foreground: 160 30% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 160 20% 12%;
+    --popover-foreground: 160 30% 15%;
 
-    --primary: 160 25% 25%; /* Глубокий хвойно-зеленый (сдержанный) */
+    --primary: 145 65% 45%; /* Сочный весенний зеленый (энергия и рост) */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 120 10% 94%; /* Мягкий серо-зеленый */
-    --secondary-foreground: 160 20% 15%;
+    --secondary: 145 30% 96%; /* Светло-зеленый (мята) */
+    --secondary-foreground: 160 30% 20%;
 
-    --muted: 120 10% 94%;
-    --muted-foreground: 160 10% 45%;
+    --muted: 145 20% 96%;
+    --muted-foreground: 160 15% 45%;
 
-    --accent: 140 15% 96%;
-    --accent-foreground: 160 25% 20%;
+    --accent: 48 100% 50%; /* Солнечный желтый для ярких акцентов */
+    --accent-foreground: 160 30% 15%;
 
-    --destructive: 0 0% 30%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 120 10% 88%;
-    --input: 120 10% 88%;
-    --ring: 160 25% 25%;
+    --border: 145 20% 90%;
+    --input: 145 20% 90%;
+    --ring: 145 65% 45%;
 
-    --radius: 1.25rem;
+    --radius: 1.5rem; /* Возвращаем более мягкие скругления */
   }
 
   .dark {
