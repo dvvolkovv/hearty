@@ -128,15 +128,6 @@ const Landing = () => {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2 justify-center mb-24">
-        {["Все", "Личная встреча", "Онлайн", "Уфа", "Москва", "Семейные вопросы", "Бизнес-коучинг", "Зависимости"].map(tag => (
-          <button key={tag} className="px-6 py-2.5 rounded-xl border bg-white hover:border-primary hover:text-primary hover:bg-primary/5 transition-all text-sm font-bold shadow-sm border-[#F5E6DA]">
-            {tag}
-          </button>
-        ))}
-      </div>
-
       {/* Advantages Section */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-32">
         <div className="bg-[#FAF3ED] p-8 rounded-[2rem] border border-[#F5E6DA] hover:shadow-xl transition-all">
