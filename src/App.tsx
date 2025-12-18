@@ -137,8 +137,8 @@ const Landing = () => {
               <span className="text-xs font-medium opacity-60">(чтобы точнее сформулировать запрос)</span>
             </Link>
           </div>
-        </div>
       </div>
+    </div>
 
       {/* Advantages Section */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-32">
@@ -313,6 +313,35 @@ const SpecialistsList = () => {
   const [loading, setLoading] = useState(true)
   const [searchParams] = useSearchParams()
   const filter = searchParams.get('filter')
+  
+  // AI Chat State
+  const [chatMessages, setChatMessages] = useState([
+    { role: 'ai', content: 'Привет! Я помогу подобрать специалиста именно под ваш запрос. Расскажите немного, что вас сейчас беспокоит?' }
+  ])
+  const [chatInput, setChatInput] = useState('')
+  const [isTyping, setIsTyping] = useState(false)
+
+  const handleSendChat = async () => {
+    if (!chatInput.trim()) return
+    const newMessages = [...chatMessages, { role: 'user', content: chatInput }]
+    setChatMessages(newMessages)
+    setChatInput('')
+    setIsTyping(true)
+
+    try {
+      const res = await fetch(`${API_URL}/ai/diagnostic`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: chatInput })
+      })
+      const data = await res.json()
+      setChatMessages([...newMessages, { role: 'ai', content: data.reply }])
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setIsTyping(false)
+    }
+  }
 
   useEffect(() => {
     fetch(`${API_URL}/specialists`)
@@ -372,11 +401,79 @@ const SpecialistsList = () => {
               }`}
             >
               {tag === "Для вас" && <Heart className={`h-3 w-3 ${filter === tag ? 'fill-white' : 'fill-primary/20'}`} />}
-              {tag}
+          {tag}
             </Link>
-          ))}
+      ))}
         </div>
-      </div>
+    </div>
+
+      {filter === 'Для вас' && (
+        <div className="mb-16 animate-in fade-in slide-in-from-top duration-700">
+          <div className="bg-white border-2 border-primary/20 rounded-[3rem] overflow-hidden shadow-2xl shadow-primary/5 flex flex-col md:flex-row h-[500px]">
+            <div className="md:w-1/3 bg-primary p-10 text-white flex flex-col justify-between">
+              <div>
+                <div className="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center mb-6">
+                  <Sparkles className="h-6 w-6 text-white" />
+          </div>
+                <h3 className="text-2xl font-black mb-4">Персональный подбор</h3>
+                <p className="text-primary-foreground/80 font-medium text-sm leading-relaxed">
+                  Ответьте на несколько вопросов нашего ИИ-ассистента, чтобы мы могли предложить вам наиболее подходящих специалистов на основе ваших ценностей и текущего состояния.
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex -space-x-3">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="h-8 w-8 rounded-full border-2 border-primary bg-[#FAF3ED] overflow-hidden">
+                      <img src={getImageUrl(`/images/spec-${i}.jpg`)} alt="" className="h-full w-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-wider opacity-60">Вас ждут 40+ экспертов</span>
+              </div>
+            </div>
+            <div className="flex-1 flex flex-col bg-[#FFFDFB]">
+              <div className="flex-1 p-8 overflow-y-auto space-y-4">
+                {chatMessages.map((m, i) => (
+                  <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[85%] p-4 rounded-2xl font-medium text-sm leading-relaxed ${
+                      m.role === 'user' 
+                        ? 'bg-primary text-white rounded-tr-none' 
+                        : 'bg-[#FAF3ED] text-[#2D241E] rounded-tl-none border border-[#F5E6DA]'
+                    }`}>
+                      {m.content}
+                    </div>
+                  </div>
+                ))}
+                {isTyping && (
+                  <div className="flex justify-start">
+                    <div className="bg-[#FAF3ED] px-4 py-2 rounded-full animate-pulse text-[10px] font-black uppercase text-[#8B7361]">
+                      Ассистент подбирает слова...
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="p-6 border-t border-[#F5E6DA] bg-white">
+                <div className="flex gap-3">
+                  <input 
+                    type="text" 
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendChat()}
+                    placeholder="Напишите ваш ответ..." 
+                    className="flex-1 bg-[#FAF3ED] border-2 border-transparent focus:border-primary/20 rounded-xl px-6 py-3 text-sm font-medium outline-none transition-all"
+                  />
+                  <button 
+                    onClick={handleSendChat}
+                    className="bg-primary text-white p-3 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20"
+                  >
+                    <Send className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {specialists.length === 0 && !loading ? (
         <div className="text-center py-20">
@@ -420,8 +517,8 @@ const SpecialistsList = () => {
                   <div className="flex flex-wrap gap-2 mb-8">
                     {sp.tags.slice(0, 3).map((tag: string) => (
                       <span key={tag} className="text-[11px] font-bold bg-muted px-2 py-1 rounded-md text-muted-foreground uppercase">{tag}</span>
-                    ))}
-                  </div>
+      ))}
+    </div>
                 </Link>
 
                 <div className="border-t pt-8 mt-auto">
@@ -451,8 +548,8 @@ const SpecialistsList = () => {
           )}
         </div>
       )}
-    </div>
-  )
+  </div>
+)
 }
 
 const Onboarding = () => {
@@ -540,16 +637,16 @@ const Onboarding = () => {
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                 <Heart className="h-6 w-6 text-primary fill-primary/10" />
               </div>
-              <div>
+        <div>
                 <h2 className="font-black text-sm">Интервью с Linkeon</h2>
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
                   <span className="text-[10px] font-black text-muted-foreground uppercase">В сети</span>
                 </div>
               </div>
-            </div>
-    </div>
-
+        </div>
+      </div>
+      
           <div className="flex-1 p-8 overflow-y-auto space-y-6">
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -572,7 +669,7 @@ const Onboarding = () => {
           </div>
 
           <div className="p-6 bg-white border-t">
-            <div className="flex gap-3">
+        <div className="flex gap-3">
               <input 
                 type="text" 
                 value={input}
@@ -587,9 +684,9 @@ const Onboarding = () => {
               >
                 <Send className="h-6 w-6" />
               </button>
-            </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   )
@@ -630,8 +727,8 @@ const AITools = () => {
         <div className="mb-8">
           <label className="block text-sm font-black uppercase text-muted-foreground mb-3">О чем хотите написать?</label>
           <div className="flex gap-3">
-            <input 
-              type="text" 
+          <input 
+            type="text" 
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               placeholder="Напр: Как справиться с тревогой перед выступлением" 
@@ -643,9 +740,9 @@ const AITools = () => {
               className="bg-primary text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
             >
               {loading ? 'Создаю...' : 'Создать'}
-            </button>
-          </div>
+          </button>
         </div>
+      </div>
 
         {result && (
           <div className="bg-muted/30 p-8 rounded-[2rem] border-2 border-dashed border-primary/10 animate-in fade-in slide-in-from-bottom duration-500">
