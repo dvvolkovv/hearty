@@ -105,7 +105,7 @@ const Landing = () => {
           психолога или коуча
       </h1>
         <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
-          Анонимный поиск специалистов на основе глубокого профилирования Linkeon. 
+          Поиск специалистов на основе глубокого профилирования Linkeon. 
           Ваше ментальное здоровье — наш приоритет.
         </p>
         
