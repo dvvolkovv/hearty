@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { Search, User, MessageSquare, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Zap, Target, FileText, Upload, Briefcase, Rocket, Compass, BatteryCharging, CloudLightning, Users, Smile, Anchor, LayoutDashboard, Wallet, CheckCircle2, Clock } from 'lucide-react'
 
 // Constants
@@ -183,112 +183,112 @@ const Landing = () => {
               <span className="bg-primary/10 px-4 py-1 rounded-full">Коучинг</span>
               <div className="h-px flex-1 bg-primary/10"></div>
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
-                <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
-                  <Briefcase className="text-primary h-7 w-7" />
-                </div>
-                <h3 className="text-xl font-black mb-4 text-[#2D241E]">Бизнес и Карьера</h3>
-                <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
-                  <li className="flex items-center gap-2">• Рост в доходе</li>
-                  <li className="flex items-center gap-2">• Синдром самозванца</li>
-                  <li className="flex items-center gap-2">• Лидерство</li>
-                </ul>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Link to="/specialists?filter=Бизнес" className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
+              <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
+                <Briefcase className="text-primary h-7 w-7" />
               </div>
+              <h3 className="text-xl font-black mb-4 text-[#2D241E]">Бизнес и Карьера</h3>
+              <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
+                <li className="flex items-center gap-2">• Рост в доходе</li>
+                <li className="flex items-center gap-2">• Синдром самозванца</li>
+                <li className="flex items-center gap-2">• Лидерство</li>
+              </ul>
+            </Link>
 
-              <div className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
-                <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
-                  <Rocket className="text-primary h-7 w-7" />
-                </div>
-                <h3 className="text-xl font-black mb-4 text-[#2D241E]">Эффективность</h3>
-                <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
-                  <li className="flex items-center gap-2">• Тайм-менеджмент</li>
-                  <li className="flex items-center gap-2">• Work-life balance</li>
-                  <li className="flex items-center gap-2">• Цели</li>
-                </ul>
+            <Link to="/specialists?filter=Эффективность" className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
+              <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
+                <Rocket className="text-primary h-7 w-7" />
               </div>
+              <h3 className="text-xl font-black mb-4 text-[#2D241E]">Эффективность</h3>
+              <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
+                <li className="flex items-center gap-2">• Тайм-менеджмент</li>
+                <li className="flex items-center gap-2">• Work-life balance</li>
+                <li className="flex items-center gap-2">• Цели</li>
+              </ul>
+            </Link>
 
-              <div className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
-                <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
-                  <Compass className="text-primary h-7 w-7" />
-                </div>
-                <h3 className="text-xl font-black mb-4 text-[#2D241E]">Личность</h3>
-                <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
-                  <li className="flex items-center gap-2">• Предназначение</li>
-                  <li className="flex items-center gap-2">• Самооценка</li>
-                  <li className="flex items-center gap-2">• Выбор пути</li>
-                </ul>
+            <Link to="/specialists?filter=Личность" className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
+              <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
+                <Compass className="text-primary h-7 w-7" />
               </div>
+              <h3 className="text-xl font-black mb-4 text-[#2D241E]">Личность</h3>
+              <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
+                <li className="flex items-center gap-2">• Предназначение</li>
+                <li className="flex items-center gap-2">• Самооценка</li>
+                <li className="flex items-center gap-2">• Выбор пути</li>
+              </ul>
+            </Link>
 
-              <div className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
-                <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
-                  <BatteryCharging className="text-primary h-7 w-7" />
-                </div>
-                <h3 className="text-xl font-black mb-4 text-[#2D241E]">Ресурс</h3>
-                <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
-                  <li className="flex items-center gap-2">• Энергия</li>
-                  <li className="flex items-center gap-2">• Выгорание</li>
-                  <li className="flex items-center gap-2">• Привычки</li>
-                </ul>
+            <Link to="/specialists?filter=Выгорание" className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
+              <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
+                <BatteryCharging className="text-primary h-7 w-7" />
               </div>
-            </div>
+              <h3 className="text-xl font-black mb-4 text-[#2D241E]">Ресурс</h3>
+              <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
+                <li className="flex items-center gap-2">• Энергия</li>
+                <li className="flex items-center gap-2">• Выгорание</li>
+                <li className="flex items-center gap-2">• Привычки</li>
+              </ul>
+            </Link>
           </div>
+        </div>
 
-          {/* Psychology Row */}
-          <div>
-            <h3 className="text-sm font-black uppercase tracking-widest text-[#8B7361] mb-8 flex items-center gap-4">
-              <span className="bg-[#FAF3ED] px-4 py-1 rounded-full">Психология</span>
-              <div className="h-px flex-1 bg-[#F5E6DA]"></div>
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
-                <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
-                  <CloudLightning className="text-primary h-7 w-7" />
-                </div>
-                <h3 className="text-xl font-black mb-4 text-[#2D241E]">Состояния</h3>
-                <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
-                  <li className="flex items-center gap-2">• Тревога и страхи</li>
-                  <li className="flex items-center gap-2">• Депрессия</li>
-                  <li className="flex items-center gap-2">• Апатия</li>
-                </ul>
+        {/* Psychology Row */}
+        <div>
+          <h3 className="text-sm font-black uppercase tracking-widest text-[#8B7361] mb-8 flex items-center gap-4">
+            <span className="bg-[#FAF3ED] px-4 py-1 rounded-full">Психология</span>
+            <div className="h-px flex-1 bg-[#F5E6DA]"></div>
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Link to="/specialists?filter=Тревога" className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
+              <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
+                <CloudLightning className="text-primary h-7 w-7" />
               </div>
+              <h3 className="text-xl font-black mb-4 text-[#2D241E]">Состояния</h3>
+              <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
+                <li className="flex items-center gap-2">• Тревога и страхи</li>
+                <li className="flex items-center gap-2">• Депрессия</li>
+                <li className="flex items-center gap-2">• Апатия</li>
+              </ul>
+            </Link>
 
-              <div className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
-                <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
-                  <Users className="text-primary h-7 w-7" />
-                </div>
-                <h3 className="text-xl font-black mb-4 text-[#2D241E]">Отношения</h3>
-                <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
-                  <li className="flex items-center gap-2">• Конфликты в паре</li>
-                  <li className="flex items-center gap-2">• Расставание</li>
-                  <li className="flex items-center gap-2">• Границы</li>
-                </ul>
+            <Link to="/specialists?filter=Отношения" className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
+              <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
+                <Users className="text-primary h-7 w-7" />
               </div>
+              <h3 className="text-xl font-black mb-4 text-[#2D241E]">Отношения</h3>
+              <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
+                <li className="flex items-center gap-2">• Конфликты в паре</li>
+                <li className="flex items-center gap-2">• Расставание</li>
+                <li className="flex items-center gap-2">• Границы</li>
+              </ul>
+            </Link>
 
-              <div className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
-                <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
-                  <Smile className="text-primary h-7 w-7" />
-                </div>
-                <h3 className="text-xl font-black mb-4 text-[#2D241E]">Самоценность</h3>
-                <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
-                  <li className="flex items-center gap-2">• Неуверенность</li>
-                  <li className="flex items-center gap-2">• Самопринятие</li>
-                  <li className="flex items-center gap-2">• Поиск себя</li>
-                </ul>
+            <Link to="/specialists?filter=Самооценка" className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
+              <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
+                <Smile className="text-primary h-7 w-7" />
               </div>
+              <h3 className="text-xl font-black mb-4 text-[#2D241E]">Самоценность</h3>
+              <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
+                <li className="flex items-center gap-2">• Неуверенность</li>
+                <li className="flex items-center gap-2">• Самопринятие</li>
+                <li className="flex items-center gap-2">• Поиск себя</li>
+              </ul>
+            </Link>
 
-              <div className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
-                <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
-                  <Anchor className="text-primary h-7 w-7" />
-                </div>
-                <h3 className="text-xl font-black mb-4 text-[#2D241E]">События</h3>
-                <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
-                  <li className="flex items-center gap-2">• Утрата и горе</li>
-                  <li className="flex items-center gap-2">• Травмы</li>
-                  <li className="flex items-center gap-2">• Переезд</li>
-                </ul>
+            <Link to="/specialists?filter=События" className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
+              <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
+                <Anchor className="text-primary h-7 w-7" />
               </div>
-            </div>
+              <h3 className="text-xl font-black mb-4 text-[#2D241E]">События</h3>
+              <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
+                <li className="flex items-center gap-2">• Утрата и горе</li>
+                <li className="flex items-center gap-2">• Травмы</li>
+                <li className="flex items-center gap-2">• Переезд</li>
+              </ul>
+            </Link>
+          </div>
           </div>
         </div>
       </div>
@@ -299,78 +299,107 @@ const Landing = () => {
 const SpecialistsList = () => {
   const [specialists, setSpecialists] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchParams] = useSearchParams()
+  const filter = searchParams.get('filter')
 
   useEffect(() => {
     fetch(`${API_URL}/specialists`)
       .then(res => res.json())
       .then(data => {
-        setSpecialists(data)
+        if (filter) {
+          const filtered = data.filter((sp: any) => 
+            sp.specialty.toLowerCase().includes(filter.toLowerCase()) || 
+            sp.tags.some((tag: string) => tag.toLowerCase().includes(filter.toLowerCase())) ||
+            sp.description.toLowerCase().includes(filter.toLowerCase())
+          )
+          setSpecialists(filtered)
+        } else {
+          setSpecialists(data)
+        }
         setLoading(false)
       })
       .catch(err => {
         console.error(err)
         setLoading(false)
       })
-  }, [])
+  }, [filter])
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-20">
       <div className="flex items-center justify-between mb-12">
-        <h2 className="text-4xl font-black text-[#2D241E]">Наши специалисты</h2>
+        <div>
+          <h2 className="text-4xl font-black text-[#2D241E]">
+            {filter ? `Специалисты: ${filter}` : 'Наши специалисты'}
+          </h2>
+          {filter && (
+            <Link to="/specialists" className="text-sm font-bold text-primary hover:underline mt-2 inline-block">
+              Показать всех
+            </Link>
+          )}
+        </div>
         <div className="h-px flex-1 bg-[#F5E6DA] mx-8 hidden md:block"></div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-        {loading ? (
-          [1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-96 bg-[#FAF3ED] animate-pulse rounded-[2.5rem]" />)
-        ) : (
-          specialists.map(sp => (
-            <div key={sp.id} className="bg-white border-white border-2 rounded-[2.5rem] p-8 hover:shadow-2xl transition-all group relative overflow-hidden shadow-xl shadow-black/5">
-              <div className="absolute top-0 right-0 p-6">
-                <div className="bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full">
-                  Доступен
-                </div>
-              </div>
-              <div className="h-20 w-20 rounded-2xl overflow-hidden mb-8 group-hover:scale-110 transition-transform">
-                {sp.image ? (
-                  <img src={sp.image} alt={sp.name} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="h-full w-full bg-primary/10 flex items-center justify-center">
-                    <User className="h-10 w-10 text-primary" />
+      {specialists.length === 0 && !loading ? (
+        <div className="text-center py-20">
+          <p className="text-xl font-bold text-[#8B7361]">К сожалению, по вашему запросу ничего не найдено.</p>
+          <Link to="/specialists" className="text-primary font-bold hover:underline mt-4 inline-block">
+            Посмотреть всех специалистов
+          </Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+          {loading ? (
+            [1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-96 bg-[#FAF3ED] animate-pulse rounded-[2.5rem]" />)
+          ) : (
+            specialists.map(sp => (
+              <div key={sp.id} className="bg-white border-white border-2 rounded-[2.5rem] p-8 hover:shadow-2xl transition-all group relative overflow-hidden shadow-xl shadow-black/5">
+                <div className="absolute top-0 right-0 p-6">
+                  <div className="bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full">
+                    Доступен
                   </div>
-                )}
-              </div>
-              <h3 className="text-2xl font-black mb-1">{sp.name}</h3>
-              <div className="flex items-center gap-1 mb-4">
-                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                <span className="text-sm font-bold">{sp.rating}</span>
-                <span className="text-xs text-muted-foreground font-medium">({sp.reviews} отзывов)</span>
-              </div>
-              <p className="text-sm text-primary font-bold mb-4">{sp.specialty}</p>
-              <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
-                {sp.description}
-              </p>
-              <div className="flex flex-wrap gap-2 mb-8">
-                {sp.tags.map((tag: string) => (
-                  <span key={tag} className="text-[11px] font-bold bg-muted px-2 py-1 rounded-md text-muted-foreground uppercase">{tag}</span>
-                ))}
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-4 border-t pt-8">
-                <div>
-                  <span className="block text-[10px] font-black text-[#8B7361] uppercase mb-1">Стоимость</span>
-                  <span className="text-2xl font-black text-[#2D241E]">{sp.price} ₽</span>
                 </div>
-                <Link 
-                  to={`/book/${sp.id}`}
-                  className="bg-black text-white px-8 py-3 rounded-2xl text-sm font-bold hover:bg-primary transition-all shadow-lg shadow-black/10 whitespace-nowrap"
-                >
-                  Записаться
-                </Link>
+                <div className="h-20 w-20 rounded-2xl overflow-hidden mb-8 group-hover:scale-110 transition-transform">
+                  {sp.image ? (
+                    <img src={sp.image} alt={sp.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full bg-primary/10 flex items-center justify-center">
+                      <User className="h-10 w-10 text-primary" />
+                    </div>
+                  )}
+                </div>
+                <h3 className="text-2xl font-black mb-1">{sp.name}</h3>
+                <div className="flex items-center gap-1 mb-4">
+                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  <span className="text-sm font-bold">{sp.rating}</span>
+                  <span className="text-xs text-muted-foreground font-medium">({sp.reviews} отзывов)</span>
+                </div>
+                <p className="text-sm text-primary font-bold mb-4">{sp.specialty}</p>
+                <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
+                  {sp.description}
+                </p>
+                <div className="flex flex-wrap gap-2 mb-8">
+                  {sp.tags.map((tag: string) => (
+                    <span key={tag} className="text-[11px] font-bold bg-muted px-2 py-1 rounded-md text-muted-foreground uppercase">{tag}</span>
+                  ))}
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-4 border-t pt-8">
+                  <div>
+                    <span className="block text-[10px] font-black text-[#8B7361] uppercase mb-1">Стоимость</span>
+                    <span className="text-2xl font-black text-[#2D241E]">{sp.price} ₽</span>
+                  </div>
+                  <Link 
+                    to={`/book/${sp.id}`}
+                    className="bg-black text-white px-8 py-3 rounded-2xl text-sm font-bold hover:bg-primary transition-all shadow-lg shadow-black/10 whitespace-nowrap"
+                  >
+                    Записаться
+                  </Link>
+                </div>
               </div>
-            </div>
-          ))
-        )}
-      </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   )
 }
