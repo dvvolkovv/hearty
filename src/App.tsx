@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { Search, User, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Zap, Target, FileText, Upload, Briefcase, Rocket, Compass, BatteryCharging, CloudLightning, Users, Smile, Anchor, Wallet, CheckCircle2, Clock, ArrowLeft } from 'lucide-react'
 
@@ -320,6 +320,22 @@ const SpecialistsList = () => {
   ])
   const [chatInput, setChatInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const chatContainerRef = useRef<HTMLDivElement>(null)
+
+  const scrollToBottom = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      })
+    }
+  }
+
+  useEffect(() => {
+    if (filter === 'Для вас') {
+      scrollToBottom()
+    }
+  }, [chatMessages, isTyping, filter])
 
   const handleSendChat = async () => {
     if (!chatInput.trim()) return
@@ -432,7 +448,10 @@ const SpecialistsList = () => {
               </div>
             </div>
             <div className="flex-1 flex flex-col bg-[#FFFDFB]">
-              <div className="flex-1 p-8 overflow-y-auto space-y-4">
+              <div 
+                ref={chatContainerRef}
+                className="flex-1 p-8 overflow-y-auto space-y-4 scroll-smooth"
+              >
                 {chatMessages.map((m, i) => (
                   <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[85%] p-4 rounded-2xl font-medium text-sm leading-relaxed ${
@@ -558,6 +577,16 @@ const Onboarding = () => {
   ])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const chatContainerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      })
+    }
+  }, [messages, isTyping])
 
   const handleSend = async () => {
     if (!input.trim()) return
@@ -647,7 +676,10 @@ const Onboarding = () => {
         </div>
       </div>
       
-          <div className="flex-1 p-8 overflow-y-auto space-y-6">
+          <div 
+            ref={chatContainerRef}
+            className="flex-1 p-8 overflow-y-auto space-y-6 scroll-smooth"
+          >
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[80%] p-5 rounded-[1.5rem] font-medium text-sm leading-relaxed ${
@@ -1140,6 +1172,16 @@ const Diagnostic = () => {
   ])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const chatContainerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      })
+    }
+  }, [messages, isTyping])
 
   const handleSend = async () => {
     if (!input.trim()) return
@@ -1177,7 +1219,10 @@ const Diagnostic = () => {
       </div>
 
       <div className="bg-white border-2 border-[#F5E6DA] rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col h-[600px]">
-        <div className="flex-1 p-8 overflow-y-auto space-y-6">
+        <div 
+          ref={chatContainerRef}
+          className="flex-1 p-8 overflow-y-auto space-y-6 scroll-smooth"
+        >
           {messages.map((m, i) => (
             <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[80%] p-5 rounded-[1.5rem] font-medium text-sm leading-relaxed ${
