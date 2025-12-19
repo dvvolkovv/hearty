@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { Search, User, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Zap, Target, FileText, Upload, Briefcase, Rocket, Compass, BatteryCharging, CloudLightning, Users, Smile, Anchor, Wallet, CheckCircle2, Clock, ArrowLeft } from 'lucide-react'
-import logoHearty from './assets/logo_hearty.png'
+import logoHearty from './assets/logo_hearty.jpg'
 
 // Constants
 const getApiUrl = () => {
@@ -26,9 +26,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     <div className="min-h-screen bg-[#FFFDFB] font-sans text-[#2D241E]">
       <nav className="border-b bg-white/80 backdrop-blur-xl sticky top-0 z-50 border-[#F5E6DA]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-24 items-center">
-            <Link to="/" className="flex items-center">
-              <img src={logoHearty} alt="Hearty" className="h-[100px] w-[100px]" />
+          <div className="flex justify-between h-16 items-center">
+            <Link to="/" className="flex items-center gap-3">
+              <img src={logoHearty} alt="Hearty" className="h-12 w-12 object-contain" />
+              <span className="text-xl font-bold tracking-tight text-foreground">Hearty</span>
             </Link>
             
             <div className="hidden md:flex items-center gap-8">
@@ -70,8 +71,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       <footer className="border-t bg-white py-12 mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex items-center justify-center mb-4 opacity-70">
-            <img src={logoHearty} alt="Hearty" className="h-10 w-10" />
+          <div className="flex items-center justify-center gap-2 mb-4 opacity-70">
+            <img src={logoHearty} alt="Hearty" className="h-8 w-8 object-contain" />
+            <span className="font-bold">Hearty</span>
           </div>
           <p className="text-muted-foreground text-sm">© 2025 Hearty Platform. Часть экосистемы Linkeon.</p>
         </div>
