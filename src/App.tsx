@@ -26,9 +26,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     <div className="min-h-screen bg-[#FFFDFB] font-sans text-[#2D241E]">
       <nav className="border-b bg-white/80 backdrop-blur-xl sticky top-0 z-50 border-[#F5E6DA]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
+          <div className="flex justify-between h-24 items-center">
             <Link to="/" className="flex items-center">
-              <img src={logoHearty} alt="Hearty" className="h-12 w-12" />
+              <img src={logoHearty} alt="Hearty" className="h-[100px] w-[100px]" />
             </Link>
             
             <div className="hidden md:flex items-center gap-8">
