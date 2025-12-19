@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { Search, User, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Zap, Target, FileText, Upload, Briefcase, Rocket, Compass, BatteryCharging, CloudLightning, Users, Smile, Anchor, Wallet, CheckCircle2, Clock, ArrowLeft } from 'lucide-react'
+import logoHearty from './assets/logo_hearty.png'
 
 // Constants
 const getApiUrl = () => {
@@ -27,9 +28,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <Link to="/" className="flex items-center gap-2">
-              <div className="bg-primary/10 p-1.5 rounded-lg">
-                <Heart className="h-6 w-6 text-primary fill-primary/20" />
-            </div>
+              <img src={logoHearty} alt="Hearty" className="h-8 w-8" />
               <span className="text-xl font-bold tracking-tight text-foreground">Hearty</span>
             </Link>
             
@@ -72,8 +71,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       <footer className="border-t bg-white py-12 mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex items-center justify-center gap-2 mb-4 opacity-50">
-            <Heart className="h-5 w-5 fill-current" />
+          <div className="flex items-center justify-center gap-2 mb-4 opacity-70">
+            <img src={logoHearty} alt="Hearty" className="h-5 w-5" />
             <span className="font-bold">Hearty</span>
           </div>
           <p className="text-muted-foreground text-sm">© 2025 Hearty Platform. Часть экосистемы Linkeon.</p>
