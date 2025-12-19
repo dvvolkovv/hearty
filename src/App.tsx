@@ -425,8 +425,8 @@ const SpecialistsList = () => {
 
       {filter === 'Для вас' && (
         <div className="mb-16 animate-in fade-in slide-in-from-top duration-700">
-          <div className="bg-white border-2 border-primary/20 rounded-[3rem] overflow-hidden shadow-2xl shadow-primary/5 flex flex-col md:flex-row h-[500px]">
-            <div className="md:w-1/3 bg-primary p-10 text-white flex flex-col justify-between">
+          <div className="bg-white border-2 border-primary/20 rounded-[3rem] overflow-hidden shadow-2xl shadow-primary/5 flex flex-col md:flex-row h-[calc(100vh-300px)] md:h-[500px] max-h-[800px]">
+            <div className="hidden md:flex md:w-1/3 bg-primary p-10 text-white flex-col justify-between">
               <div>
                 <div className="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center mb-6">
                   <Sparkles className="h-6 w-6 text-white" />
@@ -447,10 +447,10 @@ const SpecialistsList = () => {
                 <span className="text-[10px] font-black uppercase tracking-wider opacity-60">Вас ждут 40+ экспертов</span>
               </div>
             </div>
-            <div className="flex-1 flex flex-col bg-[#FFFDFB]">
+            <div className="flex-1 flex flex-col bg-[#FFFDFB] min-h-0">
               <div 
                 ref={chatContainerRef}
-                className="flex-1 p-8 overflow-y-auto space-y-4 scroll-smooth"
+                className="flex-1 p-4 md:p-8 overflow-y-auto space-y-4 scroll-smooth min-h-0"
               >
                 {chatMessages.map((m, i) => (
                   <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -471,7 +471,7 @@ const SpecialistsList = () => {
                   </div>
                 )}
               </div>
-              <div className="p-6 border-t border-[#F5E6DA] bg-white">
+              <div className="p-4 md:p-6 border-t border-[#F5E6DA] bg-white flex-shrink-0">
                 <div className="flex gap-3">
                   <input 
                     type="text" 
@@ -479,11 +479,11 @@ const SpecialistsList = () => {
                     onChange={(e) => setChatInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendChat()}
                     placeholder="Напишите ваш ответ..." 
-                    className="flex-1 bg-[#FAF3ED] border-2 border-transparent focus:border-primary/20 rounded-xl px-6 py-3 text-sm font-medium outline-none transition-all"
+                    className="flex-1 bg-[#FAF3ED] border-2 border-transparent focus:border-primary/20 rounded-xl px-4 md:px-6 py-3 text-sm font-medium outline-none transition-all"
                   />
                   <button 
                     onClick={handleSendChat}
-                    className="bg-primary text-white p-3 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20"
+                    className="bg-primary text-white p-3 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 flex-shrink-0"
                   >
                     <Send className="h-5 w-5" />
             </button>
