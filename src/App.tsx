@@ -23,8 +23,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-[#FFFDFB] font-sans text-[#2D241E]">
-      <nav className="border-b bg-white/80 backdrop-blur-xl sticky top-0 z-50 border-[#F5E6DA]">
+    <div className="min-h-screen bg-background font-sans text-foreground">
+      <nav className="border-b bg-white/80 backdrop-blur-xl sticky top-0 z-50 border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <Link to="/" className="flex items-center gap-3">
@@ -109,13 +109,13 @@ const Landing = () => {
         </p>
         
         <div className="flex flex-col gap-4 max-w-3xl mx-auto">
-          <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4 p-3 bg-white rounded-3xl shadow-2xl border-[#F5E6DA] border">
-            <div className="flex-1 flex items-center px-4 gap-3 bg-[#FAF3ED] rounded-2xl">
-              <Search className="text-[#8B7361] h-5 w-5" />
+          <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4 p-3 bg-white rounded-3xl shadow-2xl border-border border">
+            <div className="flex-1 flex items-center px-4 gap-3 bg-muted rounded-2xl">
+              <Search className="text-muted-foreground h-5 w-5" />
           <input 
             type="text" 
                 placeholder="Что вас беспокоит? (напр. стресс, выгорание)" 
-                className="w-full py-4 bg-transparent outline-none text-sm font-medium text-[#4A3B2F]"
+                className="w-full py-4 bg-transparent outline-none text-sm font-medium text-muted-foreground"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
           />
@@ -125,8 +125,8 @@ const Landing = () => {
         </button>
           </form>
           
-          <div className="flex items-center justify-center gap-3 py-2 px-4 rounded-2xl bg-white/50 backdrop-blur-sm border border-[#F5E6DA] w-fit mx-auto animate-in fade-in slide-in-from-top duration-700">
-            <span className="text-sm font-medium text-[#8B7361]">Или</span>
+          <div className="flex items-center justify-center gap-3 py-2 px-4 rounded-2xl bg-white/50 backdrop-blur-sm border border-border w-fit mx-auto animate-in fade-in slide-in-from-top duration-700">
+            <span className="text-sm font-medium text-muted-foreground">Или</span>
             <Link 
               to="/diagnostic" 
               className="flex items-center gap-2 text-primary hover:text-primary/80 transition-all font-bold text-sm group"
@@ -141,42 +141,42 @@ const Landing = () => {
 
       {/* Advantages Section */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-32">
-        <div className="bg-[#FAF3ED] p-8 rounded-[2rem] border border-[#F5E6DA] hover:shadow-xl transition-all">
+        <div className="bg-muted p-8 rounded-[2rem] border border-border hover:shadow-xl transition-all">
           <div className="h-12 w-12 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm">
             <Target className="text-primary h-6 w-6" />
           </div>
-          <h3 className="text-lg font-black mb-3 text-[#2D241E]">Точный мэтчинг</h3>
-          <p className="text-sm text-[#8B7361] font-medium leading-relaxed">
+          <h3 className="text-lg font-black mb-3 text-foreground">Точный мэтчинг</h3>
+          <p className="text-sm text-muted-foreground font-medium leading-relaxed">
             Технология Linkeon анализирует ваши ценности, а не только симптомы.
           </p>
         </div>
         
-        <div className="bg-[#FAF3ED] p-8 rounded-[2rem] border border-[#F5E6DA] hover:shadow-xl transition-all">
+        <div className="bg-muted p-8 rounded-[2rem] border border-border hover:shadow-xl transition-all">
           <div className="h-12 w-12 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm">
             <Shield className="text-primary h-6 w-6" />
           </div>
-          <h3 className="text-lg font-black mb-3 text-[#2D241E]">Анонимность</h3>
-          <p className="text-sm text-[#8B7361] font-medium leading-relaxed">
+          <h3 className="text-lg font-black mb-3 text-foreground">Анонимность</h3>
+          <p className="text-sm text-muted-foreground font-medium leading-relaxed">
             Ищите и выбирайте специалиста без обязательной регистрации.
           </p>
         </div>
 
-        <div className="bg-[#FAF3ED] p-8 rounded-[2rem] border border-[#F5E6DA] hover:shadow-xl transition-all">
+        <div className="bg-muted p-8 rounded-[2rem] border border-border hover:shadow-xl transition-all">
           <div className="h-12 w-12 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm">
             <Zap className="text-primary h-6 w-6" />
           </div>
-          <h3 className="text-lg font-black mb-3 text-[#2D241E]">AI-проверка</h3>
-          <p className="text-sm text-[#8B7361] font-medium leading-relaxed">
+          <h3 className="text-lg font-black mb-3 text-foreground">AI-проверка</h3>
+          <p className="text-sm text-muted-foreground font-medium leading-relaxed">
             Каждый психолог прошел глубокое интервью с агентом Linkeon.
           </p>
         </div>
 
-        <div className="bg-[#FAF3ED] p-8 rounded-[2rem] border border-[#F5E6DA] hover:shadow-xl transition-all">
+        <div className="bg-muted p-8 rounded-[2rem] border border-border hover:shadow-xl transition-all">
           <div className="h-12 w-12 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm">
             <Heart className="text-primary h-6 w-6 fill-primary/10" />
           </div>
-          <h3 className="text-lg font-black mb-3 text-[#2D241E]">Бережный подход</h3>
-          <p className="text-sm text-[#8B7361] font-medium leading-relaxed">
+          <h3 className="text-lg font-black mb-3 text-foreground">Бережный подход</h3>
+          <p className="text-sm text-muted-foreground font-medium leading-relaxed">
             Минимум барьеров и стресса при поиске своего специалиста.
           </p>
         </div>
@@ -184,8 +184,8 @@ const Landing = () => {
 
       {/* Popular Requests Section */}
       <div className="mb-32">
-        <h2 className="text-3xl font-black text-[#2D241E] mb-6 text-center">С чем мы помогаем</h2>
-        <p className="text-center text-[#8B7361] mb-12 font-medium">Выберите направление, которое вам сейчас ближе</p>
+        <h2 className="text-3xl font-black text-foreground mb-6 text-center">С чем мы помогаем</h2>
+        <p className="text-center text-muted-foreground mb-12 font-medium">Выберите направление, которое вам сейчас ближе</p>
         
         <div className="space-y-16">
           {/* Coaching Row */}
@@ -195,48 +195,48 @@ const Landing = () => {
               <div className="h-px flex-1 bg-primary/10"></div>
             </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Link to="/specialists?filter=Бизнес" className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
-              <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
+            <Link to="/specialists?filter=Бизнес" className="bg-white p-8 rounded-[2.5rem] border border-border hover:border-primary/30 transition-all group">
+              <div className="h-14 w-14 bg-muted rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
                 <Briefcase className="text-primary h-7 w-7" />
               </div>
-              <h3 className="text-xl font-black mb-4 text-[#2D241E]">Бизнес и Карьера</h3>
-              <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
+              <h3 className="text-xl font-black mb-4 text-foreground">Бизнес и Карьера</h3>
+              <ul className="space-y-3 text-sm font-medium text-muted-foreground">
                 <li className="flex items-center gap-2">• Рост в доходе</li>
                 <li className="flex items-center gap-2">• Синдром самозванца</li>
                 <li className="flex items-center gap-2">• Лидерство</li>
               </ul>
             </Link>
 
-            <Link to="/specialists?filter=Эффективность" className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
-              <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
+            <Link to="/specialists?filter=Эффективность" className="bg-white p-8 rounded-[2.5rem] border border-border hover:border-primary/30 transition-all group">
+              <div className="h-14 w-14 bg-muted rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
                 <Rocket className="text-primary h-7 w-7" />
               </div>
-              <h3 className="text-xl font-black mb-4 text-[#2D241E]">Эффективность</h3>
-              <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
+              <h3 className="text-xl font-black mb-4 text-foreground">Эффективность</h3>
+              <ul className="space-y-3 text-sm font-medium text-muted-foreground">
                 <li className="flex items-center gap-2">• Тайм-менеджмент</li>
                 <li className="flex items-center gap-2">• Work-life balance</li>
                 <li className="flex items-center gap-2">• Цели</li>
               </ul>
             </Link>
 
-            <Link to="/specialists?filter=Личность" className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
-              <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
+            <Link to="/specialists?filter=Личность" className="bg-white p-8 rounded-[2.5rem] border border-border hover:border-primary/30 transition-all group">
+              <div className="h-14 w-14 bg-muted rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
                 <Compass className="text-primary h-7 w-7" />
               </div>
-              <h3 className="text-xl font-black mb-4 text-[#2D241E]">Личность</h3>
-              <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
+              <h3 className="text-xl font-black mb-4 text-foreground">Личность</h3>
+              <ul className="space-y-3 text-sm font-medium text-muted-foreground">
                 <li className="flex items-center gap-2">• Предназначение</li>
                 <li className="flex items-center gap-2">• Самооценка</li>
                 <li className="flex items-center gap-2">• Выбор пути</li>
               </ul>
             </Link>
 
-            <Link to="/specialists?filter=Выгорание" className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
-              <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
+            <Link to="/specialists?filter=Выгорание" className="bg-white p-8 rounded-[2.5rem] border border-border hover:border-primary/30 transition-all group">
+              <div className="h-14 w-14 bg-muted rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
                 <BatteryCharging className="text-primary h-7 w-7" />
               </div>
-              <h3 className="text-xl font-black mb-4 text-[#2D241E]">Ресурс</h3>
-              <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
+              <h3 className="text-xl font-black mb-4 text-foreground">Ресурс</h3>
+              <ul className="space-y-3 text-sm font-medium text-muted-foreground">
                 <li className="flex items-center gap-2">• Энергия</li>
                 <li className="flex items-center gap-2">• Выгорание</li>
                 <li className="flex items-center gap-2">• Привычки</li>
@@ -247,53 +247,53 @@ const Landing = () => {
 
         {/* Psychology Row */}
         <div>
-          <h3 className="text-sm font-black uppercase tracking-widest text-[#8B7361] mb-8 flex items-center gap-4">
-            <span className="bg-[#FAF3ED] px-4 py-1 rounded-full">Психология</span>
+          <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-8 flex items-center gap-4">
+            <span className="bg-muted px-4 py-1 rounded-full">Психология</span>
             <div className="h-px flex-1 bg-[#F5E6DA]"></div>
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Link to="/specialists?filter=Тревога" className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
-              <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
+            <Link to="/specialists?filter=Тревога" className="bg-white p-8 rounded-[2.5rem] border border-border hover:border-primary/30 transition-all group">
+              <div className="h-14 w-14 bg-muted rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
                 <CloudLightning className="text-primary h-7 w-7" />
               </div>
-              <h3 className="text-xl font-black mb-4 text-[#2D241E]">Состояния</h3>
-              <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
+              <h3 className="text-xl font-black mb-4 text-foreground">Состояния</h3>
+              <ul className="space-y-3 text-sm font-medium text-muted-foreground">
                 <li className="flex items-center gap-2">• Тревога и страхи</li>
                 <li className="flex items-center gap-2">• Депрессия</li>
                 <li className="flex items-center gap-2">• Апатия</li>
               </ul>
             </Link>
 
-            <Link to="/specialists?filter=Отношения" className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
-              <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
+            <Link to="/specialists?filter=Отношения" className="bg-white p-8 rounded-[2.5rem] border border-border hover:border-primary/30 transition-all group">
+              <div className="h-14 w-14 bg-muted rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
                 <Users className="text-primary h-7 w-7" />
               </div>
-              <h3 className="text-xl font-black mb-4 text-[#2D241E]">Отношения</h3>
-              <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
+              <h3 className="text-xl font-black mb-4 text-foreground">Отношения</h3>
+              <ul className="space-y-3 text-sm font-medium text-muted-foreground">
                 <li className="flex items-center gap-2">• Конфликты в паре</li>
                 <li className="flex items-center gap-2">• Расставание</li>
                 <li className="flex items-center gap-2">• Границы</li>
               </ul>
             </Link>
 
-            <Link to="/specialists?filter=Самооценка" className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
-              <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
+            <Link to="/specialists?filter=Самооценка" className="bg-white p-8 rounded-[2.5rem] border border-border hover:border-primary/30 transition-all group">
+              <div className="h-14 w-14 bg-muted rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
                 <Smile className="text-primary h-7 w-7" />
               </div>
-              <h3 className="text-xl font-black mb-4 text-[#2D241E]">Самоценность</h3>
-              <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
+              <h3 className="text-xl font-black mb-4 text-foreground">Самоценность</h3>
+              <ul className="space-y-3 text-sm font-medium text-muted-foreground">
                 <li className="flex items-center gap-2">• Неуверенность</li>
                 <li className="flex items-center gap-2">• Самопринятие</li>
                 <li className="flex items-center gap-2">• Поиск себя</li>
               </ul>
             </Link>
 
-            <Link to="/specialists?filter=События" className="bg-white p-8 rounded-[2.5rem] border border-[#F5E6DA] hover:border-primary/30 transition-all group">
-              <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
+            <Link to="/specialists?filter=События" className="bg-white p-8 rounded-[2.5rem] border border-border hover:border-primary/30 transition-all group">
+              <div className="h-14 w-14 bg-muted rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
                 <Anchor className="text-primary h-7 w-7" />
               </div>
-              <h3 className="text-xl font-black mb-4 text-[#2D241E]">События</h3>
-              <ul className="space-y-3 text-sm font-medium text-[#8B7361]">
+              <h3 className="text-xl font-black mb-4 text-foreground">События</h3>
+              <ul className="space-y-3 text-sm font-medium text-muted-foreground">
                 <li className="flex items-center gap-2">• Утрата и горе</li>
                 <li className="flex items-center gap-2">• Травмы</li>
                 <li className="flex items-center gap-2">• Переезд</li>
@@ -393,10 +393,10 @@ const SpecialistsList = () => {
     <div className="max-w-7xl mx-auto px-4 py-20">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
         <div>
-          <h2 className="text-4xl font-black text-[#2D241E]">
+          <h2 className="text-4xl font-black text-foreground">
             {filter === 'Для вас' ? 'Персональные рекомендации' : filter ? `Специалисты: ${filter}` : 'Наши специалисты'}
           </h2>
-          <p className="text-[#8B7361] font-medium mt-2">
+          <p className="text-muted-foreground font-medium mt-2">
             {filter === 'Для вас' ? 'Специалисты, которые лучше всего подходят под ваш профиль.' : 'Подобраны на основе ваших ценностей и запросов.'}
           </p>
     </div>
@@ -412,7 +412,7 @@ const SpecialistsList = () => {
                   ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20'
                   : tag === "Для вас" 
                     ? 'bg-primary/5 border-primary/20 text-primary hover:bg-primary/10'
-                    : 'bg-white border-[#F5E6DA] text-[#8B7361] hover:border-primary/30'
+                    : 'bg-white border-border text-muted-foreground hover:border-primary/30'
               }`}
             >
               {tag === "Для вас" && <Heart className={`h-3 w-3 ${filter === tag ? 'fill-white' : 'fill-primary/20'}`} />}
@@ -438,7 +438,7 @@ const SpecialistsList = () => {
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-3">
                   {[1, 2, 3].map(i => (
-                    <div key={i} className="h-8 w-8 rounded-full border-2 border-primary bg-[#FAF3ED] overflow-hidden">
+                    <div key={i} className="h-8 w-8 rounded-full border-2 border-primary bg-muted overflow-hidden">
                       <img src={getImageUrl(`/images/spec-${i}.jpg`)} alt="" className="h-full w-full object-cover" />
                     </div>
                   ))}
@@ -446,7 +446,7 @@ const SpecialistsList = () => {
                 <span className="text-[10px] font-black uppercase tracking-wider opacity-60">Вас ждут 40+ экспертов</span>
               </div>
             </div>
-            <div className="flex-1 flex flex-col bg-[#FFFDFB] min-h-0">
+            <div className="flex-1 flex flex-col bg-background min-h-0">
               <div 
                 ref={chatContainerRef}
                 className="flex-1 p-4 md:p-8 overflow-y-auto space-y-4 scroll-smooth min-h-0"
@@ -456,7 +456,7 @@ const SpecialistsList = () => {
                     <div className={`max-w-[85%] p-4 rounded-2xl font-medium text-sm leading-relaxed ${
                       m.role === 'user' 
                         ? 'bg-primary text-white rounded-tr-none' 
-                        : 'bg-[#FAF3ED] text-[#2D241E] rounded-tl-none border border-[#F5E6DA]'
+                        : 'bg-muted text-foreground rounded-tl-none border border-border'
                     }`}>
                       {m.content}
                     </div>
@@ -464,13 +464,13 @@ const SpecialistsList = () => {
                 ))}
                 {isTyping && (
                   <div className="flex justify-start">
-                    <div className="bg-[#FAF3ED] px-4 py-2 rounded-full animate-pulse text-[10px] font-black uppercase text-[#8B7361]">
+                    <div className="bg-muted px-4 py-2 rounded-full animate-pulse text-[10px] font-black uppercase text-muted-foreground">
                       Ассистент подбирает слова...
                     </div>
                   </div>
                 )}
               </div>
-              <div className="p-4 md:p-6 border-t border-[#F5E6DA] bg-white flex-shrink-0">
+              <div className="p-4 md:p-6 border-t border-border bg-white flex-shrink-0">
                 <div className="flex gap-3">
                   <input 
                     type="text" 
@@ -478,7 +478,7 @@ const SpecialistsList = () => {
                     onChange={(e) => setChatInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendChat()}
                     placeholder="Напишите ваш ответ..." 
-                    className="flex-1 bg-[#FAF3ED] border-2 border-transparent focus:border-primary/20 rounded-xl px-4 md:px-6 py-3 text-sm font-medium outline-none transition-all"
+                    className="flex-1 bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 md:px-6 py-3 text-sm font-medium outline-none transition-all"
                   />
                   <button 
                     onClick={handleSendChat}
@@ -495,7 +495,7 @@ const SpecialistsList = () => {
 
       {specialists.length === 0 && !loading ? (
         <div className="text-center py-20">
-          <p className="text-xl font-bold text-[#8B7361]">К сожалению, по вашему запросу ничего не найдено.</p>
+          <p className="text-xl font-bold text-muted-foreground">К сожалению, по вашему запросу ничего не найдено.</p>
           <Link to="/specialists" className="text-primary font-bold hover:underline mt-4 inline-block">
             Посмотреть всех специалистов
           </Link>
@@ -503,7 +503,7 @@ const SpecialistsList = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           {loading ? (
-            [1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-96 bg-[#FAF3ED] animate-pulse rounded-[2.5rem]" />)
+            [1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-96 bg-muted animate-pulse rounded-[2.5rem]" />)
           ) : (
             specialists.map(sp => (
               <div key={sp.id} className="bg-white border-white border-2 rounded-[2.5rem] p-8 hover:shadow-2xl transition-all group relative flex flex-col shadow-xl shadow-black/5">
@@ -543,8 +543,8 @@ const SpecialistsList = () => {
                   <div className="flex flex-col gap-6">
                     <div className="flex justify-between items-center">
                       <div>
-                        <span className="block text-[10px] font-black text-[#8B7361] uppercase mb-1">Стоимость</span>
-                        <span className="text-2xl font-black text-[#2D241E]">{sp.price} ₽</span>
+                        <span className="block text-[10px] font-black text-muted-foreground uppercase mb-1">Стоимость</span>
+                        <span className="text-2xl font-black text-foreground">{sp.price} ₽</span>
                       </div>
                       <Link 
                         to={`/specialist/${sp.id}`}
@@ -636,10 +636,10 @@ const Onboarding = () => {
             <div className="space-y-4">
               <div className="group">
                 <label className="block text-[10px] font-black uppercase text-muted-foreground mb-2">Резюме / CV</label>
-                <label className="flex items-center justify-center w-full h-24 border-2 border-dashed border-[#F5E6DA] rounded-2xl hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all group">
+                <label className="flex items-center justify-center w-full h-24 border-2 border-dashed border-border rounded-2xl hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all group">
                   <div className="flex flex-col items-center">
-                    <Upload className="h-5 w-5 text-[#8B7361] group-hover:text-primary mb-2" />
-                    <span className="text-[10px] font-bold text-[#8B7361] group-hover:text-primary uppercase">Загрузить PDF</span>
+                    <Upload className="h-5 w-5 text-muted-foreground group-hover:text-primary mb-2" />
+                    <span className="text-[10px] font-bold text-muted-foreground group-hover:text-primary uppercase">Загрузить PDF</span>
                   </div>
                   <input type="file" className="hidden" accept=".pdf,.doc,.docx" />
                 </label>
@@ -647,10 +647,10 @@ const Onboarding = () => {
 
               <div className="group">
                 <label className="block text-[10px] font-black uppercase text-muted-foreground mb-2">Профессиональное эссе</label>
-                <label className="flex items-center justify-center w-full h-24 border-2 border-dashed border-[#F5E6DA] rounded-2xl hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all group">
+                <label className="flex items-center justify-center w-full h-24 border-2 border-dashed border-border rounded-2xl hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all group">
                   <div className="flex flex-col items-center">
-                    <FileText className="h-5 w-5 text-[#8B7361] group-hover:text-primary mb-2" />
-                    <span className="text-[10px] font-bold text-[#8B7361] group-hover:text-primary uppercase">Загрузить эссе</span>
+                    <FileText className="h-5 w-5 text-muted-foreground group-hover:text-primary mb-2" />
+                    <span className="text-[10px] font-bold text-muted-foreground group-hover:text-primary uppercase">Загрузить эссе</span>
                   </div>
                   <input type="file" className="hidden" accept=".pdf,.doc,.docx,.txt" />
                 </label>
@@ -819,7 +819,7 @@ const SpecialistProfile = () => {
     <div className="max-w-7xl mx-auto px-4 py-12 md:py-20">
       <Link 
         to="/specialists" 
-        className="inline-flex items-center gap-2 text-[#8B7361] font-bold hover:text-primary transition-all mb-8 group"
+        className="inline-flex items-center gap-2 text-muted-foreground font-bold hover:text-primary transition-all mb-8 group"
       >
         <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
         Назад в витрину
@@ -827,7 +827,7 @@ const SpecialistProfile = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* Left Column: Photo & Base Info */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-[3rem] border border-[#F5E6DA] p-8 shadow-xl shadow-black/5 sticky top-24">
+          <div className="bg-white rounded-[3rem] border border-border p-8 shadow-xl shadow-black/5 sticky top-24">
             <div className="h-64 w-full rounded-[2.5rem] overflow-hidden mb-8 border-4 border-primary/10">
               <img 
                 src={getImageUrl(specialist.image)} 
@@ -835,26 +835,26 @@ const SpecialistProfile = () => {
                 className="h-full w-full object-cover"
               />
             </div>
-            <h1 className="text-3xl font-black text-[#2D241E] mb-2">{specialist.name}</h1>
+            <h1 className="text-3xl font-black text-foreground mb-2">{specialist.name}</h1>
             <p className="text-primary font-bold mb-6">{specialist.specialty}</p>
             
             <div className="flex items-center gap-2 mb-8">
               <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
               <span className="text-xl font-black">{specialist.rating}</span>
-              <span className="text-sm text-[#8B7361] font-medium">({specialist.reviews} отзывов)</span>
+              <span className="text-sm text-muted-foreground font-medium">({specialist.reviews} отзывов)</span>
             </div>
 
             <div className="space-y-4 mb-8">
-              <div className="flex justify-between items-center py-3 border-b border-[#F5E6DA]">
-                <span className="text-[10px] font-black uppercase text-[#8B7361]">Стоимость</span>
+              <div className="flex justify-between items-center py-3 border-b border-border">
+                <span className="text-[10px] font-black uppercase text-muted-foreground">Стоимость</span>
                 <span className="font-black text-xl">{specialist.price} ₽</span>
               </div>
-              <div className="flex justify-between items-center py-3 border-b border-[#F5E6DA]">
-                <span className="text-[10px] font-black uppercase text-[#8B7361]">Формат</span>
+              <div className="flex justify-between items-center py-3 border-b border-border">
+                <span className="text-[10px] font-black uppercase text-muted-foreground">Формат</span>
                 <span className="font-bold text-sm">{specialist.format}</span>
               </div>
-              <div className="flex justify-between items-center py-3 border-b border-[#F5E6DA]">
-                <span className="text-[10px] font-black uppercase text-[#8B7361]">Город</span>
+              <div className="flex justify-between items-center py-3 border-b border-border">
+                <span className="text-[10px] font-black uppercase text-muted-foreground">Город</span>
                 <span className="font-bold text-sm">{specialist.location}</span>
               </div>
             </div>
@@ -871,16 +871,16 @@ const SpecialistProfile = () => {
         {/* Right Column: Detailed Content */}
         <div className="lg:col-span-2 space-y-12">
           <section>
-            <h2 className="text-2xl font-black text-[#2D241E] mb-6 flex items-center gap-3">
+            <h2 className="text-2xl font-black text-foreground mb-6 flex items-center gap-3">
               <User className="h-6 w-6 text-primary" />
               О специалисте
             </h2>
-            <div className="bg-white rounded-[2.5rem] border border-[#F5E6DA] p-10 shadow-sm leading-relaxed text-[#2D241E]/80 font-medium">
+            <div className="bg-white rounded-[2.5rem] border border-border p-10 shadow-sm leading-relaxed text-foreground/80 font-medium">
               <p className="mb-6">{specialist.fullDescription || specialist.description}</p>
               
               <div className="flex flex-wrap gap-2 mt-8">
                 {specialist.tags.map((tag: string) => (
-                  <span key={tag} className="text-[11px] font-black bg-[#FAF3ED] px-4 py-2 rounded-xl text-[#8B7361] uppercase border border-[#F5E6DA]">
+                  <span key={tag} className="text-[11px] font-black bg-muted px-4 py-2 rounded-xl text-muted-foreground uppercase border border-border">
                     {tag}
                   </span>
                 ))}
@@ -890,15 +890,15 @@ const SpecialistProfile = () => {
 
           {specialist.education && (
             <section>
-              <h2 className="text-2xl font-black text-[#2D241E] mb-6 flex items-center gap-3">
+              <h2 className="text-2xl font-black text-foreground mb-6 flex items-center gap-3">
                 <Briefcase className="h-6 w-6 text-primary" />
                 Образование
               </h2>
-              <div className="bg-white rounded-[2.5rem] border border-[#F5E6DA] p-10 shadow-sm space-y-4">
+              <div className="bg-white rounded-[2.5rem] border border-border p-10 shadow-sm space-y-4">
                 {specialist.education.map((edu: string, i: number) => (
                   <div key={i} className="flex gap-4">
                     <div className="h-2 w-2 rounded-full bg-primary mt-2" />
-                    <p className="font-bold text-[#2D241E]/70">{edu}</p>
+                    <p className="font-bold text-foreground/70">{edu}</p>
                   </div>
                 ))}
               </div>
@@ -907,7 +907,7 @@ const SpecialistProfile = () => {
 
           <section>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-black text-[#2D241E] flex items-center gap-3">
+              <h2 className="text-2xl font-black text-foreground flex items-center gap-3">
                 <Smile className="h-6 w-6 text-primary" />
                 Отзывы клиентов
               </h2>
@@ -921,13 +921,13 @@ const SpecialistProfile = () => {
                 { id: 1, author: 'Клиент', text: 'Замечательный специалист, очень помог.', rating: 5 },
                 { id: 2, author: 'Клиент', text: 'Профессионально и комфортно.', rating: 5 }
               ]).map((review: any) => (
-                <div key={review.id} className="bg-white rounded-[2.5rem] border border-[#F5E6DA] p-8 shadow-sm">
+                <div key={review.id} className="bg-white rounded-[2.5rem] border border-border p-8 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center font-black text-primary">
                         {review.author[0]}
                       </div>
-                      <span className="font-black text-[#2D241E]">{review.author}</span>
+                      <span className="font-black text-foreground">{review.author}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       {[...Array(review.rating)].map((_, i) => (
@@ -935,7 +935,7 @@ const SpecialistProfile = () => {
                       ))}
                     </div>
                   </div>
-                  <p className="text-sm font-medium text-[#8B7361] leading-relaxed italic">
+                  <p className="text-sm font-medium text-muted-foreground leading-relaxed italic">
                     «{review.text}»
                   </p>
                 </div>
@@ -1212,12 +1212,12 @@ const Diagnostic = () => {
           <Sparkles className="h-8 w-8 text-primary" />
         </div>
         <h1 className="text-3xl font-black mb-4">Предварительная диагностика</h1>
-        <p className="text-[#8B7361] font-medium max-w-lg mx-auto">
+        <p className="text-muted-foreground font-medium max-w-lg mx-auto">
           Этот разговор поможет нам понять суть вашего запроса и подобрать специалиста, который лучше всего подходит именно вам.
         </p>
       </div>
 
-      <div className="bg-white border-2 border-[#F5E6DA] rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col h-[600px]">
+      <div className="bg-white border-2 border-border rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col h-[600px]">
         <div 
           ref={chatContainerRef}
           className="flex-1 p-8 overflow-y-auto space-y-6 scroll-smooth"
@@ -1227,7 +1227,7 @@ const Diagnostic = () => {
               <div className={`max-w-[80%] p-5 rounded-[1.5rem] font-medium text-sm leading-relaxed ${
                 m.role === 'user' 
                   ? 'bg-primary text-white rounded-tr-none shadow-lg shadow-primary/20' 
-                  : 'bg-[#FAF3ED] text-[#2D241E] rounded-tl-none border border-[#F5E6DA]'
+                  : 'bg-muted text-foreground rounded-tl-none border border-border'
               }`}>
                 {m.content}
               </div>
@@ -1235,14 +1235,14 @@ const Diagnostic = () => {
           ))}
           {isTyping && (
             <div className="flex justify-start">
-              <div className="bg-[#FAF3ED] p-4 rounded-2xl animate-pulse text-[10px] font-black uppercase text-[#8B7361]">
+              <div className="bg-muted p-4 rounded-2xl animate-pulse text-[10px] font-black uppercase text-muted-foreground">
                 Ассистент думает...
               </div>
             </div>
           )}
         </div>
 
-        <div className="p-6 bg-white border-t border-[#F5E6DA]">
+        <div className="p-6 bg-white border-t border-border">
           <div className="flex gap-3">
           <input 
             type="text" 
@@ -1250,7 +1250,7 @@ const Diagnostic = () => {
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Опишите свои чувства или ситуацию..." 
-              className="flex-1 bg-[#FAF3ED] border-2 border-transparent focus:border-primary/20 rounded-2xl px-6 py-4 text-sm font-medium outline-none transition-all"
+              className="flex-1 bg-muted border-2 border-transparent focus:border-primary/20 rounded-2xl px-6 py-4 text-sm font-medium outline-none transition-all"
             />
             <button 
               onClick={handleSend}
@@ -1362,31 +1362,31 @@ const SpecialistDashboard = () => {
     <div className="max-w-7xl mx-auto px-4 py-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
         <div>
-          <h1 className="text-4xl font-black text-[#2D241E] mb-2">Добрый день, {specialist.name.split(' ')[0]}!</h1>
-          <p className="text-[#8B7361] font-medium">Управление вашим профилем и расписанием.</p>
+          <h1 className="text-4xl font-black text-foreground mb-2">Добрый день, {specialist.name.split(' ')[0]}!</h1>
+          <p className="text-muted-foreground font-medium">Управление вашим профилем и расписанием.</p>
         </div>
         <div className="flex flex-wrap gap-4">
-          <div className="bg-white p-1 rounded-2xl border border-[#F5E6DA] flex">
+          <div className="bg-white p-1 rounded-2xl border border-border flex">
             <button 
               onClick={() => setActiveTab('overview')}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'overview' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-[#8B7361] hover:text-primary'}`}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'overview' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
             >
               Обзор
             </button>
             <button 
               onClick={() => setActiveTab('schedule')}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'schedule' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-[#8B7361] hover:text-primary'}`}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'schedule' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
             >
               Расписание
             </button>
             <button 
               onClick={() => setActiveTab('profile')}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'profile' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-[#8B7361] hover:text-primary'}`}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'profile' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
             >
               Профиль
             </button>
           </div>
-          <Link to="/tools" className="flex items-center gap-2 bg-white border border-[#F5E6DA] px-6 py-3 rounded-2xl font-bold text-sm hover:bg-[#FAF3ED] transition-all">
+          <Link to="/tools" className="flex items-center gap-2 bg-white border border-border px-6 py-3 rounded-2xl font-bold text-sm hover:bg-muted transition-all">
             <Sparkles className="h-4 w-4 text-primary" />
             Агент Екатерина
           </Link>
@@ -1403,34 +1403,34 @@ const SpecialistDashboard = () => {
               { label: 'Ваш рейтинг', value: stats.rating, icon: Star, color: 'text-yellow-500', bg: 'bg-yellow-50' },
               { label: 'Доход (₽)', value: stats.earned.toLocaleString(), icon: Wallet, color: 'text-primary', bg: 'bg-primary/5' },
             ].map((stat, i) => (
-              <div key={i} className="bg-white p-6 rounded-[2rem] border border-[#F5E6DA] shadow-sm">
+              <div key={i} className="bg-white p-6 rounded-[2rem] border border-border shadow-sm">
                 <div className={`h-12 w-12 ${stat.bg} ${stat.color} rounded-2xl flex items-center justify-center mb-4`}>
                   <stat.icon className="h-6 w-6" />
                 </div>
-                <p className="text-[10px] font-black uppercase text-[#8B7361] mb-1">{stat.label}</p>
-                <p className="text-2xl font-black text-[#2D241E]">{stat.value}</p>
+                <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">{stat.label}</p>
+                <p className="text-2xl font-black text-foreground">{stat.value}</p>
               </div>
             ))}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2 space-y-6">
-              <h2 className="text-2xl font-black text-[#2D241E]">Ближайшие записи</h2>
+              <h2 className="text-2xl font-black text-foreground">Ближайшие записи</h2>
               <div className="space-y-4">
                 {bookings.map((booking) => (
-                  <div key={booking.id} className="bg-white p-6 rounded-3xl border border-[#F5E6DA] hover:shadow-md transition-all flex items-center justify-between">
+                  <div key={booking.id} className="bg-white p-6 rounded-3xl border border-border hover:shadow-md transition-all flex items-center justify-between">
                     <div className="flex items-center gap-6">
-                      <div className="h-14 w-14 bg-[#FAF3ED] rounded-2xl flex items-center justify-center text-primary font-black text-xl">
+                      <div className="h-14 w-14 bg-muted rounded-2xl flex items-center justify-center text-primary font-black text-xl">
                         {booking.name[0]}
                       </div>
                       <div>
-                        <h3 className="font-black text-[#2D241E]">{booking.name}</h3>
-                        <p className="text-xs font-bold text-[#8B7361]">{booking.phone}</p>
+                        <h3 className="font-black text-foreground">{booking.name}</h3>
+                        <p className="text-xs font-bold text-muted-foreground">{booking.phone}</p>
                         <p className="text-[10px] text-muted-foreground mt-1 italic">«{booking.message}»</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="flex items-center gap-2 text-sm font-black text-[#2D241E] mb-1">
+                      <div className="flex items-center gap-2 text-sm font-black text-foreground mb-1">
                         <Calendar className="h-4 w-4 text-primary" />
                         {new Date(booking.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })} в {booking.time}
                       </div>
@@ -1447,7 +1447,7 @@ const SpecialistDashboard = () => {
             </div>
 
             <div className="lg:col-span-1 space-y-6">
-              <h2 className="text-2xl font-black text-[#2D241E]">Linkeon Insight</h2>
+              <h2 className="text-2xl font-black text-foreground">Linkeon Insight</h2>
               <div className="bg-primary text-white p-8 rounded-[2.5rem] shadow-xl shadow-primary/20 relative overflow-hidden">
                 <Sparkles className="absolute top-[-10px] right-[-10px] h-24 w-24 text-white/10" />
                 <h3 className="text-xl font-black mb-4 relative z-10">Анализ профиля</h3>
@@ -1465,10 +1465,10 @@ const SpecialistDashboard = () => {
           </div>
         </>
       ) : activeTab === 'profile' ? (
-        <div className="bg-white rounded-[3rem] border border-[#F5E6DA] p-12 shadow-sm max-w-2xl mx-auto">
+        <div className="bg-white rounded-[3rem] border border-border p-12 shadow-sm max-w-2xl mx-auto">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-black text-[#2D241E] mb-4">Ваш профиль</h2>
-            <p className="text-[#8B7361] font-medium">Здесь вы можете обновить свою фотографию и личные данные.</p>
+            <h2 className="text-3xl font-black text-foreground mb-4">Ваш профиль</h2>
+            <p className="text-muted-foreground font-medium">Здесь вы можете обновить свою фотографию и личные данные.</p>
           </div>
 
           <div className="flex flex-col items-center gap-8">
@@ -1503,22 +1503,22 @@ const SpecialistDashboard = () => {
             <div className="w-full space-y-6 pt-6">
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-[#8B7361] ml-4">Имя специалиста</label>
-                  <div className="bg-[#FAF3ED] p-4 rounded-2xl border border-[#F5E6DA] font-bold text-[#2D241E]">
+                  <label className="text-[10px] font-black uppercase text-muted-foreground ml-4">Имя специалиста</label>
+                  <div className="bg-muted p-4 rounded-2xl border border-border font-bold text-foreground">
                     {specialist.name}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-[#8B7361] ml-4">Специализация</label>
-                  <div className="bg-[#FAF3ED] p-4 rounded-2xl border border-[#F5E6DA] font-bold text-[#2D241E]">
+                  <label className="text-[10px] font-black uppercase text-muted-foreground ml-4">Специализация</label>
+                  <div className="bg-muted p-4 rounded-2xl border border-border font-bold text-foreground">
                     {specialist.specialty}
                   </div>
                 </div>
               </div>
               
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-[#8B7361] ml-4">О себе</label>
-                <div className="bg-[#FAF3ED] p-6 rounded-3xl border border-[#F5E6DA] font-medium text-[#2D241E] leading-relaxed text-sm">
+                <label className="text-[10px] font-black uppercase text-muted-foreground ml-4">О себе</label>
+                <div className="bg-muted p-6 rounded-3xl border border-border font-medium text-foreground leading-relaxed text-sm">
                   {specialist.description}
                 </div>
               </div>
@@ -1532,10 +1532,10 @@ const SpecialistDashboard = () => {
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-[3rem] border border-[#F5E6DA] overflow-hidden shadow-sm">
+        <div className="bg-white rounded-[3rem] border border-border overflow-hidden shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-3">
-            <div className="p-10 border-r border-[#F5E6DA] bg-[#FAF3ED]/30">
-              <h2 className="text-2xl font-black text-[#2D241E] mb-6 text-center">Выбор даты</h2>
+            <div className="p-10 border-r border-border bg-muted/30">
+              <h2 className="text-2xl font-black text-foreground mb-6 text-center">Выбор даты</h2>
               <div className="space-y-3">
                 {[0, 1, 2, 3, 4, 5, 6].map(offset => {
                   const d = new Date()
@@ -1548,7 +1548,7 @@ const SpecialistDashboard = () => {
                       className={`w-full p-4 rounded-2xl border-2 text-sm font-bold transition-all flex justify-between items-center ${
                         editingDate === iso 
                           ? 'border-primary bg-primary/5 text-primary shadow-md' 
-                          : 'border-transparent bg-white hover:border-[#F5E6DA]'
+                          : 'border-transparent bg-white hover:border-border'
                       }`}
                     >
                       <span>{d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}</span>
@@ -1563,7 +1563,7 @@ const SpecialistDashboard = () => {
 
             <div className="md:col-span-2 p-10">
               <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-black text-[#2D241E]">Свободные слоты на {new Date(editingDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}</h2>
+                <h2 className="text-2xl font-black text-foreground">Свободные слоты на {new Date(editingDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}</h2>
                 {savingSlots && <span className="text-[10px] font-black uppercase text-primary animate-pulse">Сохранение...</span>}
               </div>
               
@@ -1578,7 +1578,7 @@ const SpecialistDashboard = () => {
                       className={`p-4 rounded-2xl border-2 text-sm font-bold transition-all ${
                         isSelected 
                           ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' 
-                          : 'border-[#F5E6DA] bg-white text-[#8B7361] hover:border-primary/40'
+                          : 'border-border bg-white text-muted-foreground hover:border-primary/40'
                       }`}
                     >
                       {time}
@@ -1587,14 +1587,14 @@ const SpecialistDashboard = () => {
                 })}
               </div>
 
-              <div className="mt-12 p-6 bg-[#FAF3ED] rounded-3xl border border-[#F5E6DA]">
+              <div className="mt-12 p-6 bg-muted rounded-3xl border border-border">
                 <div className="flex gap-4">
                   <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center">
                     <Clock className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h4 className="font-black text-[#2D241E] text-sm mb-1">Как это работает?</h4>
-                    <p className="text-xs text-[#8B7361] font-medium leading-relaxed">
+                    <h4 className="font-black text-foreground text-sm mb-1">Как это работает?</h4>
+                    <p className="text-xs text-muted-foreground font-medium leading-relaxed">
                       Выберите время, в которое вы готовы проводить сессии. Клиенты увидят эти окна на вашей витрине и смогут записаться в один клик. Все изменения сохраняются автоматически.
                     </p>
                   </div>
