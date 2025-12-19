@@ -27,9 +27,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       <nav className="border-b bg-white/80 backdrop-blur-xl sticky top-0 z-50 border-[#F5E6DA]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <Link to="/" className="flex items-center gap-2">
-              <img src={logoHearty} alt="Hearty" className="h-8 w-8" />
-              <span className="text-xl font-bold tracking-tight text-foreground">Hearty</span>
+            <Link to="/" className="flex items-center">
+              <img src={logoHearty} alt="Hearty" className="h-12 w-12" />
             </Link>
             
             <div className="hidden md:flex items-center gap-8">
@@ -71,9 +70,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       <footer className="border-t bg-white py-12 mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex items-center justify-center gap-2 mb-4 opacity-70">
-            <img src={logoHearty} alt="Hearty" className="h-5 w-5" />
-            <span className="font-bold">Hearty</span>
+          <div className="flex items-center justify-center mb-4 opacity-70">
+            <img src={logoHearty} alt="Hearty" className="h-10 w-10" />
           </div>
           <p className="text-muted-foreground text-sm">© 2025 Hearty Platform. Часть экосистемы Linkeon.</p>
         </div>
