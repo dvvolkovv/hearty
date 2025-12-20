@@ -1443,6 +1443,15 @@ const SpecialistDashboard = () => {
   const [savingSlots, setSavingSlots] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [bookingStatusFilter, setBookingStatusFilter] = useState<string>('all')
+  const [editingProfile, setEditingProfile] = useState(false)
+  const [profileForm, setProfileForm] = useState({
+    phone: '',
+    email: '',
+    instagram: '',
+    telegram: '',
+    vk: ''
+  })
+  const [savingProfile, setSavingProfile] = useState(false)
 
   const timeSlots = [
     '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', 
@@ -1758,6 +1767,59 @@ const SpecialistDashboard = () => {
     }
   }
 
+  useEffect(() => {
+    if (specialist) {
+      setProfileForm({
+        phone: specialist.phone || '',
+        email: specialist.email || '',
+        instagram: specialist.socialLinks?.instagram || '',
+        telegram: specialist.socialLinks?.telegram || '',
+        vk: specialist.socialLinks?.vk || ''
+      })
+    }
+  }, [specialist])
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!specialist) return
+
+    setSavingProfile(true)
+    try {
+      const socialLinks = {
+        instagram: profileForm.instagram || undefined,
+        telegram: profileForm.telegram || undefined,
+        vk: profileForm.vk || undefined
+      }
+      // Remove undefined values
+      Object.keys(socialLinks).forEach(key => {
+        if (socialLinks[key as keyof typeof socialLinks] === undefined) {
+          delete socialLinks[key as keyof typeof socialLinks]
+        }
+      })
+
+      const res = await fetch(`${API_URL}/specialists/1/profile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: profileForm.phone,
+          email: profileForm.email,
+          socialLinks: Object.keys(socialLinks).length > 0 ? socialLinks : undefined
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setSpecialist({ ...specialist, ...data.specialist })
+        setEditingProfile(false)
+        alert('Профиль успешно обновлен!')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Ошибка при сохранении профиля')
+    } finally {
+      setSavingProfile(false)
+    }
+  }
+
   const handleBookingStatusChange = async (bookingId: number, newStatus: string) => {
     try {
       const res = await fetch(`${API_URL}/bookings/${bookingId}/status`, {
@@ -2050,42 +2112,181 @@ const SpecialistDashboard = () => {
             </div>
 
             <div className="w-full space-y-6 pt-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-muted-foreground ml-4">Имя специалиста</label>
-                  <div className="bg-muted p-4 rounded-2xl border border-border font-bold text-foreground">
-                    {specialist.name}
+              {!editingProfile ? (
+                <>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase text-muted-foreground ml-4">Имя специалиста</label>
+                      <div className="bg-muted p-4 rounded-2xl border border-border font-bold text-foreground">
+                        {specialist.name}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase text-muted-foreground ml-4">Специализация</label>
+                      <div className="bg-muted p-4 rounded-2xl border border-border font-bold text-foreground">
+                        {specialist.specialty}
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-muted-foreground ml-4">Специализация</label>
-                  <div className="bg-muted p-4 rounded-2xl border border-border font-bold text-foreground">
-                    {specialist.specialty}
+                  
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-muted-foreground ml-4">О себе</label>
+                    <div className="bg-muted p-6 rounded-3xl border border-border font-medium text-foreground leading-relaxed text-sm">
+                      {specialist.description}
+                    </div>
                   </div>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-muted-foreground ml-4">О себе</label>
-                <div className="bg-muted p-6 rounded-3xl border border-border font-medium text-foreground leading-relaxed text-sm">
-                  {specialist.description}
-                </div>
-              </div>
 
-              <div className="flex flex-col gap-4 pt-4">
-                <a 
-                  href="https://my.linkeon.io"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-3 bg-primary text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all"
-                >
-                  <User className="h-5 w-5" />
-                  Подключить профиль Linkeon
-                </a>
-                <button className="flex-1 bg-white border-2 border-border text-foreground py-4 rounded-2xl font-black hover:bg-muted transition-all">
-                  Редактировать данные
-                </button>
-              </div>
+                  {(specialist.phone || specialist.email || specialist.socialLinks) && (
+                    <div className="space-y-4 pt-4">
+                      <h3 className="text-lg font-black text-foreground">Контакты</h3>
+                      {specialist.phone && (
+                        <div className="flex items-center gap-3 bg-muted p-4 rounded-2xl border border-border">
+                          <span className="text-xs font-black uppercase text-muted-foreground w-20">Телефон:</span>
+                          <span className="font-bold text-foreground">{specialist.phone}</span>
+                        </div>
+                      )}
+                      {specialist.email && (
+                        <div className="flex items-center gap-3 bg-muted p-4 rounded-2xl border border-border">
+                          <span className="text-xs font-black uppercase text-muted-foreground w-20">Email:</span>
+                          <span className="font-bold text-foreground">{specialist.email}</span>
+                        </div>
+                      )}
+                      {specialist.socialLinks && (
+                        <div className="space-y-2">
+                          <span className="text-xs font-black uppercase text-muted-foreground ml-4 block">Социальные сети:</span>
+                          <div className="bg-muted p-4 rounded-2xl border border-border space-y-2">
+                            {specialist.socialLinks.instagram && (
+                              <a href={specialist.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="block text-primary font-bold hover:underline">
+                                Instagram: {specialist.socialLinks.instagram}
+                              </a>
+                            )}
+                            {specialist.socialLinks.telegram && (
+                              <a href={specialist.socialLinks.telegram} target="_blank" rel="noopener noreferrer" className="block text-primary font-bold hover:underline">
+                                Telegram: {specialist.socialLinks.telegram}
+                              </a>
+                            )}
+                            {specialist.socialLinks.vk && (
+                              <a href={specialist.socialLinks.vk} target="_blank" rel="noopener noreferrer" className="block text-primary font-bold hover:underline">
+                                ВКонтакте: {specialist.socialLinks.vk}
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex flex-col gap-4 pt-4">
+                    <a 
+                      href="https://my.linkeon.io"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-3 bg-primary text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all"
+                    >
+                      <User className="h-5 w-5" />
+                      Подключить профиль Linkeon
+                    </a>
+                    <button 
+                      onClick={() => setEditingProfile(true)}
+                      className="flex-1 bg-white border-2 border-border text-foreground py-4 rounded-2xl font-black hover:bg-muted transition-all"
+                    >
+                      Редактировать контакты
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <form onSubmit={handleSaveProfile} className="space-y-6">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-black text-foreground">Контактная информация</h3>
+                    
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase text-muted-foreground ml-4">Мобильный телефон</label>
+                      <input
+                        type="tel"
+                        value={profileForm.phone}
+                        onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                        placeholder="+7 (900) 000-00-00"
+                        className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase text-muted-foreground ml-4">Email</label>
+                      <input
+                        type="email"
+                        value={profileForm.email}
+                        onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                        placeholder="email@example.com"
+                        className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 pt-4">
+                    <h3 className="text-lg font-black text-foreground">Социальные сети</h3>
+                    
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase text-muted-foreground ml-4">Instagram</label>
+                      <input
+                        type="url"
+                        value={profileForm.instagram}
+                        onChange={(e) => setProfileForm({ ...profileForm, instagram: e.target.value })}
+                        placeholder="https://instagram.com/your_profile"
+                        className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase text-muted-foreground ml-4">Telegram</label>
+                      <input
+                        type="url"
+                        value={profileForm.telegram}
+                        onChange={(e) => setProfileForm({ ...profileForm, telegram: e.target.value })}
+                        placeholder="https://t.me/your_profile"
+                        className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase text-muted-foreground ml-4">ВКонтакте</label>
+                      <input
+                        type="url"
+                        value={profileForm.vk}
+                        onChange={(e) => setProfileForm({ ...profileForm, vk: e.target.value })}
+                        placeholder="https://vk.com/your_profile"
+                        className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 pt-4">
+                    <button
+                      type="submit"
+                      disabled={savingProfile}
+                      className="flex-1 bg-primary text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all disabled:opacity-50"
+                    >
+                      {savingProfile ? 'Сохранение...' : 'Сохранить'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingProfile(false)
+                        // Reset form to current values
+                        setProfileForm({
+                          phone: specialist.phone || '',
+                          email: specialist.email || '',
+                          instagram: specialist.socialLinks?.instagram || '',
+                          telegram: specialist.socialLinks?.telegram || '',
+                          vk: specialist.socialLinks?.vk || ''
+                        })
+                      }}
+                      className="px-6 bg-white border-2 border-border text-foreground py-4 rounded-2xl font-black hover:bg-muted transition-all"
+                    >
+                      Отмена
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </div>

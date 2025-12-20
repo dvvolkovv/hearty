@@ -49,6 +49,13 @@ let specialists = [
     ],
     fullDescription: 'Я верю, что каждый человек обладает внутренними ресурсами для преодоления любых трудностей. В своей работе я использую гештальт-подход, который помогает клиентам осознать свои истинные потребности и чувства здесь и сейчас. Моя задача — создать безопасное пространство, где вы сможете быть собой и находить ответы на важные вопросы.',
     education: ['МГУ им. Ломоносова, Психологический факультет', 'Московский Гештальт Институт (МГИ)'],
+    phone: '+7 (917) 123-45-67',
+    email: 'alexey.ivanov@example.com',
+    socialLinks: {
+      instagram: 'https://instagram.com/alexey_ivanov',
+      telegram: 'https://t.me/alexey_ivanov',
+      vk: 'https://vk.com/alexey_ivanov'
+    },
     slots: {
       '2025-12-20': ['10:00', '12:00', '14:00', '16:00'],
       '2025-12-21': ['11:00', '13:00', '15:00'],
@@ -343,6 +350,22 @@ app.post('/api/specialists/:id/upload-photo', upload.single('photo'), (req, res)
   } else {
     res.status(404).json({ error: 'Specialist not found or no file uploaded' });
   }
+});
+
+app.put('/api/specialists/:id/profile', (req, res) => {
+  const { id } = req.params;
+  const { phone, email, socialLinks } = req.body;
+  const specialist = specialists.find(s => s.id === parseInt(id));
+  
+  if (!specialist) {
+    return res.status(404).json({ error: 'Specialist not found' });
+  }
+  
+  if (phone !== undefined) specialist.phone = phone;
+  if (email !== undefined) specialist.email = email;
+  if (socialLinks !== undefined) specialist.socialLinks = socialLinks;
+  
+  res.json({ success: true, specialist });
 });
 
 // Reviews API
