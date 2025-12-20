@@ -1682,24 +1682,35 @@ const ClientDashboard = () => {
           <h1 className="text-4xl font-black text-foreground mb-2">Добрый день!</h1>
           <p className="text-muted-foreground font-medium">Ваш личный кабинет клиента</p>
         </div>
-        <div className="bg-white p-1 rounded-2xl border border-border flex">
-          <button 
-            onClick={() => setActiveTab('bookings')}
-            className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'bookings' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="bg-white p-1 rounded-2xl border border-border flex">
+            <button 
+              onClick={() => setActiveTab('bookings')}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'bookings' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
+            >
+              Записи
+            </button>
+            <button 
+              onClick={() => setActiveTab('messages')}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all relative ${activeTab === 'messages' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
+            >
+              Сообщения
+              {chats.some(c => c.unreadCount > 0) && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 bg-secondary rounded-full flex items-center justify-center text-[10px] font-black text-white">
+                  {chats.reduce((sum, c) => sum + c.unreadCount, 0)}
+                </span>
+              )}
+            </button>
+          </div>
+          <a 
+            href="https://my.linkeon.io"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 bg-white border border-border px-6 py-3 rounded-2xl font-bold text-sm hover:bg-muted transition-all"
           >
-            Записи
-          </button>
-          <button 
-            onClick={() => setActiveTab('messages')}
-            className={`px-6 py-2 rounded-xl text-sm font-bold transition-all relative ${activeTab === 'messages' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
-          >
-            Сообщения
-            {chats.some(c => c.unreadCount > 0) && (
-              <span className="absolute -top-1 -right-1 h-5 w-5 bg-secondary rounded-full flex items-center justify-center text-[10px] font-black text-white">
-                {chats.reduce((sum, c) => sum + c.unreadCount, 0)}
-              </span>
-            )}
-          </button>
+            <User className="h-4 w-4 text-primary" />
+            Подключить профиль Linkeon
+          </a>
         </div>
       </div>
       
