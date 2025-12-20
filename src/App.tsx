@@ -152,13 +152,15 @@ const Landing = () => {
               <span className="font-bold text-foreground">клиенты</span> получат наиболее подходящего специалиста, 
               {' '}<span className="font-bold text-foreground">специалисты</span> — идеальных клиентов
             </p>
-            <Link 
-              to="/onboarding"
+            <a 
+              href="https://my.linkeon.io"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-3 bg-primary text-white px-8 py-4 rounded-2xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-primary/30 hover:bg-primary/90"
             >
               <User className="h-5 w-5" />
               Подключить свой профиль с Linkeon
-            </Link>
+            </a>
           </div>
         </div>
       </div>
