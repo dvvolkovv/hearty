@@ -3663,7 +3663,9 @@ const SpecialistDashboard = () => {
               </div>
             )}
           </div>
+          </div>
         </div>
+      )
       ) : (
         <div className="bg-white rounded-[3rem] border border-border overflow-hidden shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-3">
@@ -3935,7 +3937,6 @@ const SpecialistDashboard = () => {
                         onClick={() => {
                           setShowCreateBookingForm(false)
                           setBookingForm({
-                            clientId: '',
                             clientName: '',
                             date: new Date().toISOString().split('T')[0],
                             time: '10:00',
