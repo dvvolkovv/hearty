@@ -1535,6 +1535,158 @@ const Diagnostic = () => {
 )
 }
 
+const DashboardSelector = () => {
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-20">
+      <div className="text-center mb-16">
+        <h1 className="text-4xl font-black text-foreground mb-4">Личный кабинет</h1>
+        <p className="text-muted-foreground font-medium">Выберите тип вашего кабинета</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <Link 
+          to="/dashboard/client"
+          className="bg-white border-2 border-border rounded-[3rem] p-12 shadow-xl hover:shadow-2xl transition-all hover:border-primary/50 group"
+        >
+          <div className="text-center">
+            <div className="h-20 w-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-all">
+              <User className="h-10 w-10 text-primary" />
+            </div>
+            <h2 className="text-2xl font-black text-foreground mb-4">Кабинет клиента</h2>
+            <p className="text-muted-foreground font-medium leading-relaxed mb-6">
+              Управляйте своими записями, просматривайте историю сессий и общайтесь со специалистами
+            </p>
+            <div className="bg-primary text-white px-6 py-3 rounded-2xl font-bold inline-block group-hover:scale-105 transition-all">
+              Войти как клиент
+            </div>
+          </div>
+        </Link>
+
+        <Link 
+          to="/dashboard/specialist"
+          className="bg-white border-2 border-border rounded-[3rem] p-12 shadow-xl hover:shadow-2xl transition-all hover:border-primary/50 group"
+        >
+          <div className="text-center">
+            <div className="h-20 w-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-all">
+              <Briefcase className="h-10 w-10 text-primary" />
+            </div>
+            <h2 className="text-2xl font-black text-foreground mb-4">Кабинет специалиста</h2>
+            <p className="text-muted-foreground font-medium leading-relaxed mb-6">
+              Управляйте расписанием, записями клиентов, отзывами и профилем
+            </p>
+            <div className="bg-primary text-white px-6 py-3 rounded-2xl font-bold inline-block group-hover:scale-105 transition-all">
+              Войти как специалист
+            </div>
+          </div>
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+const ClientDashboard = () => {
+  const [bookings, setBookings] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // Mock данные для клиента
+    const mockBookings = [
+      { id: 1, specialistName: 'Алексей Иванов', date: '2025-12-20', time: '10:00', status: 'confirmed', specialty: 'Психолог, Гештальт-терапевт' },
+      { id: 2, specialistName: 'Мария Петрова', date: '2025-12-22', time: '14:00', status: 'pending', specialty: 'Коуч, Бизнес-консультант' }
+    ]
+    setTimeout(() => {
+      setBookings(mockBookings)
+      setLoading(false)
+    }, 500)
+  }, [])
+
+  const getStatusLabel = (status: string) => {
+    const labels: { [key: string]: { text: string; color: string } } = {
+      'confirmed': { text: 'Подтверждена', color: 'bg-green-100 text-green-600' },
+      'pending': { text: 'Ожидает подтверждения', color: 'bg-orange-100 text-orange-600' },
+      'completed': { text: 'Завершена', color: 'bg-blue-100 text-blue-600' },
+      'cancelled': { text: 'Отменена', color: 'bg-gray-100 text-gray-600' }
+    }
+    return labels[status] || { text: status, color: 'bg-muted text-muted-foreground' }
+  }
+
+  if (loading) return <div className="p-20 text-center">Загрузка кабинета...</div>
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="mb-12">
+        <h1 className="text-4xl font-black text-foreground mb-2">Добрый день!</h1>
+        <p className="text-muted-foreground font-medium">Ваш личный кабинет клиента</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
+          <h2 className="text-2xl font-black text-foreground">Мои записи</h2>
+          
+          {bookings.length === 0 ? (
+            <div className="bg-white p-12 rounded-3xl border border-border text-center">
+              <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-bold text-muted-foreground">У вас пока нет записей</p>
+              <Link to="/specialists" className="inline-block mt-6 bg-primary text-white px-6 py-3 rounded-2xl font-bold hover:bg-primary/90 transition-all">
+                Записаться к специалисту
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {bookings.map((booking) => {
+                const status = getStatusLabel(booking.status)
+                return (
+                  <div key={booking.id} className="bg-white p-6 rounded-3xl border border-border hover:shadow-md transition-all">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="font-black text-foreground text-lg mb-1">{booking.specialistName}</h3>
+                        <p className="text-sm text-muted-foreground">{booking.specialty}</p>
+                      </div>
+                      <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full ${status.color}`}>
+                        {status.text}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm font-bold text-foreground">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-primary" />
+                        {new Date(booking.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-primary" />
+                        {booking.time}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-6">
+          <div className="bg-primary text-white p-8 rounded-[2.5rem] shadow-xl shadow-primary/20">
+            <h3 className="text-xl font-black mb-4">Быстрые действия</h3>
+            <div className="space-y-3">
+              <Link 
+                to="/specialists"
+                className="block bg-white/20 hover:bg-white/30 text-white py-3 px-4 rounded-2xl font-bold transition-all text-center"
+              >
+                Найти специалиста
+              </Link>
+              <Link 
+                to="/diagnostic"
+                className="block bg-white/20 hover:bg-white/30 text-white py-3 px-4 rounded-2xl font-bold transition-all text-center"
+              >
+                Предварительная диагностика
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const SpecialistDashboard = () => {
   const [stats, setStats] = useState<any>(null)
   const [bookings, setBookings] = useState<any[]>([])
@@ -2970,7 +3122,9 @@ const App = () => {
           <Route path="/tools" element={<AITools />} />
           <Route path="/book/:id" element={<Booking />} />
           <Route path="/specialist/:id" element={<SpecialistProfile />} />
-          <Route path="/dashboard" element={<SpecialistDashboard />} />
+          <Route path="/dashboard" element={<DashboardSelector />} />
+          <Route path="/dashboard/client" element={<ClientDashboard />} />
+          <Route path="/dashboard/specialist" element={<SpecialistDashboard />} />
         </Routes>
       </Layout>
     </Router>
