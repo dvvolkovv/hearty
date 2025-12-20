@@ -273,6 +273,24 @@ app.get('/api/specialists/:id/bookings', (req, res) => {
   res.json(bookings);
 });
 
+app.post('/api/specialists/:id/bookings', (req, res) => {
+  const { id } = req.params;
+  const { clientName, date, time, status } = req.body;
+  
+  const newBooking = {
+    id: mockBookings.length > 0 ? Math.max(...mockBookings.map(b => b.id)) + 1 : 1,
+    specialistId: parseInt(id),
+    clientName: clientName || 'Клиент',
+    date: date,
+    time: time,
+    status: status || 'confirmed',
+    specialty: 'Сессия'
+  };
+  
+  mockBookings.push(newBooking);
+  res.status(201).json({ success: true, booking: newBooking });
+});
+
 app.put('/api/bookings/:bookingId/status', (req, res) => {
   const { bookingId } = req.params;
   const { status } = req.body;

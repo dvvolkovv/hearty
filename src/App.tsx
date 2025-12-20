@@ -1961,6 +1961,14 @@ const SpecialistDashboard = () => {
     vk: ''
   })
   const [savingProfile, setSavingProfile] = useState(false)
+  const [showCreateBookingForm, setShowCreateBookingForm] = useState(false)
+  const [creatingBooking, setCreatingBooking] = useState(false)
+  const [bookingForm, setBookingForm] = useState({
+    clientName: '',
+    date: new Date().toISOString().split('T')[0],
+    time: '10:00',
+    status: 'confirmed'
+  })
 
   const timeSlots = [
     '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', 
@@ -2346,6 +2354,53 @@ const SpecialistDashboard = () => {
 
   const getBookingsForDate = (date: string) => {
     return bookings.filter((booking: any) => booking.date === date)
+  }
+
+  const handleCreateBooking = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!bookingForm.clientName.trim()) {
+      alert('Введите имя клиента')
+      return
+    }
+
+    setCreatingBooking(true)
+    try {
+      const newBooking = {
+        id: Date.now(), // Временный ID, в реальном приложении будет генерироваться на сервере
+        clientName: bookingForm.clientName,
+        date: bookingForm.date,
+        time: bookingForm.time,
+        status: bookingForm.status,
+        specialistId: 1
+      }
+
+      // Отправляем на сервер
+      const res = await fetch(`${API_URL}/specialists/1/bookings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newBooking)
+      })
+      
+      if (res.ok) {
+        const data = await res.json()
+        setBookings([...bookings, data.booking || newBooking])
+        setShowCreateBookingForm(false)
+        setBookingForm({
+          clientName: '',
+          date: new Date().toISOString().split('T')[0],
+          time: '10:00',
+          status: 'confirmed'
+        })
+        alert('Встреча успешно создана!')
+      } else {
+        throw new Error('Ошибка при создании встречи')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Ошибка при создании встречи')
+    } finally {
+      setCreatingBooking(false)
+    }
   }
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -3549,8 +3604,121 @@ const SpecialistDashboard = () => {
             <div className="md:col-span-2 p-10">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-2xl font-black text-foreground">Свободные слоты на {new Date(editingDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}</h2>
-                {savingSlots && <span className="text-[10px] font-black uppercase text-primary animate-pulse">Сохранение...</span>}
+                <div className="flex items-center gap-3">
+                  {savingSlots && <span className="text-[10px] font-black uppercase text-primary animate-pulse">Сохранение...</span>}
+                  <button
+                    onClick={() => {
+                      setShowCreateBookingForm(true)
+                      setBookingForm({
+                        ...bookingForm,
+                        date: editingDate
+                      })
+                    }}
+                    className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    Создать встречу
+                  </button>
+                </div>
               </div>
+
+              {showCreateBookingForm && (
+                <div className="mb-8 bg-white border-2 border-border p-6 rounded-2xl">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-black text-foreground">Создать встречу</h3>
+                    <button
+                      onClick={() => {
+                        setShowCreateBookingForm(false)
+                        setBookingForm({
+                          clientName: '',
+                          date: new Date().toISOString().split('T')[0],
+                          time: '10:00',
+                          status: 'confirmed'
+                        })
+                      }}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                  <form onSubmit={handleCreateBooking} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-black text-foreground mb-2">Имя клиента *</label>
+                      <input
+                        type="text"
+                        required
+                        value={bookingForm.clientName}
+                        onChange={(e) => setBookingForm({ ...bookingForm, clientName: e.target.value })}
+                        className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                        placeholder="Введите имя клиента"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-black text-foreground mb-2">Дата *</label>
+                        <input
+                          type="date"
+                          required
+                          value={bookingForm.date}
+                          onChange={(e) => setBookingForm({ ...bookingForm, date: e.target.value })}
+                          min={new Date().toISOString().split('T')[0]}
+                          className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-black text-foreground mb-2">Время *</label>
+                        <select
+                          required
+                          value={bookingForm.time}
+                          onChange={(e) => setBookingForm({ ...bookingForm, time: e.target.value })}
+                          className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                        >
+                          {timeSlots.map(time => (
+                            <option key={time} value={time}>{time}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-black text-foreground mb-2">Статус</label>
+                      <select
+                        value={bookingForm.status}
+                        onChange={(e) => setBookingForm({ ...bookingForm, status: e.target.value })}
+                        className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                      >
+                        <option value="confirmed">Подтверждена</option>
+                        <option value="pending">Ожидает подтверждения</option>
+                        <option value="completed">Завершена</option>
+                        <option value="cancelled">Отменена</option>
+                      </select>
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        type="submit"
+                        disabled={creatingBooking}
+                        className="flex-1 bg-primary text-white py-3 rounded-xl font-black hover:bg-primary/90 transition-all disabled:opacity-50"
+                      >
+                        {creatingBooking ? 'Создание...' : 'Создать встречу'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowCreateBookingForm(false)
+                          setBookingForm({
+                            clientName: '',
+                            date: new Date().toISOString().split('T')[0],
+                            time: '10:00',
+                            status: 'confirmed'
+                          })
+                        }}
+                        className="px-6 bg-white border-2 border-border text-foreground py-3 rounded-xl font-black hover:bg-muted transition-all"
+                      >
+                        Отмена
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
 
               {(() => {
                 const dayBookings = getBookingsForDate(editingDate)
