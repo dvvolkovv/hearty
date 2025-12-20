@@ -3083,9 +3083,119 @@ const SpecialistDashboard = () => {
           )}
         </div>
       ) : activeTab === 'clients' ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Clients List */}
-          <div className="lg:col-span-1">
+        !selectedClient && !showAddClientForm && !showEditClientForm ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Clients List - Grid View */}
+            {clients.length === 0 ? (
+              <div className="col-span-full bg-white rounded-[2rem] border border-border p-12 shadow-sm text-center">
+                <Users className="h-16 w-16 text-muted-foreground mx-auto mb-6 opacity-50" />
+                <p className="text-lg font-bold text-muted-foreground mb-2">Пока нет клиентов</p>
+                <button
+                  onClick={() => {
+                    setShowAddClientForm(true)
+                    setClientForm({ name: '', phone: '', email: '', notes: '' })
+                  }}
+                  className="bg-primary text-white px-6 py-3 rounded-xl font-black hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 mt-4"
+                >
+                  Добавить клиента
+                </button>
+              </div>
+            ) : (
+              clients.map((client, idx) => {
+                const clientChat = chats.find(c => c.clientName === client.name)
+                const hasUnreadMessages = clientChat && clientChat.unreadCount > 0
+                
+                return (
+                  <div
+                    key={idx}
+                    className={`bg-white rounded-2xl border-2 transition-all relative cursor-pointer hover:shadow-lg ${
+                      hasUnreadMessages
+                        ? 'border-orange-400 bg-orange-50/50'
+                        : 'border-border hover:border-primary/30'
+                    }`}
+                    onClick={() => handleSelectClient(client)}
+                  >
+                    {hasUnreadMessages && (
+                      <div className="absolute top-3 right-3 h-3 w-3 bg-orange-500 rounded-full animate-pulse"></div>
+                    )}
+                    <div className="p-6">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className={`h-12 w-12 rounded-xl flex items-center justify-center font-black text-lg ${
+                          hasUnreadMessages 
+                            ? 'bg-orange-100 text-orange-600' 
+                            : 'bg-primary/10 text-primary'
+                        }`}>
+                          {client.name[0]}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-black text-foreground flex items-center gap-2 mb-1">
+                            {client.name}
+                            {hasUnreadMessages && (
+                              <span className="bg-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+                                {clientChat.unreadCount}
+                              </span>
+                            )}
+                          </h3>
+                          <p className="text-xs text-muted-foreground">{client.phone}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
+                        <span>{client.totalSessions} сессий</span>
+                        {client.notesCount > 0 && (
+                          <span className="bg-primary/10 text-primary px-2 py-1 rounded-full font-bold">
+                            {client.notesCount} заметок
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleGoToMessages(client, e)
+                        }}
+                        className="w-full bg-primary text-white py-2 px-4 rounded-xl text-xs font-bold hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-md shadow-primary/20"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        Перейти к сообщениям
+                      </button>
+                    </div>
+                  </div>
+                )
+              })
+            )}
+            <div
+              className="bg-white rounded-2xl border-2 border-dashed border-border p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all min-h-[200px]"
+              onClick={() => {
+                setShowAddClientForm(true)
+                setClientForm({ name: '', phone: '', email: '', notes: '' })
+              }}
+            >
+              <PlusCircle className="h-8 w-8 text-muted-foreground mb-3" />
+              <p className="text-sm font-bold text-muted-foreground">Добавить клиента</p>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-[2rem] border border-border shadow-sm">
+            {/* Back Button */}
+            {(selectedClient || showAddClientForm || showEditClientForm) && (
+              <div className="p-6 border-b border-border">
+                <button
+                  onClick={() => {
+                    setSelectedClient(null)
+                    setShowAddClientForm(false)
+                    setShowEditClientForm(false)
+                    setClientViewMode('notes')
+                  }}
+                  className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors font-bold"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                  Назад к списку клиентов
+                </button>
+              </div>
+            )}
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Clients List */}
+              <div className="lg:col-span-1 hidden lg:block">
             <div className="bg-white rounded-[2rem] border border-border p-6 shadow-sm">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-black text-foreground">Мои клиенты</h2>
