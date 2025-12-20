@@ -2406,8 +2406,25 @@ const SpecialistDashboard = () => {
 
   const handleCreateBooking = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!bookingForm.clientName.trim()) {
+    if (!bookingForm.clientId && (!bookingForm.clientName || !bookingForm.clientName.trim())) {
       alert('Выберите клиента или создайте нового')
+      return
+    }
+    
+    // Если выбран клиент по ID, но нет имени, найти имя в списке клиентов
+    let clientName = bookingForm.clientName || ''
+    if (bookingForm.clientId && !clientName.trim()) {
+      const selectedClient = clients.find(c => c.id.toString() === bookingForm.clientId)
+      if (selectedClient) {
+        clientName = selectedClient.name
+      } else {
+        alert('Клиент не найден. Пожалуйста, выберите клиента снова.')
+        return
+      }
+    }
+    
+    if (!clientName.trim()) {
+      alert('Имя клиента обязательно для заполнения')
       return
     }
 
@@ -2415,7 +2432,7 @@ const SpecialistDashboard = () => {
     try {
       const newBooking = {
         id: Date.now(), // Временный ID, в реальном приложении будет генерироваться на сервере
-        clientName: bookingForm.clientName,
+        clientName: clientName,
         date: bookingForm.date,
         time: bookingForm.time,
         status: bookingForm.status,
