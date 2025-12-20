@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { Search, User, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Zap, Target, FileText, Upload, Briefcase, Rocket, Compass, BatteryCharging, CloudLightning, Users, Smile, Anchor, Wallet, CheckCircle2, Clock, ArrowLeft, MessageSquare, Check, XCircle } from 'lucide-react'
+import { Search, User, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Zap, Target, FileText, Upload, Briefcase, Rocket, Compass, BatteryCharging, CloudLightning, Users, Smile, Anchor, Wallet, CheckCircle2, Clock, ArrowLeft, MessageSquare, Check, XCircle, PlusCircle } from 'lucide-react'
 import logoHearty from './assets/logo_hearty.jpg'
 
 // Constants
@@ -1475,6 +1475,8 @@ const SpecialistDashboard = () => {
 
   const handleSelectClient = async (client: any) => {
     setSelectedClient(client)
+    setShowAddClientForm(false)
+    setShowEditClientForm(false)
     await loadClientNotes(client.name)
   }
 
@@ -1992,18 +1994,30 @@ const SpecialistDashboard = () => {
                 <button
                   onClick={() => {
                     setShowAddClientForm(true)
+                    setSelectedClient(null)
+                    setShowEditClientForm(false)
                     setClientForm({ name: '', phone: '', email: '', notes: '' })
                   }}
                   className="h-8 w-8 bg-primary text-white rounded-lg flex items-center justify-center hover:bg-primary/90 transition-all"
                   title="Добавить клиента"
                 >
-                  <User className="h-4 w-4" />
+                  <PlusCircle className="h-4 w-4" />
                 </button>
               </div>
               {clients.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                  <p className="text-sm text-muted-foreground">Пока нет клиентов</p>
+                  <p className="text-sm text-muted-foreground mb-6">Пока нет клиентов</p>
+                  <button
+                    onClick={() => {
+                      setShowAddClientForm(true)
+                      setSelectedClient(null)
+                      setClientForm({ name: '', phone: '', email: '', notes: '' })
+                    }}
+                    className="bg-primary text-white px-6 py-3 rounded-xl font-black hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
+                  >
+                    Добавить клиента
+                  </button>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -2038,6 +2052,18 @@ const SpecialistDashboard = () => {
                   ))}
                 </div>
               )}
+              <button
+                onClick={() => {
+                  setShowAddClientForm(true)
+                  setSelectedClient(null)
+                  setShowEditClientForm(false)
+                  setClientForm({ name: '', phone: '', email: '', notes: '' })
+                }}
+                className="w-full mt-6 bg-primary text-white py-3 rounded-xl font-black hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+              >
+                <PlusCircle className="h-5 w-5" />
+                Добавить клиента
+              </button>
         </div>
       </div>
 
