@@ -796,11 +796,11 @@ const AITools = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 py-20">
       <Link 
-        to="/"
+        to="/dashboard"
         className="inline-flex items-center gap-2 text-muted-foreground font-bold hover:text-primary transition-all mb-8 group"
       >
         <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-        Назад на главную
+        Назад в личный кабинет
       </Link>
 
       <div className="text-center mb-12">
