@@ -1419,6 +1419,15 @@ const SpecialistDashboard = () => {
               Профиль
             </button>
           </div>
+          <a 
+            href="https://my.linkeon.io"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 bg-white border border-border px-6 py-3 rounded-2xl font-bold text-sm hover:bg-muted transition-all"
+          >
+            <User className="h-4 w-4 text-primary" />
+            Подключить профиль Linkeon
+          </a>
           <Link to="/tools" className="flex items-center gap-2 bg-white border border-border px-6 py-3 rounded-2xl font-bold text-sm hover:bg-muted transition-all">
             <Sparkles className="h-4 w-4 text-primary" />
             Агент Екатерина
@@ -1556,8 +1565,17 @@ const SpecialistDashboard = () => {
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-4">
-                <button className="flex-1 bg-primary text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">
+              <div className="flex flex-col gap-4 pt-4">
+                <a 
+                  href="https://my.linkeon.io"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-3 bg-primary text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all"
+                >
+                  <User className="h-5 w-5" />
+                  Подключить профиль Linkeon
+                </a>
+                <button className="flex-1 bg-white border-2 border-border text-foreground py-4 rounded-2xl font-black hover:bg-muted transition-all">
                   Редактировать данные
                 </button>
               </div>
