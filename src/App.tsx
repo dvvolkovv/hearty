@@ -822,9 +822,9 @@ const AITools = () => {
                   : 'bg-muted text-foreground rounded-tl-none border border-border'
               }`}>
                 {m.content}
-              </div>
-            </div>
-          ))}
+          </div>
+        </div>
+      ))}
           {isTyping && (
             <div className="flex justify-start">
               <div className="bg-muted px-4 py-2 rounded-full animate-pulse text-[10px] font-black uppercase text-muted-foreground">
@@ -852,9 +852,9 @@ const AITools = () => {
             </button>
           </div>
         </div>
-      </div>
     </div>
-  )
+  </div>
+)
 }
 
 const SpecialistProfile = () => {
@@ -1702,7 +1702,7 @@ const ClientDashboard = () => {
           </button>
         </div>
       </div>
-
+      
       {activeTab === 'bookings' ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
@@ -1862,7 +1862,7 @@ const ClientDashboard = () => {
                   )}
                 </div>
                 <div className="p-6 border-t border-border">
-                  <div className="flex gap-3">
+        <div className="flex gap-3">
                     <input
                       type="text"
                       value={chatInput}
@@ -1878,9 +1878,9 @@ const ClientDashboard = () => {
                     >
                       <Send className="h-5 w-5" />
                     </button>
-                  </div>
-                </div>
-              </div>
+          </div>
+        </div>
+      </div>
             ) : (
               <div className="bg-white rounded-[2rem] border border-border p-12 shadow-sm text-center flex items-center justify-center h-[600px]">
                 <div>
@@ -1901,9 +1901,9 @@ const SpecialistDashboard = () => {
   const [bookings, setBookings] = useState<any[]>([])
   const [specialist, setSpecialist] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'profile' | 'reviews' | 'clients' | 'messages'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'profile' | 'reviews' | 'clients'>('overview')
+  const [clientViewMode, setClientViewMode] = useState<'notes' | 'chat'>('notes')
   const [chats, setChats] = useState<any[]>([])
-  const [selectedChatClient, setSelectedChatClient] = useState<any>(null)
   const [chatMessages, setChatMessages] = useState<any[]>([])
   const [chatInput, setChatInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
@@ -2041,6 +2041,7 @@ const SpecialistDashboard = () => {
     setSelectedClient(client)
     setShowAddClientForm(false)
     setShowEditClientForm(false)
+    setClientViewMode('notes')
     await loadClientNotes(client.name)
   }
 
@@ -2180,7 +2181,7 @@ const SpecialistDashboard = () => {
   }, [])
 
   useEffect(() => {
-    if (activeTab === 'messages') {
+    if (activeTab === 'clients') {
       fetch(`${API_URL}/specialists/1/chats`)
         .then(res => res.json())
         .then(setChats)
@@ -2189,23 +2190,23 @@ const SpecialistDashboard = () => {
   }, [activeTab])
 
   useEffect(() => {
-    if (selectedChatClient) {
-      fetch(`${API_URL}/specialists/1/chats/${encodeURIComponent(selectedChatClient.clientName)}/messages`)
+    if (selectedClient && clientViewMode === 'chat') {
+      fetch(`${API_URL}/specialists/1/chats/${encodeURIComponent(selectedClient.name)}/messages`)
         .then(res => res.json())
         .then(setChatMessages)
         .catch(console.error)
     }
-  }, [selectedChatClient])
+  }, [selectedClient, clientViewMode])
 
   const handleSendMessage = async () => {
-    if (!chatInput.trim() || !selectedChatClient) return
+    if (!chatInput.trim() || !selectedClient) return
     
     const messageText = chatInput
     setChatInput('')
     setIsTyping(true)
     
     try {
-      const res = await fetch(`${API_URL}/specialists/1/chats/${encodeURIComponent(selectedChatClient.clientName)}/messages`, {
+      const res = await fetch(`${API_URL}/specialists/1/chats/${encodeURIComponent(selectedClient.name)}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: messageText })
@@ -2449,16 +2450,11 @@ const SpecialistDashboard = () => {
               onClick={() => {
                 setActiveTab('clients')
                 setSelectedClient(null)
+                setClientViewMode('notes')
               }}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'clients' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all relative ${activeTab === 'clients' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
             >
               Клиенты
-            </button>
-            <button 
-              onClick={() => setActiveTab('messages')}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all relative ${activeTab === 'messages' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
-            >
-              Сообщения
               {chats.some(c => c.unreadCount > 0) && (
                 <span className="absolute -top-1 -right-1 h-5 w-5 bg-secondary rounded-full flex items-center justify-center text-[10px] font-black text-white">
                   {chats.reduce((sum, c) => sum + c.unreadCount, 0)}
@@ -3196,9 +3192,42 @@ const SpecialistDashboard = () => {
                 </div>
 
                 <div>
-                  <h3 className="text-xl font-black text-foreground mb-4">Заметки о клиенте</h3>
-                  
-                  <form onSubmit={handleAddNote} className="mb-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-black text-foreground">
+                      {clientViewMode === 'notes' ? 'Заметки о клиенте' : 'Сообщения с клиентом'}
+                    </h3>
+                    <div className="bg-white p-1 rounded-xl border border-border flex">
+                      <button
+                        onClick={() => setClientViewMode('notes')}
+                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                          clientViewMode === 'notes'
+                            ? 'bg-primary text-white'
+                            : 'text-muted-foreground hover:text-primary'
+                        }`}
+                      >
+                        Заметки
+                      </button>
+                      <button
+                        onClick={() => setClientViewMode('chat')}
+                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all relative ${
+                          clientViewMode === 'chat'
+                            ? 'bg-primary text-white'
+                            : 'text-muted-foreground hover:text-primary'
+                        }`}
+                      >
+                        Сообщения
+                        {chats.find(c => c.clientName === selectedClient.name)?.unreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 h-4 w-4 bg-secondary rounded-full flex items-center justify-center text-[8px] font-black text-white">
+                            {chats.find(c => c.clientName === selectedClient.name)?.unreadCount}
+                          </span>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {clientViewMode === 'notes' ? (
+                    <>
+                      <form onSubmit={handleAddNote} className="mb-6">
                     <textarea
                       value={newNote}
                       onChange={(e) => setNewNote(e.target.value)}
@@ -3251,6 +3280,60 @@ const SpecialistDashboard = () => {
                       ))}
                     </div>
                   )}
+                    </>
+                  ) : (
+                    <div className="bg-white rounded-[2rem] border border-border shadow-sm flex flex-col h-[500px]">
+                      <div 
+                        ref={chatContainerRef}
+                        className="flex-1 p-6 overflow-y-auto space-y-4 scroll-smooth"
+                      >
+                        {chatMessages.length === 0 ? (
+                          <div className="text-center py-12">
+                            <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                            <p className="text-sm text-muted-foreground">Нет сообщений</p>
+                          </div>
+                        ) : (
+                          chatMessages.map((msg) => (
+                            <div key={msg.id} className={`flex ${msg.sender === 'specialist' ? 'justify-end' : 'justify-start'}`}>
+                              <div className={`max-w-[75%] p-4 rounded-2xl font-medium text-sm leading-relaxed ${
+                                msg.sender === 'specialist'
+                                  ? 'bg-primary text-white rounded-tr-none'
+                                  : 'bg-muted text-foreground rounded-tl-none border border-border'
+                              }`}>
+                                {msg.text}
+                              </div>
+                            </div>
+                          ))
+                        )}
+                        {isTyping && (
+                          <div className="flex justify-start">
+                            <div className="bg-muted px-4 py-2 rounded-full animate-pulse text-[10px] font-black uppercase text-muted-foreground">
+                              Печатает...
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-6 border-t border-border">
+                        <div className="flex gap-3">
+                          <input
+                            type="text"
+                            value={chatInput}
+                            onChange={(e) => setChatInput(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                            placeholder="Напишите сообщение..."
+                            className="flex-1 bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                          />
+                          <button
+                            onClick={handleSendMessage}
+                            disabled={!chatInput.trim() || isTyping}
+                            className="bg-primary text-white p-3 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
+                          >
+                            <Send className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -3258,113 +3341,6 @@ const SpecialistDashboard = () => {
                 <Users className="h-16 w-16 text-muted-foreground mx-auto mb-6 opacity-50" />
                 <h3 className="text-xl font-black text-foreground mb-2">Выберите клиента</h3>
                 <p className="text-sm text-muted-foreground">Выберите клиента из списка, чтобы просмотреть детали и заметки</p>
-              </div>
-            )}
-          </div>
-        </div>
-      ) : activeTab === 'messages' ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-[2rem] border border-border p-6 shadow-sm">
-              <h2 className="text-2xl font-black text-foreground mb-6">Чаты</h2>
-              {chats.length === 0 ? (
-                <div className="text-center py-12">
-                  <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                  <p className="text-sm text-muted-foreground">Нет активных чатов</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {chats.map((chat) => (
-                    <button
-                      key={chat.clientName}
-                      onClick={() => setSelectedChatClient(chat)}
-                      className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${
-                        selectedChatClient?.clientName === chat.clientName
-                          ? 'border-primary bg-primary/5 shadow-md'
-                          : 'border-border bg-white hover:border-primary/30'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center font-black text-primary">
-                          {chat.clientName[0]}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-black text-foreground">{chat.clientName}</h3>
-                          <p className="text-xs text-muted-foreground truncate">{chat.lastMessage}</p>
-                        </div>
-                      </div>
-                      {chat.unreadCount > 0 && (
-                        <span className="bg-primary text-white text-[10px] font-black px-2 py-1 rounded-full">
-                          {chat.unreadCount}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="lg:col-span-2">
-            {selectedChatClient ? (
-              <div className="bg-white rounded-[2rem] border border-border shadow-sm flex flex-col h-[600px]">
-                <div className="p-6 border-b border-border flex items-center gap-4">
-                  <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center font-black text-primary">
-                    {selectedChatClient.clientName[0]}
-                  </div>
-                  <div>
-                    <h3 className="font-black text-foreground">{selectedChatClient.clientName}</h3>
-                  </div>
-                </div>
-                <div 
-                  ref={chatContainerRef}
-                  className="flex-1 p-6 overflow-y-auto space-y-4 scroll-smooth"
-                >
-                  {chatMessages.map((msg) => (
-                    <div key={msg.id} className={`flex ${msg.sender === 'specialist' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[75%] p-4 rounded-2xl font-medium text-sm leading-relaxed ${
-                        msg.sender === 'specialist'
-                          ? 'bg-primary text-white rounded-tr-none'
-                          : 'bg-muted text-foreground rounded-tl-none border border-border'
-                      }`}>
-                        {msg.text}
-                      </div>
-                    </div>
-                  ))}
-                  {isTyping && (
-                    <div className="flex justify-start">
-                      <div className="bg-muted px-4 py-2 rounded-full animate-pulse text-[10px] font-black uppercase text-muted-foreground">
-                        Печатает...
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="p-6 border-t border-border">
-                  <div className="flex gap-3">
-                    <input
-                      type="text"
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                      placeholder="Напишите сообщение..."
-                      className="flex-1 bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
-                    />
-                    <button
-                      onClick={handleSendMessage}
-                      disabled={!chatInput.trim() || isTyping}
-                      className="bg-primary text-white p-3 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
-                    >
-                      <Send className="h-5 w-5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-white rounded-[2rem] border border-border p-12 shadow-sm text-center flex items-center justify-center h-[600px]">
-                <div>
-                  <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-                  <p className="text-lg font-bold text-muted-foreground">Выберите чат для общения</p>
-                </div>
               </div>
             )}
           </div>
