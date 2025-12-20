@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { Search, User, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Zap, Target, FileText, Upload, Briefcase, Rocket, Compass, BatteryCharging, CloudLightning, Users, Smile, Anchor, Wallet, CheckCircle2, Clock, ArrowLeft, MessageSquare, Check, XCircle, PlusCircle } from 'lucide-react'
+import { Search, User, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Zap, Target, FileText, Upload, Briefcase, Rocket, Compass, BatteryCharging, CloudLightning, Users, Smile, Anchor, Wallet, CheckCircle2, Clock, ArrowLeft, MessageSquare, Check, XCircle, PlusCircle, RefreshCw } from 'lucide-react'
 import logoHearty from './assets/logo_hearty.jpg'
 
 // Constants
@@ -2302,6 +2302,52 @@ const SpecialistDashboard = () => {
     }
   }
 
+  const syncWithGoogleCalendar = () => {
+    // Создаем iCal файл со всеми встречами
+    let icalContent = 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Hearty Platform//EN\nCALSCALE:GREGORIAN\nMETHOD:PUBLISH\n'
+    
+    bookings.forEach((booking: any) => {
+      if (booking.status === 'confirmed' || booking.status === 'pending') {
+        const [hours, minutes] = booking.time.split(':')
+        const startDate = new Date(booking.date)
+        startDate.setHours(parseInt(hours), parseInt(minutes), 0, 0)
+        const endDate = new Date(startDate)
+        endDate.setHours(startDate.getHours() + 1) // Сессия длится 1 час
+        
+        const formatDate = (date: Date) => {
+          return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
+        }
+        
+        icalContent += `BEGIN:VEVENT\n`
+        icalContent += `UID:${booking.id}@hearty.pro\n`
+        icalContent += `DTSTART:${formatDate(startDate)}\n`
+        icalContent += `DTEND:${formatDate(endDate)}\n`
+        icalContent += `SUMMARY:Сессия с ${booking.clientName || 'клиентом'}\n`
+        icalContent += `DESCRIPTION:Сессия с ${booking.clientName || 'клиентом'}. Статус: ${getStatusLabel(booking.status)}\n`
+        icalContent += `STATUS:CONFIRMED\n`
+        icalContent += `END:VEVENT\n`
+      }
+    })
+    
+    icalContent += 'END:VCALENDAR'
+    
+    // Создаем blob и скачиваем файл
+    const blob = new Blob([icalContent], { type: 'text/calendar;charset=utf-8' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = 'hearty-calendar.ics'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(link.href)
+    
+    alert('Календарь экспортирован! Импортируйте файл hearty-calendar.ics в Google Calendar.')
+  }
+
+  const getBookingsForDate = (date: string) => {
+    return bookings.filter((booking: any) => booking.date === date)
+  }
+
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !specialist) return
@@ -3430,6 +3476,14 @@ const SpecialistDashboard = () => {
                 Сегодня
               </button>
 
+              <button
+                onClick={syncWithGoogleCalendar}
+                className="w-full mb-4 px-4 py-2 bg-white border-2 border-primary text-primary rounded-xl text-sm font-bold hover:bg-primary/5 transition-all flex items-center justify-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Синхронизировать с Google Calendar
+              </button>
+
               <div className="grid grid-cols-7 gap-1 mb-2">
                 {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
                   <div key={day} className="text-center text-xs font-black text-muted-foreground py-2">
@@ -3448,6 +3502,8 @@ const SpecialistDashboard = () => {
                   const isSelected = editingDate === iso
                   const isToday = iso === new Date().toISOString().split('T')[0]
                   const slotsCount = (specialist.slots[iso] || []).length
+                  const dayBookings = getBookingsForDate(iso)
+                  const bookingsCount = dayBookings.length
                   const isPast = day < new Date() && !isToday
                   
                   return (
@@ -3467,13 +3523,22 @@ const SpecialistDashboard = () => {
                     >
                       <div className="flex flex-col items-center justify-center h-full">
                         <span>{day.getDate()}</span>
-                        {slotsCount > 0 && (
-                          <span className={`text-[8px] mt-0.5 ${
-                            isSelected ? 'text-white/80' : 'text-primary font-black'
-                          }`}>
-                            {slotsCount}
-                          </span>
-                        )}
+                        <div className="flex items-center gap-1 mt-0.5">
+                          {slotsCount > 0 && (
+                            <span className={`text-[8px] ${
+                              isSelected ? 'text-white/80' : 'text-primary font-black'
+                            }`}>
+                              {slotsCount} сл.
+                            </span>
+                          )}
+                          {bookingsCount > 0 && (
+                            <span className={`text-[8px] ${
+                              isSelected ? 'text-white/80' : 'text-green-600 font-black'
+                            }`}>
+                              {bookingsCount} встреч
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </button>
                   )
@@ -3486,6 +3551,42 @@ const SpecialistDashboard = () => {
                 <h2 className="text-2xl font-black text-foreground">Свободные слоты на {new Date(editingDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}</h2>
                 {savingSlots && <span className="text-[10px] font-black uppercase text-primary animate-pulse">Сохранение...</span>}
               </div>
+
+              {(() => {
+                const dayBookings = getBookingsForDate(editingDate)
+                if (dayBookings.length > 0) {
+                  return (
+                    <div className="mb-8">
+                      <h3 className="text-lg font-black text-foreground mb-4">Встречи на этот день</h3>
+                      <div className="space-y-3">
+                        {dayBookings.map((booking: any) => {
+                          const statusLabel = getStatusLabel(booking.status)
+                          const statusColor = getStatusColor(booking.status)
+                          return (
+                            <div key={booking.id} className="bg-white border-2 border-border p-4 rounded-2xl">
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <h4 className="font-black text-foreground mb-1">{booking.clientName || 'Клиент'}</h4>
+                                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                    <div className="flex items-center gap-2">
+                                      <Clock className="h-4 w-4" />
+                                      {booking.time}
+                                    </div>
+                                  </div>
+                                </div>
+                                <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full ${statusColor.bg} ${statusColor.text}`}>
+                                  {statusLabel}
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                }
+                return null
+              })()}
               
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
                 {timeSlots.map(time => {
