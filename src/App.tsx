@@ -2380,6 +2380,10 @@ const SpecialistDashboard = () => {
       const data = await res.json()
       if (data.success) {
         const newClient = data.client
+        if (!newClient || !newClient.id) {
+          alert('Ошибка: клиент не был создан корректно')
+          return
+        }
         const updatedClients = [...clients, newClient]
         setClients(updatedClients)
         
@@ -2414,7 +2418,7 @@ const SpecialistDashboard = () => {
     // Если выбран клиент по ID, но нет имени, найти имя в списке клиентов
     let clientName = bookingForm.clientName || ''
     if (bookingForm.clientId && !clientName.trim()) {
-      const selectedClient = clients.find(c => c.id.toString() === bookingForm.clientId)
+      const selectedClient = clients.find(c => c.id && c.id.toString() === bookingForm.clientId)
       if (selectedClient) {
         clientName = selectedClient.name
       } else {
@@ -3773,7 +3777,7 @@ const SpecialistDashboard = () => {
                           required
                           value={bookingForm.clientId}
                           onChange={(e) => {
-                            const selectedClient = clients.find(c => c.id.toString() === e.target.value)
+                            const selectedClient = clients.find(c => c.id && c.id.toString() === e.target.value)
                             setBookingForm({
                               ...bookingForm,
                               clientId: e.target.value,
@@ -3783,7 +3787,7 @@ const SpecialistDashboard = () => {
                           className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
                         >
                           <option value="">Выберите клиента</option>
-                          {clients.map(client => (
+                          {clients.filter(client => client.id).map(client => (
                             <option key={client.id} value={client.id.toString()}>
                               {client.name} {client.phone && `(${client.phone})`}
                             </option>
