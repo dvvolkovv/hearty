@@ -2056,6 +2056,15 @@ const SpecialistDashboard = () => {
     await loadClientNotes(client.name)
   }
 
+  const handleGoToMessages = async (client: any, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setSelectedClient(client)
+    setShowAddClientForm(false)
+    setShowEditClientForm(false)
+    setClientViewMode('chat')
+    await loadClientNotes(client.name)
+  }
+
   const handleAddNote = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newNote.trim() || !selectedClient) return
@@ -2960,10 +2969,9 @@ const SpecialistDashboard = () => {
                     const hasUnreadMessages = clientChat && clientChat.unreadCount > 0
                     
                     return (
-                      <button
+                      <div
                         key={idx}
-                        onClick={() => handleSelectClient(client)}
-                        className={`w-full text-left p-4 rounded-2xl border-2 transition-all relative ${
+                        className={`w-full p-4 rounded-2xl border-2 transition-all relative ${
                           selectedClient?.name === client.name
                             ? hasUnreadMessages
                               ? 'border-orange-500 bg-orange-50 shadow-md'
@@ -2976,35 +2984,47 @@ const SpecialistDashboard = () => {
                         {hasUnreadMessages && (
                           <div className="absolute top-2 right-2 h-3 w-3 bg-orange-500 rounded-full animate-pulse"></div>
                         )}
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className={`h-10 w-10 rounded-xl flex items-center justify-center font-black ${
-                            hasUnreadMessages 
-                              ? 'bg-orange-100 text-orange-600' 
-                              : 'bg-primary/10 text-primary'
-                          }`}>
-                            {client.name[0]}
+                        <button
+                          onClick={() => handleSelectClient(client)}
+                          className="w-full text-left"
+                        >
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className={`h-10 w-10 rounded-xl flex items-center justify-center font-black ${
+                              hasUnreadMessages 
+                                ? 'bg-orange-100 text-orange-600' 
+                                : 'bg-primary/10 text-primary'
+                            }`}>
+                              {client.name[0]}
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-black text-foreground flex items-center gap-2">
+                                {client.name}
+                                {hasUnreadMessages && (
+                                  <span className="bg-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+                                    {clientChat.unreadCount}
+                                  </span>
+                                )}
+                              </h3>
+                              <p className="text-xs text-muted-foreground">{client.phone}</p>
+                            </div>
                           </div>
-                          <div className="flex-1">
-                            <h3 className="font-black text-foreground flex items-center gap-2">
-                              {client.name}
-                              {hasUnreadMessages && (
-                                <span className="bg-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
-                                  {clientChat.unreadCount}
-                                </span>
-                              )}
-                            </h3>
-                            <p className="text-xs text-muted-foreground">{client.phone}</p>
+                          <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
+                            <span>{client.totalSessions} сессий</span>
+                            {client.notesCount > 0 && (
+                              <span className="bg-primary/10 text-primary px-2 py-1 rounded-full font-bold">
+                                {client.notesCount} заметок
+                              </span>
+                            )}
                           </div>
-                        </div>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>{client.totalSessions} сессий</span>
-                          {client.notesCount > 0 && (
-                            <span className="bg-primary/10 text-primary px-2 py-1 rounded-full font-bold">
-                              {client.notesCount} заметок
-                            </span>
-                          )}
-                        </div>
-                      </button>
+                        </button>
+                        <button
+                          onClick={(e) => handleGoToMessages(client, e)}
+                          className="w-full bg-primary text-white py-2 px-4 rounded-xl text-xs font-bold hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-md shadow-primary/20"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          Перейти к сообщениям
+                        </button>
+                      </div>
                     )
                   })}
                 </div>
