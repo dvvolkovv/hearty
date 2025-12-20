@@ -1963,7 +1963,15 @@ const SpecialistDashboard = () => {
   const [savingProfile, setSavingProfile] = useState(false)
   const [showCreateBookingForm, setShowCreateBookingForm] = useState(false)
   const [creatingBooking, setCreatingBooking] = useState(false)
+  const [showNewClientInBooking, setShowNewClientInBooking] = useState(false)
+  const [newClientInBooking, setNewClientInBooking] = useState({
+    name: '',
+    phone: '',
+    email: ''
+  })
+  const [creatingClientInBooking, setCreatingClientInBooking] = useState(false)
   const [bookingForm, setBookingForm] = useState({
+    clientId: '',
     clientName: '',
     date: new Date().toISOString().split('T')[0],
     time: '10:00',
@@ -2356,10 +2364,44 @@ const SpecialistDashboard = () => {
     return bookings.filter((booking: any) => booking.date === date)
   }
 
+  const handleCreateClientInBooking = async () => {
+    if (!newClientInBooking.name.trim() || !newClientInBooking.phone.trim()) {
+      alert('Заполните имя и телефон клиента')
+      return
+    }
+
+    setCreatingClientInBooking(true)
+    try {
+      const res = await fetch(`${API_URL}/specialists/1/clients`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newClientInBooking)
+      })
+      const data = await res.json()
+      if (data.success) {
+        const newClient = data.client
+        setClients([...clients, newClient])
+        setBookingForm({
+          ...bookingForm,
+          clientId: newClient.id.toString(),
+          clientName: newClient.name
+        })
+        setShowNewClientInBooking(false)
+        setNewClientInBooking({ name: '', phone: '', email: '' })
+        alert('Клиент успешно создан!')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Ошибка при создании клиента')
+    } finally {
+      setCreatingClientInBooking(false)
+    }
+  }
+
   const handleCreateBooking = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!bookingForm.clientName.trim()) {
-      alert('Введите имя клиента')
+      alert('Выберите клиента или создайте нового')
       return
     }
 
@@ -2386,11 +2428,14 @@ const SpecialistDashboard = () => {
         setBookings([...bookings, data.booking || newBooking])
         setShowCreateBookingForm(false)
         setBookingForm({
+          clientId: '',
           clientName: '',
           date: new Date().toISOString().split('T')[0],
           time: '10:00',
           status: 'confirmed'
         })
+        setShowNewClientInBooking(false)
+        setNewClientInBooking({ name: '', phone: '', email: '' })
         alert('Встреча успешно создана!')
       } else {
         throw new Error('Ошибка при создании встречи')
@@ -3610,9 +3655,14 @@ const SpecialistDashboard = () => {
                     onClick={() => {
                       setShowCreateBookingForm(true)
                       setBookingForm({
-                        ...bookingForm,
-                        date: editingDate
+                        clientId: '',
+                        clientName: '',
+                        date: editingDate,
+                        time: '10:00',
+                        status: 'confirmed'
                       })
+                      setShowNewClientInBooking(false)
+                      setNewClientInBooking({ name: '', phone: '', email: '' })
                     }}
                     className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
                   >
@@ -3630,11 +3680,14 @@ const SpecialistDashboard = () => {
                       onClick={() => {
                         setShowCreateBookingForm(false)
                         setBookingForm({
+                          clientId: '',
                           clientName: '',
                           date: new Date().toISOString().split('T')[0],
                           time: '10:00',
                           status: 'confirmed'
                         })
+                        setShowNewClientInBooking(false)
+                        setNewClientInBooking({ name: '', phone: '', email: '' })
                       }}
                       className="text-muted-foreground hover:text-foreground transition-colors"
                     >
@@ -3643,15 +3696,77 @@ const SpecialistDashboard = () => {
                   </div>
                   <form onSubmit={handleCreateBooking} className="space-y-4">
                     <div>
-                      <label className="block text-sm font-black text-foreground mb-2">Имя клиента *</label>
-                      <input
-                        type="text"
-                        required
-                        value={bookingForm.clientName}
-                        onChange={(e) => setBookingForm({ ...bookingForm, clientName: e.target.value })}
-                        className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
-                        placeholder="Введите имя клиента"
-                      />
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-black text-foreground">Клиент *</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowNewClientInBooking(!showNewClientInBooking)
+                            if (showNewClientInBooking) {
+                              setNewClientInBooking({ name: '', phone: '', email: '' })
+                            }
+                          }}
+                          className="text-xs text-primary hover:underline font-bold"
+                        >
+                          {showNewClientInBooking ? 'Выбрать существующего' : 'Создать нового'}
+                        </button>
+                      </div>
+                      {showNewClientInBooking ? (
+                        <div className="space-y-3 p-4 bg-muted rounded-xl border-2 border-primary/20">
+                          <input
+                            type="text"
+                            required
+                            value={newClientInBooking.name}
+                            onChange={(e) => setNewClientInBooking({ ...newClientInBooking, name: e.target.value })}
+                            className="w-full bg-white border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                            placeholder="Имя клиента *"
+                          />
+                          <input
+                            type="tel"
+                            required
+                            value={newClientInBooking.phone}
+                            onChange={(e) => setNewClientInBooking({ ...newClientInBooking, phone: e.target.value })}
+                            className="w-full bg-white border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                            placeholder="Телефон *"
+                          />
+                          <input
+                            type="email"
+                            value={newClientInBooking.email}
+                            onChange={(e) => setNewClientInBooking({ ...newClientInBooking, email: e.target.value })}
+                            className="w-full bg-white border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                            placeholder="Email (необязательно)"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleCreateClientInBooking}
+                            disabled={creatingClientInBooking}
+                            className="w-full bg-primary text-white py-2 px-4 rounded-xl text-sm font-bold hover:bg-primary/90 transition-all disabled:opacity-50"
+                          >
+                            {creatingClientInBooking ? 'Создание...' : 'Создать клиента'}
+                          </button>
+                        </div>
+                      ) : (
+                        <select
+                          required
+                          value={bookingForm.clientId}
+                          onChange={(e) => {
+                            const selectedClient = clients.find(c => c.id.toString() === e.target.value)
+                            setBookingForm({
+                              ...bookingForm,
+                              clientId: e.target.value,
+                              clientName: selectedClient ? selectedClient.name : ''
+                            })
+                          }}
+                          className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                        >
+                          <option value="">Выберите клиента</option>
+                          {clients.map(client => (
+                            <option key={client.id} value={client.id}>
+                              {client.name} {client.phone && `(${client.phone})`}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -3705,11 +3820,14 @@ const SpecialistDashboard = () => {
                         onClick={() => {
                           setShowCreateBookingForm(false)
                           setBookingForm({
+                            clientId: '',
                             clientName: '',
                             date: new Date().toISOString().split('T')[0],
                             time: '10:00',
                             status: 'confirmed'
                           })
+                          setShowNewClientInBooking(false)
+                          setNewClientInBooking({ name: '', phone: '', email: '' })
                         }}
                         className="px-6 bg-white border-2 border-border text-foreground py-3 rounded-xl font-black hover:bg-muted transition-all"
                       >
