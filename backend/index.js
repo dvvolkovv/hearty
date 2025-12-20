@@ -251,6 +251,24 @@ app.get('/api/specialists/:id/bookings', (req, res) => {
   res.json(bookings);
 });
 
+app.put('/api/bookings/:bookingId/status', (req, res) => {
+  const { bookingId } = req.params;
+  const { status } = req.body;
+  
+  const booking = mockBookings.find(b => b.id === parseInt(bookingId));
+  if (!booking) {
+    return res.status(404).json({ error: 'Booking not found' });
+  }
+  
+  const validStatuses = ['new', 'confirmed', 'completed', 'cancelled'];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ error: 'Invalid status' });
+  }
+  
+  booking.status = status;
+  res.json({ success: true, booking });
+});
+
 app.get('/api/specialists/:id/stats', (req, res) => {
   res.json({
     totalSessions: 48,

@@ -1428,6 +1428,7 @@ const SpecialistDashboard = () => {
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
   const [savingSlots, setSavingSlots] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [bookingStatusFilter, setBookingStatusFilter] = useState<string>('all')
 
   const timeSlots = [
     '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', 
@@ -1743,6 +1744,51 @@ const SpecialistDashboard = () => {
     }
   }
 
+  const handleBookingStatusChange = async (bookingId: number, newStatus: string) => {
+    try {
+      const res = await fetch(`${API_URL}/bookings/${bookingId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setBookings(bookings.map(b => b.id === bookingId ? { ...b, status: newStatus } : b))
+        // Refresh stats
+        const statsRes = await fetch(`${API_URL}/specialists/1/stats`)
+        const statsData = await statsRes.json()
+        setStats(statsData)
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Ошибка при изменении статуса')
+    }
+  }
+
+  const getStatusLabel = (status: string) => {
+    const labels: { [key: string]: string } = {
+      'new': 'Новая',
+      'confirmed': 'Подтверждена',
+      'completed': 'Завершена',
+      'cancelled': 'Отменена'
+    }
+    return labels[status] || status
+  }
+
+  const getStatusColor = (status: string) => {
+    const colors: { [key: string]: { bg: string; text: string } } = {
+      'new': { bg: 'bg-orange-100', text: 'text-orange-600' },
+      'confirmed': { bg: 'bg-green-100', text: 'text-green-600' },
+      'completed': { bg: 'bg-blue-100', text: 'text-blue-600' },
+      'cancelled': { bg: 'bg-gray-100', text: 'text-gray-600' }
+    }
+    return colors[status] || { bg: 'bg-muted', text: 'text-muted-foreground' }
+  }
+
+  const filteredBookings = bookingStatusFilter === 'all' 
+    ? bookings 
+    : bookings.filter(b => b.status === bookingStatusFilter)
+
   if (loading || !specialist) return <div className="p-20 text-center">Загрузка кабинета...</div>
 
   return (
@@ -1831,35 +1877,108 @@ const SpecialistDashboard = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2 space-y-6">
-              <h2 className="text-2xl font-black text-foreground">Ближайшие записи</h2>
-              <div className="space-y-4">
-                {bookings.map((booking) => (
-                  <div key={booking.id} className="bg-white p-6 rounded-3xl border border-border hover:shadow-md transition-all flex items-center justify-between">
-                    <div className="flex items-center gap-6">
-                      <div className="h-14 w-14 bg-muted rounded-2xl flex items-center justify-center text-primary font-black text-xl">
-                        {booking.name[0]}
-                      </div>
-                      <div>
-                        <h3 className="font-black text-foreground">{booking.name}</h3>
-                        <p className="text-xs font-bold text-muted-foreground">{booking.phone}</p>
-                        <p className="text-[10px] text-muted-foreground mt-1 italic">«{booking.message}»</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="flex items-center gap-2 text-sm font-black text-foreground mb-1">
-                        <Calendar className="h-4 w-4 text-primary" />
-                        {new Date(booking.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })} в {booking.time}
-                      </div>
-                      <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full ${
-                        booking.status === 'new' ? 'bg-orange-100 text-orange-600' : 
-                        booking.status === 'confirmed' ? 'bg-green-100 text-green-600' : 'bg-muted text-muted-foreground'
-                      }`}>
-                        {booking.status === 'new' ? 'Новая' : booking.status === 'confirmed' ? 'Подтверждена' : 'Завершена'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <h2 className="text-2xl font-black text-foreground">Записи</h2>
+                <div className="flex gap-2 flex-wrap">
+                  {['all', 'new', 'confirmed', 'completed', 'cancelled'].map(status => (
+                    <button
+                      key={status}
+                      onClick={() => setBookingStatusFilter(status)}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                        bookingStatusFilter === status
+                          ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                          : 'bg-white border border-border text-muted-foreground hover:bg-muted'
+                      }`}
+                    >
+                      {status === 'all' ? 'Все' : getStatusLabel(status)}
+                    </button>
+                  ))}
+                </div>
               </div>
+              
+              {filteredBookings.length === 0 ? (
+                <div className="bg-white p-12 rounded-3xl border border-border text-center">
+                  <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+                  <p className="text-lg font-bold text-muted-foreground">Нет записей</p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {bookingStatusFilter === 'all' 
+                      ? 'Записи появятся здесь, когда клиенты запишутся на сессию'
+                      : `Нет записей со статусом "${getStatusLabel(bookingStatusFilter)}"`}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredBookings.map((booking) => {
+                    const statusColors = getStatusColor(booking.status)
+                    return (
+                      <div key={booking.id} className="bg-white p-6 rounded-3xl border border-border hover:shadow-md transition-all">
+                        <div className="flex items-start justify-between gap-4 mb-4">
+                          <div className="flex items-center gap-6 flex-1">
+                            <div className="h-14 w-14 bg-muted rounded-2xl flex items-center justify-center text-primary font-black text-xl flex-shrink-0">
+                              {booking.name[0]}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-black text-foreground mb-1">{booking.name}</h3>
+                              <p className="text-xs font-bold text-muted-foreground mb-2">{booking.phone}</p>
+                              {booking.message && (
+                                <p className="text-[10px] text-muted-foreground italic">«{booking.message}»</p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <div className="flex items-center gap-2 text-sm font-black text-foreground mb-2">
+                              <Calendar className="h-4 w-4 text-primary" />
+                              {new Date(booking.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })} в {booking.time}
+                            </div>
+                            <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full ${statusColors.bg} ${statusColors.text}`}>
+                              {getStatusLabel(booking.status)}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2 flex-wrap pt-4 border-t border-border">
+                          {booking.status !== 'confirmed' && (
+                            <button
+                              onClick={() => handleBookingStatusChange(booking.id, 'confirmed')}
+                              className="px-4 py-2 bg-green-100 text-green-600 rounded-xl text-xs font-bold hover:bg-green-200 transition-all"
+                            >
+                              Подтвердить
+                            </button>
+                          )}
+                          {booking.status !== 'completed' && booking.status !== 'cancelled' && (
+                            <button
+                              onClick={() => handleBookingStatusChange(booking.id, 'completed')}
+                              className="px-4 py-2 bg-blue-100 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-200 transition-all"
+                            >
+                              Завершить
+                            </button>
+                          )}
+                          {booking.status !== 'cancelled' && (
+                            <button
+                              onClick={() => {
+                                if (confirm('Вы уверены, что хотите отменить эту запись?')) {
+                                  handleBookingStatusChange(booking.id, 'cancelled')
+                                }
+                              }}
+                              className="px-4 py-2 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold hover:bg-gray-200 transition-all"
+                            >
+                              Отменить
+                            </button>
+                          )}
+                          {booking.status === 'cancelled' && (
+                            <button
+                              onClick={() => handleBookingStatusChange(booking.id, 'new')}
+                              className="px-4 py-2 bg-orange-100 text-orange-600 rounded-xl text-xs font-bold hover:bg-orange-200 transition-all"
+                            >
+                              Восстановить
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
             <div className="lg:col-span-1 space-y-6">
