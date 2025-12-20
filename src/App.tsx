@@ -1587,18 +1587,81 @@ const DashboardSelector = () => {
 const ClientDashboard = () => {
   const [bookings, setBookings] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<'bookings' | 'messages'>('bookings')
+  const [chats, setChats] = useState<any[]>([])
+  const [selectedChat, setSelectedChat] = useState<any>(null)
+  const [chatMessages, setChatMessages] = useState<any[]>([])
+  const [chatInput, setChatInput] = useState('')
+  const [isTyping, setIsTyping] = useState(false)
+  const chatContainerRef = useRef<HTMLDivElement>(null)
+  const clientName = 'Марина' // Mock имя клиента
+
+  const scrollToBottom = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      })
+    }
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [chatMessages, isTyping])
 
   useEffect(() => {
     // Mock данные для клиента
     const mockBookings = [
-      { id: 1, specialistName: 'Алексей Иванов', date: '2025-12-20', time: '10:00', status: 'confirmed', specialty: 'Психолог, Гештальт-терапевт' },
-      { id: 2, specialistName: 'Мария Петрова', date: '2025-12-22', time: '14:00', status: 'pending', specialty: 'Коуч, Бизнес-консультант' }
+      { id: 1, specialistName: 'Алексей Иванов', specialistId: 1, date: '2025-12-20', time: '10:00', status: 'confirmed', specialty: 'Психолог, Гештальт-терапевт' },
+      { id: 2, specialistName: 'Мария Петрова', specialistId: 2, date: '2025-12-22', time: '14:00', status: 'pending', specialty: 'Коуч, Бизнес-консультант' }
     ]
     setTimeout(() => {
       setBookings(mockBookings)
       setLoading(false)
     }, 500)
   }, [])
+
+  useEffect(() => {
+    if (activeTab === 'messages') {
+      fetch(`${API_URL}/clients/${encodeURIComponent(clientName)}/chats`)
+        .then(res => res.json())
+        .then(setChats)
+        .catch(console.error)
+    }
+  }, [activeTab, clientName])
+
+  useEffect(() => {
+    if (selectedChat) {
+      fetch(`${API_URL}/clients/${encodeURIComponent(clientName)}/chats/${selectedChat.specialistId}/messages`)
+        .then(res => res.json())
+        .then(setChatMessages)
+        .catch(console.error)
+    }
+  }, [selectedChat, clientName])
+
+  const handleSendMessage = async () => {
+    if (!chatInput.trim() || !selectedChat) return
+    
+    const messageText = chatInput
+    setChatInput('')
+    setIsTyping(true)
+    
+    try {
+      const res = await fetch(`${API_URL}/clients/${encodeURIComponent(clientName)}/chats/${selectedChat.specialistId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: messageText })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setChatMessages([...chatMessages, data.message])
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setIsTyping(false)
+    }
+  }
 
   const getStatusLabel = (status: string) => {
     const labels: { [key: string]: { text: string; color: string } } = {
@@ -1614,75 +1677,221 @@ const ClientDashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
-      <div className="mb-12">
-        <h1 className="text-4xl font-black text-foreground mb-2">Добрый день!</h1>
-        <p className="text-muted-foreground font-medium">Ваш личный кабинет клиента</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+        <div>
+          <h1 className="text-4xl font-black text-foreground mb-2">Добрый день!</h1>
+          <p className="text-muted-foreground font-medium">Ваш личный кабинет клиента</p>
+        </div>
+        <div className="bg-white p-1 rounded-2xl border border-border flex">
+          <button 
+            onClick={() => setActiveTab('bookings')}
+            className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'bookings' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
+          >
+            Записи
+          </button>
+          <button 
+            onClick={() => setActiveTab('messages')}
+            className={`px-6 py-2 rounded-xl text-sm font-bold transition-all relative ${activeTab === 'messages' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
+          >
+            Сообщения
+            {chats.some(c => c.unreadCount > 0) && (
+              <span className="absolute -top-1 -right-1 h-5 w-5 bg-secondary rounded-full flex items-center justify-center text-[10px] font-black text-white">
+                {chats.reduce((sum, c) => sum + c.unreadCount, 0)}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          <h2 className="text-2xl font-black text-foreground">Мои записи</h2>
-          
-          {bookings.length === 0 ? (
-            <div className="bg-white p-12 rounded-3xl border border-border text-center">
-              <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <p className="text-lg font-bold text-muted-foreground">У вас пока нет записей</p>
-              <Link to="/specialists" className="inline-block mt-6 bg-primary text-white px-6 py-3 rounded-2xl font-bold hover:bg-primary/90 transition-all">
-                Записаться к специалисту
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {bookings.map((booking) => {
-                const status = getStatusLabel(booking.status)
-                return (
-                  <div key={booking.id} className="bg-white p-6 rounded-3xl border border-border hover:shadow-md transition-all">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className="font-black text-foreground text-lg mb-1">{booking.specialistName}</h3>
-                        <p className="text-sm text-muted-foreground">{booking.specialty}</p>
+      {activeTab === 'bookings' ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            <h2 className="text-2xl font-black text-foreground">Мои записи</h2>
+            
+            {bookings.length === 0 ? (
+              <div className="bg-white p-12 rounded-3xl border border-border text-center">
+                <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-bold text-muted-foreground">У вас пока нет записей</p>
+                <Link to="/specialists" className="inline-block mt-6 bg-primary text-white px-6 py-3 rounded-2xl font-bold hover:bg-primary/90 transition-all">
+                  Записаться к специалисту
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {bookings.map((booking) => {
+                  const status = getStatusLabel(booking.status)
+                  return (
+                    <div key={booking.id} className="bg-white p-6 rounded-3xl border border-border hover:shadow-md transition-all">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h3 className="font-black text-foreground text-lg mb-1">{booking.specialistName}</h3>
+                          <p className="text-sm text-muted-foreground">{booking.specialty}</p>
+                        </div>
+                        <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full ${status.color}`}>
+                          {status.text}
+                        </span>
                       </div>
-                      <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full ${status.color}`}>
-                        {status.text}
-                      </span>
+                      <div className="flex items-center gap-4 text-sm font-bold text-foreground">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-primary" />
+                          {new Date(booking.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-primary" />
+                          {booking.time}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-4 text-sm font-bold text-foreground">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-primary" />
-                        {new Date(booking.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-primary" />
-                        {booking.time}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
 
-        <div className="space-y-6">
-          <div className="bg-primary text-white p-8 rounded-[2.5rem] shadow-xl shadow-primary/20">
-            <h3 className="text-xl font-black mb-4">Быстрые действия</h3>
-            <div className="space-y-3">
-              <Link 
-                to="/specialists"
-                className="block bg-white/20 hover:bg-white/30 text-white py-3 px-4 rounded-2xl font-bold transition-all text-center"
-              >
-                Найти специалиста
-              </Link>
-              <Link 
-                to="/diagnostic"
-                className="block bg-white/20 hover:bg-white/30 text-white py-3 px-4 rounded-2xl font-bold transition-all text-center"
-              >
-                Предварительная диагностика
-              </Link>
+          <div className="space-y-6">
+            <div className="bg-primary text-white p-8 rounded-[2.5rem] shadow-xl shadow-primary/20">
+              <h3 className="text-xl font-black mb-4">Быстрые действия</h3>
+              <div className="space-y-3">
+                <Link 
+                  to="/specialists"
+                  className="block bg-white/20 hover:bg-white/30 text-white py-3 px-4 rounded-2xl font-bold transition-all text-center"
+                >
+                  Найти специалиста
+                </Link>
+                <Link 
+                  to="/diagnostic"
+                  className="block bg-white/20 hover:bg-white/30 text-white py-3 px-4 rounded-2xl font-bold transition-all text-center"
+                >
+                  Предварительная диагностика
+                </Link>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-[2rem] border border-border p-6 shadow-sm">
+              <h2 className="text-2xl font-black text-foreground mb-6">Чаты</h2>
+              {chats.length === 0 ? (
+                <div className="text-center py-12">
+                  <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                  <p className="text-sm text-muted-foreground">Нет активных чатов</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {chats.map((chat) => (
+                    <button
+                      key={chat.specialistId}
+                      onClick={() => setSelectedChat(chat)}
+                      className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${
+                        selectedChat?.specialistId === chat.specialistId
+                          ? 'border-primary bg-primary/5 shadow-md'
+                          : 'border-border bg-white hover:border-primary/30'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        {chat.specialistImage ? (
+                          <img 
+                            src={getImageUrl(chat.specialistImage)} 
+                            alt={chat.specialistName}
+                            className="h-10 w-10 rounded-xl object-cover"
+                          />
+                        ) : (
+                          <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center font-black text-primary">
+                            {chat.specialistName[0]}
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <h3 className="font-black text-foreground">{chat.specialistName}</h3>
+                          <p className="text-xs text-muted-foreground truncate">{chat.lastMessage}</p>
+                        </div>
+                      </div>
+                      {chat.unreadCount > 0 && (
+                        <span className="bg-primary text-white text-[10px] font-black px-2 py-1 rounded-full">
+                          {chat.unreadCount}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="lg:col-span-2">
+            {selectedChat ? (
+              <div className="bg-white rounded-[2rem] border border-border shadow-sm flex flex-col h-[600px]">
+                <div className="p-6 border-b border-border flex items-center gap-4">
+                  {selectedChat.specialistImage ? (
+                    <img 
+                      src={getImageUrl(selectedChat.specialistImage)} 
+                      alt={selectedChat.specialistName}
+                      className="h-12 w-12 rounded-xl object-cover"
+                    />
+                  ) : (
+                    <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center font-black text-primary">
+                      {selectedChat.specialistName[0]}
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="font-black text-foreground">{selectedChat.specialistName}</h3>
+                  </div>
+                </div>
+                <div 
+                  ref={chatContainerRef}
+                  className="flex-1 p-6 overflow-y-auto space-y-4 scroll-smooth"
+                >
+                  {chatMessages.map((msg) => (
+                    <div key={msg.id} className={`flex ${msg.sender === 'client' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[75%] p-4 rounded-2xl font-medium text-sm leading-relaxed ${
+                        msg.sender === 'client'
+                          ? 'bg-primary text-white rounded-tr-none'
+                          : 'bg-muted text-foreground rounded-tl-none border border-border'
+                      }`}>
+                        {msg.text}
+                      </div>
+                    </div>
+                  ))}
+                  {isTyping && (
+                    <div className="flex justify-start">
+                      <div className="bg-muted px-4 py-2 rounded-full animate-pulse text-[10px] font-black uppercase text-muted-foreground">
+                        Печатает...
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="p-6 border-t border-border">
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                      placeholder="Напишите сообщение..."
+                      className="flex-1 bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                    />
+                    <button
+                      onClick={handleSendMessage}
+                      disabled={!chatInput.trim() || isTyping}
+                      className="bg-primary text-white p-3 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
+                    >
+                      <Send className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-[2rem] border border-border p-12 shadow-sm text-center flex items-center justify-center h-[600px]">
+                <div>
+                  <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+                  <p className="text-lg font-bold text-muted-foreground">Выберите чат для общения</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -1692,7 +1901,26 @@ const SpecialistDashboard = () => {
   const [bookings, setBookings] = useState<any[]>([])
   const [specialist, setSpecialist] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'profile' | 'reviews' | 'clients'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'profile' | 'reviews' | 'clients' | 'messages'>('overview')
+  const [chats, setChats] = useState<any[]>([])
+  const [selectedChatClient, setSelectedChatClient] = useState<any>(null)
+  const [chatMessages, setChatMessages] = useState<any[]>([])
+  const [chatInput, setChatInput] = useState('')
+  const [isTyping, setIsTyping] = useState(false)
+  const chatContainerRef = useRef<HTMLDivElement>(null)
+
+  const scrollToBottom = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      })
+    }
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [chatMessages, isTyping])
   const [pendingReviews, setPendingReviews] = useState<any[]>([])
   const [clients, setClients] = useState<any[]>([])
   const [selectedClient, setSelectedClient] = useState<any>(null)
@@ -1951,6 +2179,48 @@ const SpecialistDashboard = () => {
     fetchData()
   }, [])
 
+  useEffect(() => {
+    if (activeTab === 'messages') {
+      fetch(`${API_URL}/specialists/1/chats`)
+        .then(res => res.json())
+        .then(setChats)
+        .catch(console.error)
+    }
+  }, [activeTab])
+
+  useEffect(() => {
+    if (selectedChatClient) {
+      fetch(`${API_URL}/specialists/1/chats/${encodeURIComponent(selectedChatClient.clientName)}/messages`)
+        .then(res => res.json())
+        .then(setChatMessages)
+        .catch(console.error)
+    }
+  }, [selectedChatClient])
+
+  const handleSendMessage = async () => {
+    if (!chatInput.trim() || !selectedChatClient) return
+    
+    const messageText = chatInput
+    setChatInput('')
+    setIsTyping(true)
+    
+    try {
+      const res = await fetch(`${API_URL}/specialists/1/chats/${encodeURIComponent(selectedChatClient.clientName)}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: messageText })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setChatMessages([...chatMessages, data.message])
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setIsTyping(false)
+    }
+  }
+
   const handleApproveReview = async (reviewId: number) => {
     try {
       const res = await fetch(`${API_URL}/specialists/1/reviews/${reviewId}/approve`, {
@@ -2183,6 +2453,17 @@ const SpecialistDashboard = () => {
               className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'clients' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
             >
               Клиенты
+            </button>
+            <button 
+              onClick={() => setActiveTab('messages')}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all relative ${activeTab === 'messages' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
+            >
+              Сообщения
+              {chats.some(c => c.unreadCount > 0) && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 bg-secondary rounded-full flex items-center justify-center text-[10px] font-black text-white">
+                  {chats.reduce((sum, c) => sum + c.unreadCount, 0)}
+                </span>
+              )}
             </button>
           </div>
           <a 
@@ -2977,6 +3258,113 @@ const SpecialistDashboard = () => {
                 <Users className="h-16 w-16 text-muted-foreground mx-auto mb-6 opacity-50" />
                 <h3 className="text-xl font-black text-foreground mb-2">Выберите клиента</h3>
                 <p className="text-sm text-muted-foreground">Выберите клиента из списка, чтобы просмотреть детали и заметки</p>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : activeTab === 'messages' ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-[2rem] border border-border p-6 shadow-sm">
+              <h2 className="text-2xl font-black text-foreground mb-6">Чаты</h2>
+              {chats.length === 0 ? (
+                <div className="text-center py-12">
+                  <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                  <p className="text-sm text-muted-foreground">Нет активных чатов</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {chats.map((chat) => (
+                    <button
+                      key={chat.clientName}
+                      onClick={() => setSelectedChatClient(chat)}
+                      className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${
+                        selectedChatClient?.clientName === chat.clientName
+                          ? 'border-primary bg-primary/5 shadow-md'
+                          : 'border-border bg-white hover:border-primary/30'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center font-black text-primary">
+                          {chat.clientName[0]}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-black text-foreground">{chat.clientName}</h3>
+                          <p className="text-xs text-muted-foreground truncate">{chat.lastMessage}</p>
+                        </div>
+                      </div>
+                      {chat.unreadCount > 0 && (
+                        <span className="bg-primary text-white text-[10px] font-black px-2 py-1 rounded-full">
+                          {chat.unreadCount}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="lg:col-span-2">
+            {selectedChatClient ? (
+              <div className="bg-white rounded-[2rem] border border-border shadow-sm flex flex-col h-[600px]">
+                <div className="p-6 border-b border-border flex items-center gap-4">
+                  <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center font-black text-primary">
+                    {selectedChatClient.clientName[0]}
+                  </div>
+                  <div>
+                    <h3 className="font-black text-foreground">{selectedChatClient.clientName}</h3>
+                  </div>
+                </div>
+                <div 
+                  ref={chatContainerRef}
+                  className="flex-1 p-6 overflow-y-auto space-y-4 scroll-smooth"
+                >
+                  {chatMessages.map((msg) => (
+                    <div key={msg.id} className={`flex ${msg.sender === 'specialist' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[75%] p-4 rounded-2xl font-medium text-sm leading-relaxed ${
+                        msg.sender === 'specialist'
+                          ? 'bg-primary text-white rounded-tr-none'
+                          : 'bg-muted text-foreground rounded-tl-none border border-border'
+                      }`}>
+                        {msg.text}
+                      </div>
+                    </div>
+                  ))}
+                  {isTyping && (
+                    <div className="flex justify-start">
+                      <div className="bg-muted px-4 py-2 rounded-full animate-pulse text-[10px] font-black uppercase text-muted-foreground">
+                        Печатает...
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="p-6 border-t border-border">
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                      placeholder="Напишите сообщение..."
+                      className="flex-1 bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                    />
+                    <button
+                      onClick={handleSendMessage}
+                      disabled={!chatInput.trim() || isTyping}
+                      className="bg-primary text-white p-3 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
+                    >
+                      <Send className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-[2rem] border border-border p-12 shadow-sm text-center flex items-center justify-center h-[600px]">
+                <div>
+                  <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+                  <p className="text-lg font-bold text-muted-foreground">Выберите чат для общения</p>
+                </div>
               </div>
             )}
           </div>

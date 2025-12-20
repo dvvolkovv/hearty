@@ -240,6 +240,21 @@ let mockClientNotes = {
   }
 };
 
+// Mock chat messages: { specialistId: { clientName: [messages] } }
+let mockChatMessages = {
+  1: {
+    'Марина': [
+      { id: 1, sender: 'client', text: 'Здравствуйте! Спасибо за первую сессию, мне очень помогло.', createdAt: '2025-12-20T11:00:00Z' },
+      { id: 2, sender: 'specialist', text: 'Рад был помочь! Как вы себя чувствуете после нашей встречи?', createdAt: '2025-12-20T12:00:00Z' },
+      { id: 3, sender: 'client', text: 'Намного лучше, начала применять техники, которые вы посоветовали.', createdAt: '2025-12-20T15:00:00Z' }
+    ],
+    'Сергей': [
+      { id: 4, sender: 'client', text: 'Можно перенести сессию на завтра на час позже?', createdAt: '2025-12-21T09:00:00Z' },
+      { id: 5, sender: 'specialist', text: 'Конечно, давайте перенесем на 14:00, подходит?', createdAt: '2025-12-21T09:30:00Z' }
+    ]
+  }
+};
+
 // Mock clients data (manually added clients)
 let mockClients = {
   1: [
@@ -623,6 +638,120 @@ app.put('/api/specialists/:id/clients/:clientName', (req, res) => {
   if (notes !== undefined) client.notes = notes;
   
   res.json({ success: true, client });
+});
+
+// Chat API for specialists
+app.get('/api/specialists/:id/chats', (req, res) => {
+  const { id } = req.params;
+  const specialistId = parseInt(id);
+  const chats = mockChatMessages[specialistId] || {};
+  
+  const chatList = Object.keys(chats).map(clientName => {
+    const messages = chats[clientName];
+    const lastMessage = messages[messages.length - 1];
+    return {
+      clientName,
+      lastMessage: lastMessage.text,
+      lastMessageTime: lastMessage.createdAt,
+      unreadCount: messages.filter(m => m.sender === 'client' && !m.read).length
+    };
+  });
+  
+  res.json(chatList);
+});
+
+app.get('/api/specialists/:id/chats/:clientName/messages', (req, res) => {
+  const { id, clientName } = req.params;
+  const specialistId = parseInt(id);
+  const decodedClientName = decodeURIComponent(clientName);
+  
+  const messages = mockChatMessages[specialistId]?.[decodedClientName] || [];
+  res.json(messages);
+});
+
+app.post('/api/specialists/:id/chats/:clientName/messages', (req, res) => {
+  const { id, clientName } = req.params;
+  const { text } = req.body;
+  const specialistId = parseInt(id);
+  const decodedClientName = decodeURIComponent(clientName);
+  
+  if (!mockChatMessages[specialistId]) {
+    mockChatMessages[specialistId] = {};
+  }
+  if (!mockChatMessages[specialistId][decodedClientName]) {
+    mockChatMessages[specialistId][decodedClientName] = [];
+  }
+  
+  const newMessage = {
+    id: mockChatMessages[specialistId][decodedClientName].length + 1,
+    sender: 'specialist',
+    text,
+    createdAt: new Date().toISOString()
+  };
+  
+  mockChatMessages[specialistId][decodedClientName].push(newMessage);
+  res.json({ success: true, message: newMessage });
+});
+
+// Chat API for clients
+app.get('/api/clients/:clientName/chats', (req, res) => {
+  const { clientName } = req.params;
+  const decodedClientName = decodeURIComponent(clientName);
+  const chats = [];
+  
+  // Find all specialists this client has chats with
+  Object.keys(mockChatMessages).forEach(specialistId => {
+    if (mockChatMessages[specialistId][decodedClientName]) {
+      const specialist = specialists.find(s => s.id === parseInt(specialistId));
+      if (specialist) {
+        const messages = mockChatMessages[specialistId][decodedClientName];
+        const lastMessage = messages[messages.length - 1];
+        chats.push({
+          specialistId: parseInt(specialistId),
+          specialistName: specialist.name,
+          specialistImage: specialist.image,
+          lastMessage: lastMessage.text,
+          lastMessageTime: lastMessage.createdAt,
+          unreadCount: messages.filter(m => m.sender === 'specialist' && !m.read).length
+        });
+      }
+    }
+  });
+  
+  res.json(chats);
+});
+
+app.get('/api/clients/:clientName/chats/:specialistId/messages', (req, res) => {
+  const { clientName, specialistId } = req.params;
+  const decodedClientName = decodeURIComponent(clientName);
+  const specId = parseInt(specialistId);
+  
+  const messages = mockChatMessages[specId]?.[decodedClientName] || [];
+  res.json(messages);
+});
+
+app.post('/api/clients/:clientName/chats/:specialistId/messages', (req, res) => {
+  const { clientName, specialistId } = req.params;
+  const { text } = req.body;
+  const decodedClientName = decodeURIComponent(clientName);
+  const specId = parseInt(specialistId);
+  
+  if (!mockChatMessages[specId]) {
+    mockChatMessages[specId] = {};
+  }
+  if (!mockChatMessages[specId][decodedClientName]) {
+    mockChatMessages[specId][decodedClientName] = [];
+  }
+  
+  const newMessage = {
+    id: mockChatMessages[specId][decodedClientName].length + 1,
+    sender: 'client',
+    text,
+    createdAt: new Date().toISOString()
+  };
+  
+  mockChatMessages[specId][decodedClientName].push(newMessage);
+  res.json({ success: true, message: newMessage });
 });
 
 app.listen(PORT, () => {
