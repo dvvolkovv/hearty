@@ -1207,6 +1207,13 @@ const Diagnostic = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-20">
+      <Link 
+        to="/" 
+        className="inline-flex items-center gap-2 text-muted-foreground font-bold hover:text-primary transition-all mb-8 group"
+      >
+        <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+        Назад на главную
+      </Link>
       <div className="text-center mb-12">
         <div className="h-16 w-16 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
           <Sparkles className="h-8 w-8 text-primary" />
