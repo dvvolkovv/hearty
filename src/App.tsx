@@ -750,76 +750,111 @@ const Onboarding = () => {
 }
 
 const AITools = () => {
-  const [topic, setTopic] = useState('')
-  const [result, setResult] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [messages, setMessages] = useState([
+    { role: 'ai', content: 'Привет! Я Екатерина, ваш персональный ассистент по генерации контента. Расскажите, о чем вы хотите написать пост или какой контент вам нужен?' }
+  ])
+  const [input, setInput] = useState('')
+  const [isTyping, setIsTyping] = useState(false)
+  const chatContainerRef = useRef<HTMLDivElement>(null)
 
-  const generateContent = async () => {
-    if (!topic) return
-    setLoading(true)
+  const scrollToBottom = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      })
+    }
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages, isTyping])
+
+  const handleSend = async () => {
+    if (!input.trim()) return
+    const newMessages = [...messages, { role: 'user', content: input }]
+    setMessages(newMessages)
+    setInput('')
+    setIsTyping(true)
+
     try {
       const res = await fetch(`${API_URL}/ai/ekaterina`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic })
+        body: JSON.stringify({ message: input })
       })
       const data = await res.json()
-      setResult(data.post)
+      setMessages([...newMessages, { role: 'ai', content: data.reply }])
     } catch (err) {
       console.error(err)
+      setMessages([...newMessages, { role: 'ai', content: 'Извините, произошла ошибка. Попробуйте еще раз.' }])
     } finally {
-      setLoading(false)
+      setIsTyping(false)
     }
   }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-20">
-      <div className="text-center mb-16">
+      <Link 
+        to="/"
+        className="inline-flex items-center gap-2 text-muted-foreground font-bold hover:text-primary transition-all mb-8 group"
+      >
+        <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+        Назад на главную
+      </Link>
+
+      <div className="text-center mb-12">
         <Sparkles className="h-12 w-12 text-primary mx-auto mb-6" />
         <h1 className="text-4xl font-black mb-4">Агент Екатерина</h1>
         <p className="text-muted-foreground font-medium">Ваш персональный ассистент по генерации контента</p>
       </div>
 
-      <div className="bg-white border-2 border-primary/5 rounded-[2.5rem] p-10 shadow-2xl">
-        <div className="mb-8">
-          <label className="block text-sm font-black uppercase text-muted-foreground mb-3">О чем хотите написать?</label>
+      <div className="bg-white border-2 border-border rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col h-[600px]">
+        <div 
+          ref={chatContainerRef}
+          className="flex-1 p-8 overflow-y-auto space-y-6 scroll-smooth"
+        >
+          {messages.map((m, i) => (
+            <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[85%] p-4 rounded-2xl font-medium text-sm leading-relaxed ${
+                m.role === 'user' 
+                  ? 'bg-primary text-white rounded-tr-none' 
+                  : 'bg-muted text-foreground rounded-tl-none border border-border'
+              }`}>
+                {m.content}
+              </div>
+            </div>
+          ))}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="bg-muted px-4 py-2 rounded-full animate-pulse text-[10px] font-black uppercase text-muted-foreground">
+                Екатерина печатает...
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="p-6 border-t border-border bg-white">
           <div className="flex gap-3">
-          <input 
-            type="text" 
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              placeholder="Напр: Как справиться с тревогой перед выступлением" 
-              className="flex-1 bg-muted/30 border-2 border-transparent focus:border-primary/20 rounded-2xl px-6 py-4 text-sm font-medium outline-none transition-all"
+            <input 
+              type="text" 
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+              placeholder="Напишите ваш запрос..." 
+              className="flex-1 bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
             />
             <button 
-              onClick={generateContent}
-              disabled={loading}
-              className="bg-primary text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+              onClick={handleSend}
+              disabled={!input.trim() || isTyping}
+              className="bg-primary text-white p-3 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
             >
-              {loading ? 'Создаю...' : 'Создать'}
-          </button>
+              <Send className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       </div>
-
-        {result && (
-          <div className="bg-muted/30 p-8 rounded-[2rem] border-2 border-dashed border-primary/10 animate-in fade-in slide-in-from-bottom duration-500">
-            <div className="flex items-center justify-between mb-6">
-              <span className="text-[10px] font-black uppercase text-primary bg-primary/10 px-3 py-1 rounded-full">Черновик поста</span>
-              <button 
-                onClick={() => navigator.clipboard.writeText(result)}
-                className="text-xs font-bold text-muted-foreground hover:text-primary transition-colors"
-              >
-                Копировать
-              </button>
-            </div>
-            <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap italic text-foreground/80">
-              {result}
-            </p>
-          </div>
-        )}
     </div>
-  </div>
-)
+  )
 }
 
 const SpecialistProfile = () => {
