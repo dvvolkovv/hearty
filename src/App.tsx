@@ -1971,7 +1971,6 @@ const SpecialistDashboard = () => {
   })
   const [creatingClientInBooking, setCreatingClientInBooking] = useState(false)
   const [bookingForm, setBookingForm] = useState({
-    clientId: '',
     clientName: '',
     date: new Date().toISOString().split('T')[0],
     time: '10:00',
@@ -2380,7 +2379,7 @@ const SpecialistDashboard = () => {
       const data = await res.json()
       if (data.success) {
         const newClient = data.client
-        if (!newClient || !newClient.id) {
+        if (!newClient || !newClient.name) {
           alert('Ошибка: клиент не был создан корректно')
           return
         }
@@ -2390,7 +2389,6 @@ const SpecialistDashboard = () => {
         // Устанавливаем созданного клиента в форму встречи
         setBookingForm(prev => ({
           ...prev,
-          clientId: newClient.id.toString(),
           clientName: newClient.name
         }))
         
@@ -2410,27 +2408,12 @@ const SpecialistDashboard = () => {
 
   const handleCreateBooking = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!bookingForm.clientId && (!bookingForm.clientName || !bookingForm.clientName.trim())) {
+    if (!bookingForm.clientName || !bookingForm.clientName.trim()) {
       alert('Выберите клиента или создайте нового')
       return
     }
     
-    // Если выбран клиент по ID, но нет имени, найти имя в списке клиентов
-    let clientName = bookingForm.clientName || ''
-    if (bookingForm.clientId && !clientName.trim()) {
-      const selectedClient = clients.find(c => c.id && c.id.toString() === bookingForm.clientId)
-      if (selectedClient) {
-        clientName = selectedClient.name
-      } else {
-        alert('Клиент не найден. Пожалуйста, выберите клиента снова.')
-        return
-      }
-    }
-    
-    if (!clientName.trim()) {
-      alert('Имя клиента обязательно для заполнения')
-      return
-    }
+    const clientName = bookingForm.clientName.trim()
 
     setCreatingBooking(true)
     try {
@@ -2455,7 +2438,6 @@ const SpecialistDashboard = () => {
         setBookings([...bookings, data.booking || newBooking])
         setShowCreateBookingForm(false)
         setBookingForm({
-          clientId: '',
           clientName: '',
           date: new Date().toISOString().split('T')[0],
           time: '10:00',
@@ -3682,7 +3664,6 @@ const SpecialistDashboard = () => {
                     onClick={() => {
                       setShowCreateBookingForm(true)
                       setBookingForm({
-                        clientId: '',
                         clientName: '',
                         date: editingDate,
                         time: '10:00',
@@ -3707,7 +3688,6 @@ const SpecialistDashboard = () => {
                       onClick={() => {
                         setShowCreateBookingForm(false)
                         setBookingForm({
-                          clientId: '',
                           clientName: '',
                           date: new Date().toISOString().split('T')[0],
                           time: '10:00',
@@ -3775,20 +3755,18 @@ const SpecialistDashboard = () => {
                       ) : (
                         <select
                           required
-                          value={bookingForm.clientId}
+                          value={bookingForm.clientName}
                           onChange={(e) => {
-                            const selectedClient = clients.find(c => c.id && c.id.toString() === e.target.value)
                             setBookingForm({
                               ...bookingForm,
-                              clientId: e.target.value,
-                              clientName: selectedClient ? selectedClient.name : ''
+                              clientName: e.target.value
                             })
                           }}
                           className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
                         >
                           <option value="">Выберите клиента</option>
-                          {clients.filter(client => client.id).map(client => (
-                            <option key={client.id} value={client.id.toString()}>
+                          {clients.filter(client => client.name).map(client => (
+                            <option key={client.name} value={client.name}>
                               {client.name} {client.phone && `(${client.phone})`}
                             </option>
                           ))}
