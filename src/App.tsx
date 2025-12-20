@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { Search, User, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Zap, Target, FileText, Upload, Briefcase, Rocket, Compass, BatteryCharging, CloudLightning, Users, Smile, Anchor, Wallet, CheckCircle2, Clock, ArrowLeft } from 'lucide-react'
+import { Search, User, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Zap, Target, FileText, Upload, Briefcase, Rocket, Compass, BatteryCharging, CloudLightning, Users, Smile, Anchor, Wallet, CheckCircle2, Clock, ArrowLeft, MessageSquare, Check, XCircle } from 'lucide-react'
 import logoHearty from './assets/logo_hearty.jpg'
 
 // Constants
@@ -111,7 +111,7 @@ const Landing = () => {
         <div className="flex flex-col gap-4 max-w-3xl mx-auto">
           <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4 p-3 bg-white rounded-3xl shadow-2xl border-border border">
             <div className="flex-1 flex items-center px-4 gap-3 bg-muted rounded-2xl">
-              <Search className="text-muted-foreground h-5 w-5" />
+          <Search className="text-muted-foreground h-5 w-5" />
           <input 
             type="text" 
                 placeholder="Что вас беспокоит? (напр. стресс, выгорание)" 
@@ -826,6 +826,13 @@ const SpecialistProfile = () => {
   const { id } = useParams()
   const [specialist, setSpecialist] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [showReviewForm, setShowReviewForm] = useState(false)
+  const [reviewForm, setReviewForm] = useState({
+    author: '',
+    rating: 5,
+    text: ''
+  })
+  const [submittingReview, setSubmittingReview] = useState(false)
 
   useEffect(() => {
     fetch(`${API_URL}/specialists`)
@@ -837,6 +844,31 @@ const SpecialistProfile = () => {
       })
       .catch(() => setLoading(false))
   }, [id])
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!reviewForm.text.trim()) return
+
+    setSubmittingReview(true)
+    try {
+      const res = await fetch(`${API_URL}/specialists/${id}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reviewForm)
+      })
+      const data = await res.json()
+      if (data.success) {
+        setReviewForm({ author: '', rating: 5, text: '' })
+        setShowReviewForm(false)
+        alert('Спасибо за отзыв! Он будет опубликован после проверки специалистом.')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Ошибка при отправке отзыва')
+    } finally {
+      setSubmittingReview(false)
+    }
+  }
 
   if (loading) return <div className="p-20 text-center">Загрузка профиля...</div>
   if (!specialist) return <div className="p-20 text-center">Специалист не найден</div>
@@ -967,6 +999,79 @@ const SpecialistProfile = () => {
                 </div>
               ))}
             </div>
+            
+            {!showReviewForm ? (
+              <button
+                onClick={() => setShowReviewForm(true)}
+                className="w-full mt-6 bg-white border-2 border-primary text-primary py-4 rounded-2xl font-black hover:bg-primary/5 transition-all"
+              >
+                Написать отзыв
+              </button>
+            ) : (
+              <form onSubmit={handleSubmitReview} className="mt-6 bg-white rounded-[2.5rem] border-2 border-primary/20 p-8 space-y-6">
+                <div>
+                  <label className="block text-sm font-black text-foreground mb-2">Ваше имя (необязательно)</label>
+                  <input
+                    type="text"
+                    value={reviewForm.author}
+                    onChange={(e) => setReviewForm({ ...reviewForm, author: e.target.value })}
+                    className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                    placeholder="Имя"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-black text-foreground mb-2">Оценка</label>
+        <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((rating) => (
+                      <button
+                        key={rating}
+                        type="button"
+                        onClick={() => setReviewForm({ ...reviewForm, rating })}
+                        className={`p-2 rounded-lg transition-all ${
+                          reviewForm.rating >= rating
+                            ? 'text-yellow-400'
+                            : 'text-muted-foreground hover:text-yellow-400'
+                        }`}
+                      >
+                        <Star className={`h-6 w-6 ${reviewForm.rating >= rating ? 'fill-current' : ''}`} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-black text-foreground mb-2">Ваш отзыв</label>
+                  <textarea
+                    required
+                    value={reviewForm.text}
+                    onChange={(e) => setReviewForm({ ...reviewForm, text: e.target.value })}
+                    className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all h-32 resize-none"
+                    placeholder="Расскажите о вашем опыте..."
+                  />
+                </div>
+                
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={submittingReview}
+                    className="flex-1 bg-primary text-white py-4 rounded-2xl font-black hover:bg-primary/90 transition-all disabled:opacity-50"
+                  >
+                    {submittingReview ? 'Отправка...' : 'Отправить отзыв'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowReviewForm(false)
+                      setReviewForm({ author: '', rating: 5, text: '' })
+                    }}
+                    className="px-6 bg-white border-2 border-border text-foreground py-4 rounded-2xl font-black hover:bg-muted transition-all"
+                  >
+                    Отмена
+                  </button>
+                </div>
+              </form>
+            )}
           </section>
 
           <div className="bg-primary text-white p-10 rounded-[3rem] shadow-xl shadow-primary/20 flex flex-col md:flex-row items-center justify-between gap-8">
@@ -1151,9 +1256,9 @@ const Booking = () => {
                 <div className="space-y-6 animate-in fade-in slide-in-from-top duration-300">
                   <label className="block text-[10px] font-black uppercase text-muted-foreground">3. Контактные данные</label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input 
+          <input 
                       required
-                      type="text" 
+            type="text" 
                       value={formData.name}
                       onChange={e => setFormData({...formData, name: e.target.value})}
                       className="w-full bg-muted/50 border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
@@ -1180,15 +1285,15 @@ const Booking = () => {
                     className="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary/30 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
                   >
                     {loading ? 'Отправка...' : 'Подтвердить запись'}
-                  </button>
+          </button>
                 </div>
               )}
             </form>
-          </div>
         </div>
       </div>
     </div>
-  )
+  </div>
+)
 }
 
 const Diagnostic = () => {
@@ -1303,7 +1408,8 @@ const SpecialistDashboard = () => {
   const [bookings, setBookings] = useState<any[]>([])
   const [specialist, setSpecialist] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'profile'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'profile' | 'reviews'>('overview')
+  const [pendingReviews, setPendingReviews] = useState<any[]>([])
   const [editingDate, setEditingDate] = useState<string>(new Date().toISOString().split('T')[0])
   const [savingSlots, setSavingSlots] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
@@ -1315,18 +1421,21 @@ const SpecialistDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [statsRes, bookingsRes, specialistsRes] = await Promise.all([
+      const [statsRes, bookingsRes, specialistsRes, reviewsRes] = await Promise.all([
         fetch(`${API_URL}/specialists/1/stats`),
         fetch(`${API_URL}/specialists/1/bookings`),
-        fetch(`${API_URL}/specialists`)
+        fetch(`${API_URL}/specialists`),
+        fetch(`${API_URL}/specialists/1/reviews/pending`)
       ])
       const statsData = await statsRes.json()
       const bookingsData = await bookingsRes.json()
       const specialistsData = await specialistsRes.json()
+      const reviewsData = await reviewsRes.json()
       
       setStats(statsData)
       setBookings(bookingsData)
       setSpecialist(specialistsData.find((s: any) => s.id === 1))
+      setPendingReviews(reviewsData)
     } catch (err) {
       console.error(err)
     } finally {
@@ -1337,6 +1446,41 @@ const SpecialistDashboard = () => {
   useEffect(() => {
     fetchData()
   }, [])
+
+  const handleApproveReview = async (reviewId: number) => {
+    try {
+      const res = await fetch(`${API_URL}/specialists/1/reviews/${reviewId}/approve`, {
+        method: 'POST'
+      })
+      const data = await res.json()
+      if (data.success) {
+        setPendingReviews(pendingReviews.filter(r => r.id !== reviewId))
+        fetchData() // Refresh specialist data to update reviews
+        alert('Отзыв одобрен и опубликован!')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Ошибка при одобрении отзыва')
+    }
+  }
+
+  const handleRejectReview = async (reviewId: number) => {
+    if (!confirm('Вы уверены, что хотите отклонить этот отзыв?')) return
+    
+    try {
+      const res = await fetch(`${API_URL}/specialists/1/reviews/${reviewId}/reject`, {
+        method: 'POST'
+      })
+      const data = await res.json()
+      if (data.success) {
+        setPendingReviews(pendingReviews.filter(r => r.id !== reviewId))
+        alert('Отзыв отклонен')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Ошибка при отклонении отзыва')
+    }
+  }
 
   const toggleSlot = async (time: string) => {
     if (!specialist) return
@@ -1417,6 +1561,17 @@ const SpecialistDashboard = () => {
               className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'profile' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
             >
               Профиль
+            </button>
+            <button 
+              onClick={() => setActiveTab('reviews')}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all relative ${activeTab === 'reviews' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
+            >
+              Отзывы
+              {pendingReviews.length > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 bg-secondary rounded-full flex items-center justify-center text-[10px] font-black text-white">
+                  {pendingReviews.length}
+                </span>
+              )}
             </button>
           </div>
           <a 
@@ -1581,6 +1736,76 @@ const SpecialistDashboard = () => {
               </div>
             </div>
           </div>
+        </div>
+      ) : activeTab === 'reviews' ? (
+        <div className="bg-white rounded-[3rem] border border-border p-10 shadow-sm">
+          <div className="mb-8">
+            <h2 className="text-3xl font-black text-foreground mb-2">Управление отзывами</h2>
+            <p className="text-muted-foreground font-medium">
+              Здесь вы можете просмотреть и одобрить отзывы от клиентов
+            </p>
+          </div>
+
+          {pendingReviews.length === 0 ? (
+            <div className="text-center py-20">
+              <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-6 opacity-50" />
+              <p className="text-xl font-bold text-muted-foreground">Нет отзывов на модерации</p>
+              <p className="text-sm text-muted-foreground mt-2">Все отзывы обработаны</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {pendingReviews.map((review: any) => (
+                <div key={review.id} className="bg-white border-2 border-border rounded-[2.5rem] p-8 shadow-sm">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center font-black text-primary text-lg">
+                        {review.author[0] || 'А'}
+                      </div>
+                      <div>
+                        <h3 className="font-black text-foreground text-lg">{review.author || 'Анонимный клиент'}</h3>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(review.createdAt).toLocaleDateString('ru-RU', { 
+                            day: 'numeric', 
+                            month: 'long', 
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star 
+                          key={i} 
+                          className={`h-5 w-5 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`} 
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-base text-foreground leading-relaxed mb-6 italic">
+                    «{review.text}»
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => handleApproveReview(review.id)}
+                      className="flex-1 flex items-center justify-center gap-2 bg-primary text-white py-4 rounded-2xl font-black hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
+                    >
+                      <Check className="h-5 w-5" />
+                      Одобрить и опубликовать
+                    </button>
+                    <button
+                      onClick={() => handleRejectReview(review.id)}
+                      className="flex items-center justify-center gap-2 bg-white border-2 border-border text-foreground px-6 py-4 rounded-2xl font-black hover:bg-muted transition-all"
+                    >
+                      <XCircle className="h-5 w-5" />
+                      Отклонить
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       ) : (
         <div className="bg-white rounded-[3rem] border border-border overflow-hidden shadow-sm">

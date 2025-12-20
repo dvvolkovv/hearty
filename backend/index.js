@@ -211,6 +211,12 @@ const mockBookings = [
   { id: 103, specialistId: 1, name: 'Анна', phone: '+7 (999) 000-11-22', date: '2025-12-18', time: '16:00', status: 'completed', message: 'Первичная консультация.' }
 ];
 
+// Mock pending reviews (awaiting approval)
+let mockPendingReviews = [
+  { id: 1001, specialistId: 1, author: 'Мария К.', rating: 5, text: 'Алексей помог мне справиться с выгоранием. Очень внимательный и профессиональный подход!', createdAt: '2025-12-19T10:00:00Z' },
+  { id: 1002, specialistId: 1, author: 'Иван П.', rating: 4, text: 'Хороший специалист, но хотелось бы больше конкретных рекомендаций.', createdAt: '2025-12-18T15:30:00Z' }
+];
+
 // Routes
 app.get('/api/specialists', (req, res) => {
   res.json(specialists);
@@ -296,6 +302,92 @@ app.post('/api/specialists/:id/upload-photo', upload.single('photo'), (req, res)
   } else {
     res.status(404).json({ error: 'Specialist not found or no file uploaded' });
   }
+});
+
+// Reviews API
+app.post('/api/specialists/:id/reviews', (req, res) => {
+  const { id } = req.params;
+  const { author, rating, text } = req.body;
+  const specialist = specialists.find(s => s.id === parseInt(id));
+  
+  if (!specialist) {
+    return res.status(404).json({ error: 'Specialist not found' });
+  }
+  
+  const newReview = {
+    id: Date.now(),
+    specialistId: parseInt(id),
+    author: author || 'Анонимный клиент',
+    rating: parseInt(rating) || 5,
+    text: text || '',
+    createdAt: new Date().toISOString(),
+    status: 'pending'
+  };
+  
+  mockPendingReviews.push(newReview);
+  res.status(201).json({ success: true, review: newReview });
+});
+
+app.get('/api/specialists/:id/reviews/pending', (req, res) => {
+  const { id } = req.params;
+  const pendingReviews = mockPendingReviews.filter(r => r.specialistId === parseInt(id));
+  res.json(pendingReviews);
+});
+
+app.post('/api/specialists/:id/reviews/:reviewId/approve', (req, res) => {
+  const { id, reviewId } = req.params;
+  const specialist = specialists.find(s => s.id === parseInt(id));
+  
+  if (!specialist) {
+    return res.status(404).json({ error: 'Specialist not found' });
+  }
+  
+  const reviewIndex = mockPendingReviews.findIndex(r => r.id === parseInt(reviewId) && r.specialistId === parseInt(id));
+  
+  if (reviewIndex === -1) {
+    return res.status(404).json({ error: 'Review not found' });
+  }
+  
+  const approvedReview = mockPendingReviews[reviewIndex];
+  mockPendingReviews.splice(reviewIndex, 1);
+  
+  // Add to specialist's approved reviews
+  if (!specialist.detailedReviews) {
+    specialist.detailedReviews = [];
+  }
+  specialist.detailedReviews.push({
+    id: approvedReview.id,
+    author: approvedReview.author,
+    rating: approvedReview.rating,
+    text: approvedReview.text
+  });
+  
+  // Update rating (simple average calculation)
+  if (specialist.detailedReviews.length > 0) {
+    const totalRating = specialist.detailedReviews.reduce((sum, r) => sum + r.rating, 0);
+    specialist.rating = (totalRating / specialist.detailedReviews.length).toFixed(1);
+    specialist.reviews = specialist.detailedReviews.length;
+  }
+  
+  res.json({ success: true, review: approvedReview });
+});
+
+app.post('/api/specialists/:id/reviews/:reviewId/reject', (req, res) => {
+  const { id, reviewId } = req.params;
+  const specialist = specialists.find(s => s.id === parseInt(id));
+  
+  if (!specialist) {
+    return res.status(404).json({ error: 'Specialist not found' });
+  }
+  
+  const reviewIndex = mockPendingReviews.findIndex(r => r.id === parseInt(reviewId) && r.specialistId === parseInt(id));
+  
+  if (reviewIndex === -1) {
+    return res.status(404).json({ error: 'Review not found' });
+  }
+  
+  mockPendingReviews.splice(reviewIndex, 1);
+  res.json({ success: true, message: 'Review rejected' });
 });
 
 app.listen(PORT, () => {
