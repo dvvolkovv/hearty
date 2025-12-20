@@ -1142,8 +1142,15 @@ const Booking = () => {
 
   if (booked) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-20 text-center">
-        <div className="bg-white p-12 rounded-[3rem] shadow-2xl border-2 border-green-100">
+      <div className="max-w-2xl mx-auto px-4 py-20">
+        <Link 
+          to={`/specialist/${id}`}
+          className="inline-flex items-center gap-2 text-muted-foreground font-bold hover:text-primary transition-all mb-8 group"
+        >
+          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+          Назад к профилю
+        </Link>
+        <div className="bg-white p-12 rounded-[3rem] shadow-2xl border-2 border-green-100 text-center">
           <div className="h-20 w-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-8">
             <Calendar className="h-10 w-10" />
           </div>
@@ -1164,6 +1171,13 @@ const Booking = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-20">
+      <Link 
+        to={`/specialist/${id}`}
+        className="inline-flex items-center gap-2 text-muted-foreground font-bold hover:text-primary transition-all mb-8 group"
+      >
+        <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+        Назад к профилю
+      </Link>
       <div className="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-primary/5">
         <div className="grid grid-cols-1 lg:grid-cols-5">
           {/* Info Side */}
