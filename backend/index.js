@@ -217,6 +217,22 @@ let mockPendingReviews = [
   { id: 1002, specialistId: 1, author: 'Иван П.', rating: 4, text: 'Хороший специалист, но хотелось бы больше конкретных рекомендаций.', createdAt: '2025-12-18T15:30:00Z' }
 ];
 
+// Mock client notes
+let mockClientNotes = {
+  1: {
+    'Марина': [
+      { id: 1, text: 'Работает над выгоранием на работе. Первая сессия прошла продуктивно.', createdAt: '2025-12-20T10:00:00Z' },
+      { id: 2, text: 'Клиентка открылась, готовы к более глубокой работе.', createdAt: '2025-12-21T14:00:00Z' }
+    ],
+    'Сергей': [
+      { id: 3, text: 'Повторная сессия. Прогресс по целям хороший.', createdAt: '2025-12-21T13:00:00Z' }
+    ],
+    'Анна': [
+      { id: 4, text: 'Первичная консультация. Основной запрос - поиск предназначения.', createdAt: '2025-12-18T16:00:00Z' }
+    ]
+  }
+};
+
 // Routes
 app.get('/api/specialists', (req, res) => {
   res.json(specialists);
@@ -388,6 +404,69 @@ app.post('/api/specialists/:id/reviews/:reviewId/reject', (req, res) => {
   
   mockPendingReviews.splice(reviewIndex, 1);
   res.json({ success: true, message: 'Review rejected' });
+});
+
+// Client Notes API
+app.get('/api/specialists/:id/clients', (req, res) => {
+  const { id } = req.params;
+  const bookings = mockBookings.filter(b => b.specialistId === parseInt(id));
+  
+  // Get unique clients from bookings
+  const uniqueClients = Array.from(new Set(bookings.map(b => b.name))).map(name => {
+    const clientBookings = bookings.filter(b => b.name === name);
+    const notes = mockClientNotes[parseInt(id)]?.[name] || [];
+    return {
+      name,
+      phone: clientBookings[0].phone,
+      totalSessions: clientBookings.length,
+      lastSession: clientBookings[clientBookings.length - 1].date,
+      notesCount: notes.length,
+      bookings: clientBookings
+    };
+  });
+  
+  res.json(uniqueClients);
+});
+
+app.get('/api/specialists/:id/clients/:clientName/notes', (req, res) => {
+  const { id, clientName } = req.params;
+  const notes = mockClientNotes[parseInt(id)]?.[clientName] || [];
+  res.json(notes);
+});
+
+app.post('/api/specialists/:id/clients/:clientName/notes', (req, res) => {
+  const { id, clientName } = req.params;
+  const { text } = req.body;
+  
+  if (!mockClientNotes[parseInt(id)]) {
+    mockClientNotes[parseInt(id)] = {};
+  }
+  
+  if (!mockClientNotes[parseInt(id)][clientName]) {
+    mockClientNotes[parseInt(id)][clientName] = [];
+  }
+  
+  const newNote = {
+    id: Date.now(),
+    text: text || '',
+    createdAt: new Date().toISOString()
+  };
+  
+  mockClientNotes[parseInt(id)][clientName].push(newNote);
+  res.status(201).json({ success: true, note: newNote });
+});
+
+app.delete('/api/specialists/:id/clients/:clientName/notes/:noteId', (req, res) => {
+  const { id, clientName, noteId } = req.params;
+  const notes = mockClientNotes[parseInt(id)]?.[clientName] || [];
+  const noteIndex = notes.findIndex(n => n.id === parseInt(noteId));
+  
+  if (noteIndex === -1) {
+    return res.status(404).json({ error: 'Note not found' });
+  }
+  
+  notes.splice(noteIndex, 1);
+  res.json({ success: true, message: 'Note deleted' });
 });
 
 app.listen(PORT, () => {

@@ -1408,8 +1408,13 @@ const SpecialistDashboard = () => {
   const [bookings, setBookings] = useState<any[]>([])
   const [specialist, setSpecialist] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'profile' | 'reviews'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'profile' | 'reviews' | 'clients'>('overview')
   const [pendingReviews, setPendingReviews] = useState<any[]>([])
+  const [clients, setClients] = useState<any[]>([])
+  const [selectedClient, setSelectedClient] = useState<any>(null)
+  const [clientNotes, setClientNotes] = useState<any[]>([])
+  const [newNote, setNewNote] = useState('')
+  const [loadingNotes, setLoadingNotes] = useState(false)
   const [editingDate, setEditingDate] = useState<string>(new Date().toISOString().split('T')[0])
   const [savingSlots, setSavingSlots] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
@@ -1421,25 +1426,85 @@ const SpecialistDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [statsRes, bookingsRes, specialistsRes, reviewsRes] = await Promise.all([
+      const [statsRes, bookingsRes, specialistsRes, reviewsRes, clientsRes] = await Promise.all([
         fetch(`${API_URL}/specialists/1/stats`),
         fetch(`${API_URL}/specialists/1/bookings`),
         fetch(`${API_URL}/specialists`),
-        fetch(`${API_URL}/specialists/1/reviews/pending`)
+        fetch(`${API_URL}/specialists/1/reviews/pending`),
+        fetch(`${API_URL}/specialists/1/clients`)
       ])
       const statsData = await statsRes.json()
       const bookingsData = await bookingsRes.json()
       const specialistsData = await specialistsRes.json()
       const reviewsData = await reviewsRes.json()
+      const clientsData = await clientsRes.json()
       
       setStats(statsData)
       setBookings(bookingsData)
       setSpecialist(specialistsData.find((s: any) => s.id === 1))
       setPendingReviews(reviewsData)
+      setClients(clientsData)
     } catch (err) {
       console.error(err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadClientNotes = async (clientName: string) => {
+    setLoadingNotes(true)
+    try {
+      const res = await fetch(`${API_URL}/specialists/1/clients/${encodeURIComponent(clientName)}/notes`)
+      const notes = await res.json()
+      setClientNotes(notes)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoadingNotes(false)
+    }
+  }
+
+  const handleSelectClient = async (client: any) => {
+    setSelectedClient(client)
+    await loadClientNotes(client.name)
+  }
+
+  const handleAddNote = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newNote.trim() || !selectedClient) return
+
+    try {
+      const res = await fetch(`${API_URL}/specialists/1/clients/${encodeURIComponent(selectedClient.name)}/notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: newNote })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setNewNote('')
+        await loadClientNotes(selectedClient.name)
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Ошибка при добавлении заметки')
+    }
+  }
+
+  const handleDeleteNote = async (noteId: number) => {
+    if (!confirm('Удалить эту заметку?')) return
+    if (!selectedClient) return
+
+    try {
+      const res = await fetch(`${API_URL}/specialists/1/clients/${encodeURIComponent(selectedClient.name)}/notes/${noteId}`, {
+        method: 'DELETE'
+      })
+      const data = await res.json()
+      if (data.success) {
+        await loadClientNotes(selectedClient.name)
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Ошибка при удалении заметки')
     }
   }
 
@@ -1572,6 +1637,15 @@ const SpecialistDashboard = () => {
                   {pendingReviews.length}
                 </span>
               )}
+            </button>
+            <button 
+              onClick={() => {
+                setActiveTab('clients')
+                setSelectedClient(null)
+              }}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'clients' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
+            >
+              Клиенты
             </button>
           </div>
           <a 
@@ -1806,6 +1880,149 @@ const SpecialistDashboard = () => {
               ))}
             </div>
           )}
+        </div>
+      ) : activeTab === 'clients' ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Clients List */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-[2rem] border border-border p-6 shadow-sm">
+              <h2 className="text-2xl font-black text-foreground mb-6">Мои клиенты</h2>
+              {clients.length === 0 ? (
+                <div className="text-center py-12">
+                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                  <p className="text-sm text-muted-foreground">Пока нет клиентов</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {clients.map((client, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleSelectClient(client)}
+                      className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${
+                        selectedClient?.name === client.name
+                          ? 'border-primary bg-primary/5 shadow-md'
+                          : 'border-border bg-white hover:border-primary/30'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center font-black text-primary">
+                          {client.name[0]}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-black text-foreground">{client.name}</h3>
+                          <p className="text-xs text-muted-foreground">{client.phone}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{client.totalSessions} сессий</span>
+                        {client.notesCount > 0 && (
+                          <span className="bg-primary/10 text-primary px-2 py-1 rounded-full font-bold">
+                            {client.notesCount} заметок
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Client Details & Notes */}
+          <div className="lg:col-span-2">
+            {selectedClient ? (
+              <div className="bg-white rounded-[2rem] border border-border p-8 shadow-sm space-y-8">
+                <div>
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="h-16 w-16 bg-primary/10 rounded-2xl flex items-center justify-center font-black text-primary text-2xl">
+                      {selectedClient.name[0]}
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-black text-foreground">{selectedClient.name}</h2>
+                      <p className="text-muted-foreground font-medium">{selectedClient.phone}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-muted p-4 rounded-2xl">
+                      <p className="text-xs font-black uppercase text-muted-foreground mb-1">Всего сессий</p>
+                      <p className="text-2xl font-black text-foreground">{selectedClient.totalSessions}</p>
+                    </div>
+                    <div className="bg-muted p-4 rounded-2xl">
+                      <p className="text-xs font-black uppercase text-muted-foreground mb-1">Последняя сессия</p>
+                      <p className="text-lg font-black text-foreground">
+                        {new Date(selectedClient.lastSession).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-black text-foreground mb-4">Заметки о клиенте</h3>
+                  
+                  <form onSubmit={handleAddNote} className="mb-6">
+                    <textarea
+                      value={newNote}
+                      onChange={(e) => setNewNote(e.target.value)}
+                      placeholder="Добавить заметку о клиенте..."
+                      className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all h-24 resize-none mb-3"
+                    />
+                    <button
+                      type="submit"
+                      className="bg-primary text-white px-6 py-3 rounded-xl font-black hover:bg-primary/90 transition-all"
+                    >
+                      Добавить заметку
+                    </button>
+                  </form>
+
+                  {loadingNotes ? (
+                    <div className="text-center py-12">
+                      <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                      <p className="text-sm text-muted-foreground">Загрузка заметок...</p>
+                    </div>
+                  ) : clientNotes.length === 0 ? (
+                    <div className="text-center py-12 bg-muted rounded-2xl">
+                      <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                      <p className="text-sm text-muted-foreground">Нет заметок о клиенте</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {clientNotes.map((note: any) => (
+                        <div key={note.id} className="bg-muted p-6 rounded-2xl border border-border">
+                          <div className="flex items-start justify-between gap-4 mb-3">
+                            <p className="text-sm text-foreground font-medium leading-relaxed flex-1">
+                              {note.text}
+                            </p>
+                            <button
+                              onClick={() => handleDeleteNote(note.id)}
+                              className="text-muted-foreground hover:text-primary transition-colors flex-shrink-0"
+                            >
+                              <XCircle className="h-4 w-4" />
+                            </button>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(note.createdAt).toLocaleDateString('ru-RU', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-[2rem] border border-border p-12 shadow-sm text-center">
+                <Users className="h-16 w-16 text-muted-foreground mx-auto mb-6 opacity-50" />
+                <h3 className="text-xl font-black text-foreground mb-2">Выберите клиента</h3>
+                <p className="text-sm text-muted-foreground">Выберите клиента из списка, чтобы просмотреть детали и заметки</p>
+              </div>
+            )}
+          </div>
         </div>
       ) : (
         <div className="bg-white rounded-[3rem] border border-border overflow-hidden shadow-sm">
