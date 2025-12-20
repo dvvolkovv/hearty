@@ -2715,11 +2715,11 @@ const SpecialistDashboard = () => {
                         <div className="flex items-start justify-between gap-4 mb-4">
                           <div className="flex items-center gap-6 flex-1">
                             <div className="h-14 w-14 bg-muted rounded-2xl flex items-center justify-center text-primary font-black text-xl flex-shrink-0">
-                              {booking.name[0]}
+                              {(booking.name || booking.clientName || '?')[0]}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-black text-foreground mb-1">{booking.name}</h3>
-                              <p className="text-xs font-bold text-muted-foreground mb-2">{booking.phone}</p>
+                              <h3 className="font-black text-foreground mb-1">{booking.name || booking.clientName || 'Клиент'}</h3>
+                              <p className="text-xs font-bold text-muted-foreground mb-2">{booking.phone || 'Нет телефона'}</p>
                               {booking.message && (
                                 <p className="text-[10px] text-muted-foreground italic">«{booking.message}»</p>
                               )}
