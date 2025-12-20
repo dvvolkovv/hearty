@@ -463,10 +463,10 @@ const SpecialistsList = () => {
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-3">
-                  {[1, 2, 3].map(i => (
+      {[1, 2, 3].map(i => (
                     <div key={i} className="h-8 w-8 rounded-full border-2 border-primary bg-muted overflow-hidden">
                       <img src={getImageUrl(`/images/spec-${i}.jpg`)} alt="" className="h-full w-full object-cover" />
-                    </div>
+          </div>
                   ))}
                 </div>
                 <span className="text-[10px] font-black uppercase tracking-wider opacity-60">Вас ждут 40+ экспертов</span>
@@ -740,7 +740,7 @@ const Onboarding = () => {
                 className="bg-primary text-white p-4 rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
               >
                 <Send className="h-6 w-6" />
-              </button>
+            </button>
           </div>
         </div>
       </div>
@@ -1089,9 +1089,9 @@ const SpecialistProfile = () => {
             </Link>
           </div>
         </div>
-      </div>
     </div>
-  )
+  </div>
+)
 }
 
 const Booking = () => {
@@ -1337,7 +1337,7 @@ const Diagnostic = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-20">
+  <div className="max-w-4xl mx-auto px-4 py-20">
       <Link 
         to="/" 
         className="inline-flex items-center gap-2 text-muted-foreground font-bold hover:text-primary transition-all mb-8 group"
@@ -1415,6 +1415,15 @@ const SpecialistDashboard = () => {
   const [clientNotes, setClientNotes] = useState<any[]>([])
   const [newNote, setNewNote] = useState('')
   const [loadingNotes, setLoadingNotes] = useState(false)
+  const [showAddClientForm, setShowAddClientForm] = useState(false)
+  const [showEditClientForm, setShowEditClientForm] = useState(false)
+  const [clientForm, setClientForm] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    notes: ''
+  })
+  const [savingClient, setSavingClient] = useState(false)
   const [editingDate, setEditingDate] = useState<string>(new Date().toISOString().split('T')[0])
   const [savingSlots, setSavingSlots] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
@@ -1506,6 +1515,98 @@ const SpecialistDashboard = () => {
       console.error(err)
       alert('Ошибка при удалении заметки')
     }
+  }
+
+  const handleAddClient = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!clientForm.name.trim() || !clientForm.phone.trim()) {
+      alert('Имя и телефон обязательны')
+      return
+    }
+
+    setSavingClient(true)
+    try {
+      const res = await fetch(`${API_URL}/specialists/1/clients`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(clientForm)
+      })
+      const data = await res.json()
+      if (data.success) {
+        setClientForm({ name: '', phone: '', email: '', notes: '' })
+        setShowAddClientForm(false)
+        
+        // Refresh clients list
+        try {
+          const clientsRes = await fetch(`${API_URL}/specialists/1/clients`)
+          const clientsData = await clientsRes.json()
+          setClients(clientsData)
+          
+          // Select the newly added client
+          const newClient = clientsData.find((c: any) => c.name === data.client.name)
+          if (newClient) {
+            await handleSelectClient(newClient)
+          }
+        } catch (err) {
+          console.error(err)
+        }
+        
+        alert('Клиент успешно добавлен')
+      } else {
+        alert(data.error || 'Ошибка при добавлении клиента')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Ошибка при добавлении клиента')
+    } finally {
+      setSavingClient(false)
+    }
+  }
+
+  const handleEditClient = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedClient) return
+    if (!clientForm.name.trim() || !clientForm.phone.trim()) {
+      alert('Имя и телефон обязательны')
+      return
+    }
+
+    setSavingClient(true)
+    try {
+      const res = await fetch(`${API_URL}/specialists/1/clients/${encodeURIComponent(selectedClient.name)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(clientForm)
+      })
+      const data = await res.json()
+      if (data.success) {
+        setShowEditClientForm(false)
+        await fetchData()
+        // Update selected client
+        const updatedClient = { ...selectedClient, ...data.client }
+        setSelectedClient(updatedClient)
+        await loadClientNotes(data.client.name || selectedClient.name)
+        alert('Данные клиента обновлены')
+      } else {
+        alert(data.error || 'Ошибка при обновлении клиента')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Ошибка при обновлении клиента')
+    } finally {
+      setSavingClient(false)
+    }
+  }
+
+  const handleStartEditClient = () => {
+    if (!selectedClient) return
+    setClientForm({
+      name: selectedClient.name,
+      phone: selectedClient.phone,
+      email: selectedClient.email || '',
+      notes: selectedClient.notes || ''
+    })
+    setShowEditClientForm(true)
   }
 
   useEffect(() => {
@@ -1663,7 +1764,7 @@ const SpecialistDashboard = () => {
           </Link>
         </div>
       </div>
-
+      
       {activeTab === 'overview' ? (
         <>
           {/* Stats Grid */}
@@ -1860,7 +1961,7 @@ const SpecialistDashboard = () => {
                   <p className="text-base text-foreground leading-relaxed mb-6 italic">
                     «{review.text}»
                   </p>
-                  <div className="flex gap-3">
+        <div className="flex gap-3">
                     <button
                       onClick={() => handleApproveReview(review.id)}
                       className="flex-1 flex items-center justify-center gap-2 bg-primary text-white py-4 rounded-2xl font-black hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
@@ -1875,7 +1976,7 @@ const SpecialistDashboard = () => {
                       <XCircle className="h-5 w-5" />
                       Отклонить
                     </button>
-                  </div>
+          </div>
                 </div>
               ))}
             </div>
@@ -1886,7 +1987,19 @@ const SpecialistDashboard = () => {
           {/* Clients List */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-[2rem] border border-border p-6 shadow-sm">
-              <h2 className="text-2xl font-black text-foreground mb-6">Мои клиенты</h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-black text-foreground">Мои клиенты</h2>
+                <button
+                  onClick={() => {
+                    setShowAddClientForm(true)
+                    setClientForm({ name: '', phone: '', email: '', notes: '' })
+                  }}
+                  className="h-8 w-8 bg-primary text-white rounded-lg flex items-center justify-center hover:bg-primary/90 transition-all"
+                  title="Добавить клиента"
+                >
+                  <User className="h-4 w-4" />
+                </button>
+              </div>
               {clients.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
@@ -1925,22 +2038,186 @@ const SpecialistDashboard = () => {
                   ))}
                 </div>
               )}
-            </div>
-          </div>
+        </div>
+      </div>
 
           {/* Client Details & Notes */}
           <div className="lg:col-span-2">
-            {selectedClient ? (
+            {showAddClientForm ? (
+              <div className="bg-white rounded-[2rem] border border-border p-8 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-3xl font-black text-foreground">Добавить клиента</h2>
+                  <button
+                    onClick={() => {
+                      setShowAddClientForm(false)
+                      setClientForm({ name: '', phone: '', email: '', notes: '' })
+                    }}
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
+                </div>
+                <form onSubmit={handleAddClient} className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-black text-foreground mb-2">Имя *</label>
+          <input 
+            type="text" 
+                      required
+                      value={clientForm.name}
+                      onChange={(e) => setClientForm({ ...clientForm, name: e.target.value })}
+                      className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                      placeholder="Имя клиента"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-black text-foreground mb-2">Телефон *</label>
+                    <input
+                      type="tel"
+                      required
+                      value={clientForm.phone}
+                      onChange={(e) => setClientForm({ ...clientForm, phone: e.target.value })}
+                      className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                      placeholder="+7 (900) 000-00-00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-black text-foreground mb-2">Email</label>
+                    <input
+                      type="email"
+                      value={clientForm.email}
+                      onChange={(e) => setClientForm({ ...clientForm, email: e.target.value })}
+                      className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                      placeholder="email@example.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-black text-foreground mb-2">Заметки</label>
+                    <textarea
+                      value={clientForm.notes}
+                      onChange={(e) => setClientForm({ ...clientForm, notes: e.target.value })}
+                      className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all h-32 resize-none"
+                      placeholder="Дополнительная информация о клиенте"
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      type="submit"
+                      disabled={savingClient}
+                      className="flex-1 bg-primary text-white py-4 rounded-2xl font-black hover:bg-primary/90 transition-all disabled:opacity-50"
+                    >
+                      {savingClient ? 'Сохранение...' : 'Добавить клиента'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddClientForm(false)
+                        setClientForm({ name: '', phone: '', email: '', notes: '' })
+                      }}
+                      className="px-6 bg-white border-2 border-border text-foreground py-4 rounded-2xl font-black hover:bg-muted transition-all"
+                    >
+                      Отмена
+          </button>
+        </div>
+                </form>
+      </div>
+            ) : showEditClientForm && selectedClient ? (
+              <div className="bg-white rounded-[2rem] border border-border p-8 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-3xl font-black text-foreground">Редактировать клиента</h2>
+                  <button
+                    onClick={() => {
+                      setShowEditClientForm(false)
+                    }}
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
+    </div>
+                <form onSubmit={handleEditClient} className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-black text-foreground mb-2">Имя *</label>
+                    <input
+                      type="text"
+                      required
+                      value={clientForm.name}
+                      onChange={(e) => setClientForm({ ...clientForm, name: e.target.value })}
+                      className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                      placeholder="Имя клиента"
+                    />
+  </div>
+                  <div>
+                    <label className="block text-sm font-black text-foreground mb-2">Телефон *</label>
+                    <input
+                      type="tel"
+                      required
+                      value={clientForm.phone}
+                      onChange={(e) => setClientForm({ ...clientForm, phone: e.target.value })}
+                      className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                      placeholder="+7 (900) 000-00-00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-black text-foreground mb-2">Email</label>
+                    <input
+                      type="email"
+                      value={clientForm.email}
+                      onChange={(e) => setClientForm({ ...clientForm, email: e.target.value })}
+                      className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                      placeholder="email@example.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-black text-foreground mb-2">Заметки</label>
+                    <textarea
+                      value={clientForm.notes}
+                      onChange={(e) => setClientForm({ ...clientForm, notes: e.target.value })}
+                      className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all h-32 resize-none"
+                      placeholder="Дополнительная информация о клиенте"
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      type="submit"
+                      disabled={savingClient}
+                      className="flex-1 bg-primary text-white py-4 rounded-2xl font-black hover:bg-primary/90 transition-all disabled:opacity-50"
+                    >
+                      {savingClient ? 'Сохранение...' : 'Сохранить изменения'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowEditClientForm(false)
+                      }}
+                      className="px-6 bg-white border-2 border-border text-foreground py-4 rounded-2xl font-black hover:bg-muted transition-all"
+                    >
+                      Отмена
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : selectedClient ? (
               <div className="bg-white rounded-[2rem] border border-border p-8 shadow-sm space-y-8">
                 <div>
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="h-16 w-16 bg-primary/10 rounded-2xl flex items-center justify-center font-black text-primary text-2xl">
-                      {selectedClient.name[0]}
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className="h-16 w-16 bg-primary/10 rounded-2xl flex items-center justify-center font-black text-primary text-2xl">
+                        {selectedClient.name[0]}
+                      </div>
+                      <div>
+                        <h2 className="text-3xl font-black text-foreground">{selectedClient.name}</h2>
+                        <p className="text-muted-foreground font-medium">{selectedClient.phone}</p>
+                        {selectedClient.email && (
+                          <p className="text-sm text-muted-foreground">{selectedClient.email}</p>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <h2 className="text-3xl font-black text-foreground">{selectedClient.name}</h2>
-                      <p className="text-muted-foreground font-medium">{selectedClient.phone}</p>
-                    </div>
+                    <button
+                      onClick={handleStartEditClient}
+                      className="flex items-center gap-2 bg-white border-2 border-border text-foreground px-4 py-2 rounded-xl font-black hover:bg-muted transition-all"
+                    >
+                      <FileText className="h-4 w-4" />
+                      Редактировать
+                    </button>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4 mb-6">
@@ -1951,10 +2228,18 @@ const SpecialistDashboard = () => {
                     <div className="bg-muted p-4 rounded-2xl">
                       <p className="text-xs font-black uppercase text-muted-foreground mb-1">Последняя сессия</p>
                       <p className="text-lg font-black text-foreground">
-                        {new Date(selectedClient.lastSession).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
+                        {selectedClient.lastSession 
+                          ? new Date(selectedClient.lastSession).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+                          : 'Нет сессий'}
                       </p>
                     </div>
                   </div>
+                  {selectedClient.notes && (
+                    <div className="bg-muted p-4 rounded-2xl mb-6">
+                      <p className="text-xs font-black uppercase text-muted-foreground mb-2">Заметки</p>
+                      <p className="text-sm text-foreground font-medium">{selectedClient.notes}</p>
+                    </div>
+                  )}
                 </div>
 
                 <div>

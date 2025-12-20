@@ -233,6 +233,13 @@ let mockClientNotes = {
   }
 };
 
+// Mock clients data (manually added clients)
+let mockClients = {
+  1: [
+    // Format: { name: string, phone: string, email?: string, notes?: string, createdAt: string }
+  ]
+};
+
 // Routes
 app.get('/api/specialists', (req, res) => {
   res.json(specialists);
@@ -409,23 +416,49 @@ app.post('/api/specialists/:id/reviews/:reviewId/reject', (req, res) => {
 // Client Notes API
 app.get('/api/specialists/:id/clients', (req, res) => {
   const { id } = req.params;
-  const bookings = mockBookings.filter(b => b.specialistId === parseInt(id));
+  const specialistId = parseInt(id);
+  const bookings = mockBookings.filter(b => b.specialistId === specialistId);
+  const manualClients = mockClients[specialistId] || [];
   
   // Get unique clients from bookings
-  const uniqueClients = Array.from(new Set(bookings.map(b => b.name))).map(name => {
+  const bookingClients = Array.from(new Set(bookings.map(b => b.name))).map(name => {
     const clientBookings = bookings.filter(b => b.name === name);
-    const notes = mockClientNotes[parseInt(id)]?.[name] || [];
+    const notes = mockClientNotes[specialistId]?.[name] || [];
+    const manualClientData = manualClients.find(c => c.name === name);
+    
     return {
       name,
-      phone: clientBookings[0].phone,
+      phone: manualClientData?.phone || clientBookings[0].phone,
+      email: manualClientData?.email || '',
+      notes: manualClientData?.notes || '',
       totalSessions: clientBookings.length,
-      lastSession: clientBookings[clientBookings.length - 1].date,
+      lastSession: clientBookings.length > 0 ? clientBookings[clientBookings.length - 1].date : null,
       notesCount: notes.length,
-      bookings: clientBookings
+      bookings: clientBookings,
+      createdAt: manualClientData?.createdAt || (clientBookings.length > 0 ? clientBookings[0].date : null)
     };
   });
   
-  res.json(uniqueClients);
+  // Add manual clients that don't have bookings
+  const manualClientsWithoutBookings = manualClients
+    .filter(c => !bookings.some(b => b.name === c.name))
+    .map(c => {
+      const notes = mockClientNotes[specialistId]?.[c.name] || [];
+      return {
+        name: c.name,
+        phone: c.phone,
+        email: c.email || '',
+        notes: c.notes || '',
+        totalSessions: 0,
+        lastSession: null,
+        notesCount: notes.length,
+        bookings: [],
+        createdAt: c.createdAt
+      };
+    });
+  
+  const allClients = [...bookingClients, ...manualClientsWithoutBookings];
+  res.json(allClients);
 });
 
 app.get('/api/specialists/:id/clients/:clientName/notes', (req, res) => {
@@ -467,6 +500,84 @@ app.delete('/api/specialists/:id/clients/:clientName/notes/:noteId', (req, res) 
   
   notes.splice(noteIndex, 1);
   res.json({ success: true, message: 'Note deleted' });
+});
+
+// Client Management API
+app.post('/api/specialists/:id/clients', (req, res) => {
+  const { id } = req.params;
+  const { name, phone, email, notes } = req.body;
+  const specialistId = parseInt(id);
+  
+  if (!name || !phone) {
+    return res.status(400).json({ error: 'Name and phone are required' });
+  }
+  
+  if (!mockClients[specialistId]) {
+    mockClients[specialistId] = [];
+  }
+  
+  // Check if client already exists
+  const existingClient = mockClients[specialistId].find(c => c.name === name);
+  if (existingClient) {
+    return res.status(400).json({ error: 'Client with this name already exists' });
+  }
+  
+  const newClient = {
+    name,
+    phone,
+    email: email || '',
+    notes: notes || '',
+    createdAt: new Date().toISOString()
+  };
+  
+  mockClients[specialistId].push(newClient);
+  res.status(201).json({ success: true, client: newClient });
+});
+
+app.put('/api/specialists/:id/clients/:clientName', (req, res) => {
+  const { id, clientName } = req.params;
+  const { name, phone, email, notes } = req.body;
+  const specialistId = parseInt(id);
+  const decodedClientName = decodeURIComponent(clientName);
+  
+  if (!mockClients[specialistId]) {
+    mockClients[specialistId] = [];
+  }
+  
+  // Find client
+  let client = mockClients[specialistId].find(c => c.name === decodedClientName);
+  
+  // If client doesn't exist in manual clients, create it from bookings
+  if (!client) {
+    const bookings = mockBookings.filter(b => b.specialistId === specialistId && b.name === decodedClientName);
+    if (bookings.length > 0) {
+      client = {
+        name: decodedClientName,
+        phone: bookings[0].phone,
+        email: '',
+        notes: '',
+        createdAt: bookings[0].date
+      };
+      mockClients[specialistId].push(client);
+    } else {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+  }
+  
+  // Update client data
+  if (name && name !== decodedClientName) {
+    // Check if new name already exists
+    const nameExists = mockClients[specialistId].find(c => c.name === name && c.name !== decodedClientName);
+    if (nameExists) {
+      return res.status(400).json({ error: 'Client with this name already exists' });
+    }
+    client.name = name;
+  }
+  if (phone) client.phone = phone;
+  if (email !== undefined) client.email = email;
+  if (notes !== undefined) client.notes = notes;
+  
+  res.json({ success: true, client });
 });
 
 app.listen(PORT, () => {
