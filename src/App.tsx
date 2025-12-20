@@ -2955,35 +2955,58 @@ const SpecialistDashboard = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {clients.map((client, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleSelectClient(client)}
-                      className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${
-                        selectedClient?.name === client.name
-                          ? 'border-primary bg-primary/5 shadow-md'
-                          : 'border-border bg-white hover:border-primary/30'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center font-black text-primary">
-                          {client.name[0]}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-black text-foreground">{client.name}</h3>
-                          <p className="text-xs text-muted-foreground">{client.phone}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{client.totalSessions} сессий</span>
-                        {client.notesCount > 0 && (
-                          <span className="bg-primary/10 text-primary px-2 py-1 rounded-full font-bold">
-                            {client.notesCount} заметок
-                          </span>
+                  {clients.map((client, idx) => {
+                    const clientChat = chats.find(c => c.clientName === client.name)
+                    const hasUnreadMessages = clientChat && clientChat.unreadCount > 0
+                    
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => handleSelectClient(client)}
+                        className={`w-full text-left p-4 rounded-2xl border-2 transition-all relative ${
+                          selectedClient?.name === client.name
+                            ? hasUnreadMessages
+                              ? 'border-orange-500 bg-orange-50 shadow-md'
+                              : 'border-primary bg-primary/5 shadow-md'
+                            : hasUnreadMessages
+                              ? 'border-orange-400 bg-orange-50/50 hover:border-orange-500'
+                              : 'border-border bg-white hover:border-primary/30'
+                        }`}
+                      >
+                        {hasUnreadMessages && (
+                          <div className="absolute top-2 right-2 h-3 w-3 bg-orange-500 rounded-full animate-pulse"></div>
                         )}
-                      </div>
-                    </button>
-                  ))}
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className={`h-10 w-10 rounded-xl flex items-center justify-center font-black ${
+                            hasUnreadMessages 
+                              ? 'bg-orange-100 text-orange-600' 
+                              : 'bg-primary/10 text-primary'
+                          }`}>
+                            {client.name[0]}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-black text-foreground flex items-center gap-2">
+                              {client.name}
+                              {hasUnreadMessages && (
+                                <span className="bg-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+                                  {clientChat.unreadCount}
+                                </span>
+                              )}
+                            </h3>
+                            <p className="text-xs text-muted-foreground">{client.phone}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>{client.totalSessions} сессий</span>
+                          {client.notesCount > 0 && (
+                            <span className="bg-primary/10 text-primary px-2 py-1 rounded-full font-bold">
+                              {client.notesCount} заметок
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    )
+                  })}
                 </div>
               )}
               <button
