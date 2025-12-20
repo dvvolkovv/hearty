@@ -1425,6 +1425,7 @@ const SpecialistDashboard = () => {
   })
   const [savingClient, setSavingClient] = useState(false)
   const [editingDate, setEditingDate] = useState<string>(new Date().toISOString().split('T')[0])
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
   const [savingSlots, setSavingSlots] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
 
@@ -1432,6 +1433,47 @@ const SpecialistDashboard = () => {
     '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', 
     '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
   ]
+
+  // Calendar functions
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
+    const daysInMonth = lastDay.getDate()
+    const startingDayOfWeek = firstDay.getDay()
+    
+    // Convert Sunday (0) to 7 for easier calculation
+    const startDay = startingDayOfWeek === 0 ? 7 : startingDayOfWeek
+    
+    const days: (Date | null)[] = []
+    
+    // Add empty cells for days before the first day of the month
+    for (let i = 1; i < startDay; i++) {
+      days.push(null)
+    }
+    
+    // Add all days of the month
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(new Date(year, month, i))
+    }
+    
+    return days
+  }
+
+  const goToPreviousMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))
+  }
+
+  const goToNextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))
+  }
+
+  const goToToday = () => {
+    const today = new Date()
+    setCurrentMonth(today)
+    setEditingDate(today.toISOString().split('T')[0])
+  }
 
   const fetchData = async () => {
     try {
@@ -2338,27 +2380,79 @@ const SpecialistDashboard = () => {
       ) : (
         <div className="bg-white rounded-[3rem] border border-border overflow-hidden shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-3">
-            <div className="p-10 border-r border-border bg-muted/30">
-              <h2 className="text-2xl font-black text-foreground mb-6 text-center">Выбор даты</h2>
-              <div className="space-y-3">
-                {[0, 1, 2, 3, 4, 5, 6].map(offset => {
-                  const d = new Date()
-                  d.setDate(d.getDate() + offset)
-                  const iso = d.toISOString().split('T')[0]
+            <div className="p-6 md:p-10 border-r border-border bg-muted/30">
+              <div className="flex items-center justify-between mb-6">
+                <button
+                  onClick={goToPreviousMonth}
+                  className="p-2 rounded-xl hover:bg-white transition-all"
+                  title="Предыдущий месяц"
+                >
+                  <ArrowLeft className="h-5 w-5 text-foreground" />
+                </button>
+                <h2 className="text-xl md:text-2xl font-black text-foreground text-center">
+                  {currentMonth.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })}
+                </h2>
+                <button
+                  onClick={goToNextMonth}
+                  className="p-2 rounded-xl hover:bg-white transition-all"
+                  title="Следующий месяц"
+                >
+                  <ArrowLeft className="h-5 w-5 text-foreground rotate-180" />
+                </button>
+              </div>
+              
+              <button
+                onClick={goToToday}
+                className="w-full mb-4 px-4 py-2 bg-primary/10 text-primary rounded-xl text-sm font-bold hover:bg-primary/20 transition-all"
+              >
+                Сегодня
+              </button>
+
+              <div className="grid grid-cols-7 gap-1 mb-2">
+                {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
+                  <div key={day} className="text-center text-xs font-black text-muted-foreground py-2">
+                    {day}
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-7 gap-1">
+                {getDaysInMonth(currentMonth).map((day, index) => {
+                  if (!day) {
+                    return <div key={`empty-${index}`} className="aspect-square" />
+                  }
+                  
+                  const iso = day.toISOString().split('T')[0]
+                  const isSelected = editingDate === iso
+                  const isToday = iso === new Date().toISOString().split('T')[0]
+                  const slotsCount = (specialist.slots[iso] || []).length
+                  const isPast = day < new Date() && !isToday
+                  
                   return (
                     <button
                       key={iso}
-                      onClick={() => setEditingDate(iso)}
-                      className={`w-full p-4 rounded-2xl border-2 text-sm font-bold transition-all flex justify-between items-center ${
-                        editingDate === iso 
-                          ? 'border-primary bg-primary/5 text-primary shadow-md' 
-                          : 'border-transparent bg-white hover:border-border'
+                      onClick={() => !isPast && setEditingDate(iso)}
+                      disabled={isPast}
+                      className={`aspect-square p-1 rounded-xl border-2 text-xs font-bold transition-all relative ${
+                        isSelected
+                          ? 'border-primary bg-primary text-white shadow-md'
+                          : isPast
+                          ? 'border-transparent bg-muted/30 text-muted-foreground opacity-50 cursor-not-allowed'
+                          : isToday
+                          ? 'border-primary/30 bg-primary/5 text-foreground hover:border-primary/50'
+                          : 'border-transparent bg-white text-foreground hover:border-border hover:bg-muted/50'
                       }`}
                     >
-                      <span>{d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}</span>
-                      <span className="text-[10px] opacity-60">
-                        {(specialist.slots[iso] || []).length} окон
-                      </span>
+                      <div className="flex flex-col items-center justify-center h-full">
+                        <span>{day.getDate()}</span>
+                        {slotsCount > 0 && (
+                          <span className={`text-[8px] mt-0.5 ${
+                            isSelected ? 'text-white/80' : 'text-primary font-black'
+                          }`}>
+                            {slotsCount}
+                          </span>
+                        )}
+                      </div>
                     </button>
                   )
                 })}
