@@ -2064,6 +2064,7 @@ const SpecialistDashboard = () => {
   }
 
   const handleSelectClient = async (client: any) => {
+    if (!client || !client.name) return
     setSelectedClient(client)
     setShowAddClientForm(false)
     setShowEditClientForm(false)
@@ -2073,6 +2074,7 @@ const SpecialistDashboard = () => {
 
   const handleGoToMessages = async (client: any, e: React.MouseEvent) => {
     e.stopPropagation()
+    if (!client || !client.name) return
     setSelectedClient(client)
     setShowAddClientForm(false)
     setShowEditClientForm(false)
@@ -2082,7 +2084,7 @@ const SpecialistDashboard = () => {
 
   const handleAddNote = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newNote.trim() || !selectedClient) return
+    if (!newNote.trim() || !selectedClient || !selectedClient.name) return
 
     try {
       const res = await fetch(`${API_URL}/specialists/1/clients/${encodeURIComponent(selectedClient.name)}/notes`, {
@@ -2103,7 +2105,7 @@ const SpecialistDashboard = () => {
 
   const handleDeleteNote = async (noteId: number) => {
     if (!confirm('Удалить эту заметку?')) return
-    if (!selectedClient) return
+    if (!selectedClient || !selectedClient.name) return
 
     try {
       const res = await fetch(`${API_URL}/specialists/1/clients/${encodeURIComponent(selectedClient.name)}/notes/${noteId}`, {
@@ -2225,7 +2227,7 @@ const SpecialistDashboard = () => {
   }, [activeTab])
 
   useEffect(() => {
-    if (selectedClient && clientViewMode === 'chat') {
+    if (selectedClient && selectedClient.name && clientViewMode === 'chat') {
       fetch(`${API_URL}/specialists/1/chats/${encodeURIComponent(selectedClient.name)}/messages`)
         .then(res => res.json())
         .then(setChatMessages)
@@ -2234,7 +2236,7 @@ const SpecialistDashboard = () => {
   }, [selectedClient, clientViewMode])
 
   const handleSendMessage = async () => {
-    if (!chatInput.trim() || !selectedClient) return
+    if (!chatInput.trim() || !selectedClient || !selectedClient.name) return
     
     const messageText = chatInput
     setChatInput('')
@@ -3101,7 +3103,7 @@ const SpecialistDashboard = () => {
                 </button>
               </div>
             ) : (
-              clients.map((client, idx) => {
+              clients.filter(client => client && client.name).map((client, idx) => {
                 const clientChat = chats.find(c => c.clientName === client.name)
                 const hasUnreadMessages = clientChat && clientChat.unreadCount > 0
                 
@@ -3125,22 +3127,22 @@ const SpecialistDashboard = () => {
                             ? 'bg-orange-100 text-orange-600' 
                             : 'bg-primary/10 text-primary'
                         }`}>
-                          {client.name[0]}
+                          {client.name?.[0] || '?'}
                         </div>
                         <div className="flex-1">
                           <h3 className="font-black text-foreground flex items-center gap-2 mb-1">
-                            {client.name}
-                            {hasUnreadMessages && (
+                            {client.name || 'Без имени'}
+                            {hasUnreadMessages && clientChat && (
                               <span className="bg-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
                                 {clientChat.unreadCount}
                               </span>
                             )}
                           </h3>
-                          <p className="text-xs text-muted-foreground">{client.phone}</p>
+                          <p className="text-xs text-muted-foreground">{client.phone || 'Нет телефона'}</p>
                         </div>
                       </div>
                       <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
-                        <span>{client.totalSessions} сессий</span>
+                        <span>{client.totalSessions || 0} сессий</span>
                         {client.notesCount > 0 && (
                           <span className="bg-primary/10 text-primary px-2 py-1 rounded-full font-bold">
                             {client.notesCount} заметок
@@ -3229,7 +3231,7 @@ const SpecialistDashboard = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {clients.map((client, idx) => {
+                  {clients.filter(client => client && client.name).map((client, idx) => {
                     const clientChat = chats.find(c => c.clientName === client.name)
                     const hasUnreadMessages = clientChat && clientChat.unreadCount > 0
                     
@@ -3259,22 +3261,22 @@ const SpecialistDashboard = () => {
                                 ? 'bg-orange-100 text-orange-600' 
                                 : 'bg-primary/10 text-primary'
                             }`}>
-                              {client.name[0]}
+                              {client.name?.[0] || '?'}
                             </div>
                             <div className="flex-1">
                               <h3 className="font-black text-foreground flex items-center gap-2">
-                                {client.name}
-                                {hasUnreadMessages && (
+                                {client.name || 'Без имени'}
+                                {hasUnreadMessages && clientChat && (
                                   <span className="bg-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
                                     {clientChat.unreadCount}
                                   </span>
                                 )}
                               </h3>
-                              <p className="text-xs text-muted-foreground">{client.phone}</p>
+                              <p className="text-xs text-muted-foreground">{client.phone || 'Нет телефона'}</p>
                             </div>
                           </div>
                           <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
-                            <span>{client.totalSessions} сессий</span>
+                            <span>{client.totalSessions || 0} сессий</span>
                             {client.notesCount > 0 && (
                               <span className="bg-primary/10 text-primary px-2 py-1 rounded-full font-bold">
                                 {client.notesCount} заметок
@@ -3469,11 +3471,11 @@ const SpecialistDashboard = () => {
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-4">
                       <div className="h-16 w-16 bg-primary/10 rounded-2xl flex items-center justify-center font-black text-primary text-2xl">
-                        {selectedClient.name[0]}
+                        {selectedClient.name?.[0] || '?'}
                       </div>
                       <div>
-                        <h2 className="text-3xl font-black text-foreground">{selectedClient.name}</h2>
-                        <p className="text-muted-foreground font-medium">{selectedClient.phone}</p>
+                        <h2 className="text-3xl font-black text-foreground">{selectedClient.name || 'Без имени'}</h2>
+                        <p className="text-muted-foreground font-medium">{selectedClient.phone || 'Нет телефона'}</p>
                         {selectedClient.email && (
                           <p className="text-sm text-muted-foreground">{selectedClient.email}</p>
                         )}
@@ -3663,9 +3665,9 @@ const SpecialistDashboard = () => {
               </div>
             )}
           </div>
-          </div>
-        </div>
-      )
+    </div>
+  </div>
+)
       ) : (
         <div className="bg-white rounded-[3rem] border border-border overflow-hidden shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-3">
