@@ -145,10 +145,12 @@ const Landing = () => {
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center justify-center gap-3 mb-6">
               <Sparkles className="h-6 w-6 text-primary" />
-              <h2 className="text-2xl font-black text-foreground">Для специалистов</h2>
+              <h2 className="text-2xl font-black text-foreground">Подключите профиль Linkeon</h2>
             </div>
             <p className="text-lg text-muted-foreground mb-8 font-medium leading-relaxed">
-              Подключите свой профиль с Linkeon и получайте идеально подобранных клиентов
+              Подключите свой профиль с Linkeon для точного подбора: <br />
+              <span className="font-bold text-foreground">клиенты</span> получат наиболее подходящего специалиста, 
+              {' '}<span className="font-bold text-foreground">специалисты</span> — идеальных клиентов
             </p>
             <Link 
               to="/onboarding"
