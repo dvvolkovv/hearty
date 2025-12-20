@@ -1101,6 +1101,11 @@ const Booking = () => {
   const [booked, setBooked] = useState(false)
   const [selectedDate, setSelectedDate] = useState<string>('')
   const [selectedTime, setSelectedTime] = useState<string>('')
+  const [useCustomTime, setUseCustomTime] = useState(false)
+  const [customDate, setCustomDate] = useState<string>('')
+  const [customTime, setCustomTime] = useState<string>('')
+  const [finalBookingDate, setFinalBookingDate] = useState<string>('')
+  const [finalBookingTime, setFinalBookingTime] = useState<string>('')
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -1119,17 +1124,33 @@ const Booking = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedDate || !selectedTime) return
+    const finalDate = useCustomTime ? customDate : selectedDate
+    const finalTime = useCustomTime ? customTime : selectedTime
+    
+    if (!finalDate || !finalTime) {
+      alert('Пожалуйста, выберите дату и время')
+      return
+    }
+    
+    setFinalBookingDate(finalDate)
+    setFinalBookingTime(finalTime)
     setLoading(true)
     try {
       await fetch(`${API_URL}/bookings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, specialistId: id, date: selectedDate, time: selectedTime })
+        body: JSON.stringify({ 
+          ...formData, 
+          specialistId: id, 
+          date: finalDate, 
+          time: finalTime,
+          isCustomTime: useCustomTime
+        })
       })
       setBooked(true)
     } catch (err) {
       console.error(err)
+      alert('Ошибка при отправке запроса')
     } finally {
       setLoading(false)
     }
@@ -1154,12 +1175,17 @@ const Booking = () => {
           <div className="h-20 w-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-8">
             <Calendar className="h-10 w-10" />
           </div>
-          <h2 className="text-3xl font-black mb-4">Вы записаны!</h2>
+          <h2 className="text-3xl font-black mb-4">Запрос отправлен!</h2>
           <p className="text-muted-foreground font-medium mb-2">
-            Дата: <span className="text-foreground font-bold">{selectedDate}</span>, время: <span className="text-foreground font-bold">{selectedTime}</span>
+            Дата: <span className="text-foreground font-bold">
+              {finalBookingDate ? new Date(finalBookingDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
+            </span>
+          </p>
+          <p className="text-muted-foreground font-medium mb-2">
+            Время: <span className="text-foreground font-bold">{finalBookingTime}</span>
           </p>
           <p className="text-muted-foreground font-medium mb-10">
-            {specialist.name} свяжется с вами для подтверждения.
+            {specialist.name} получит ваш запрос и свяжется с вами для подтверждения.
           </p>
           <Link to="/" className="inline-block bg-primary text-white px-10 py-4 rounded-2xl font-bold shadow-lg shadow-primary/20">
             Вернуться на главную
@@ -1220,30 +1246,87 @@ const Booking = () => {
             <form onSubmit={handleSubmit} className="space-y-10">
               {/* Date Selection */}
               <div>
-                <label className="block text-[10px] font-black uppercase text-muted-foreground mb-4">1. Выберите доступную дату</label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {availableDates.map(date => (
-                    <button
-                      key={date}
-                      type="button"
-                      onClick={() => {
-                        setSelectedDate(date)
-                        setSelectedTime('')
-                      }}
-                      className={`p-4 rounded-2xl border-2 text-sm font-bold transition-all ${
-                        selectedDate === date 
-                          ? 'border-primary bg-primary/5 text-primary' 
-                          : 'border-muted bg-white hover:border-primary/20'
-                      }`}
-                    >
-                      {new Date(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}
-                    </button>
-                  ))}
+                <div className="flex items-center justify-between mb-4">
+                  <label className="block text-[10px] font-black uppercase text-muted-foreground">1. Выберите дату</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUseCustomTime(!useCustomTime)
+                      setSelectedDate('')
+                      setSelectedTime('')
+                      setCustomDate('')
+                      setCustomTime('')
+                    }}
+                    className={`text-xs font-bold px-4 py-2 rounded-xl transition-all ${
+                      useCustomTime 
+                        ? 'bg-primary text-white' 
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    }`}
+                  >
+                    {useCustomTime ? 'Выбрать из доступных' : 'Предложить свое время'}
+                  </button>
                 </div>
+                
+                {!useCustomTime ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {availableDates.length > 0 ? (
+                      availableDates.map(date => (
+                        <button
+                          key={date}
+                          type="button"
+                          onClick={() => {
+                            setSelectedDate(date)
+                            setSelectedTime('')
+                          }}
+                          className={`p-4 rounded-2xl border-2 text-sm font-bold transition-all ${
+                            selectedDate === date 
+                              ? 'border-primary bg-primary/5 text-primary' 
+                              : 'border-muted bg-white hover:border-primary/20'
+                          }`}
+                        >
+                          {new Date(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="col-span-full text-center py-8 text-muted-foreground">
+                        <p className="text-sm font-medium">Нет доступных дат</p>
+                        <p className="text-xs mt-2">Попробуйте предложить свое время</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-foreground mb-2">Дата</label>
+                      <input
+                        type="date"
+                        value={customDate}
+                        onChange={(e) => {
+                          setCustomDate(e.target.value)
+                          setCustomTime('')
+                        }}
+                        min={new Date().toISOString().split('T')[0]}
+                        className="w-full bg-muted/50 border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-foreground mb-2">Время (московское)</label>
+                      <input
+                        type="time"
+                        value={customTime}
+                        onChange={(e) => setCustomTime(e.target.value)}
+                        className="w-full bg-muted/50 border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground mt-2">Укажите удобное для вас время, специалист подтвердит его</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Time Selection */}
-              {selectedDate && (
+              {!useCustomTime && selectedDate && specialist.slots[selectedDate] && (
                 <div className="animate-in fade-in slide-in-from-top duration-300">
                   <label className="block text-[10px] font-black uppercase text-muted-foreground mb-4">2. Выберите время (московское)</label>
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
@@ -1266,7 +1349,7 @@ const Booking = () => {
               )}
 
               {/* Personal Info */}
-              {selectedTime && (
+              {((!useCustomTime && selectedTime) || (useCustomTime && customDate && customTime)) && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-top duration-300">
                   <label className="block text-[10px] font-black uppercase text-muted-foreground">3. Контактные данные</label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
