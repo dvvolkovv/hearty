@@ -2380,15 +2380,21 @@ const SpecialistDashboard = () => {
       const data = await res.json()
       if (data.success) {
         const newClient = data.client
-        setClients([...clients, newClient])
-        setBookingForm({
-          ...bookingForm,
+        const updatedClients = [...clients, newClient]
+        setClients(updatedClients)
+        
+        // Устанавливаем созданного клиента в форму встречи
+        setBookingForm(prev => ({
+          ...prev,
           clientId: newClient.id.toString(),
           clientName: newClient.name
-        })
+        }))
+        
+        // Скрываем форму создания клиента
         setShowNewClientInBooking(false)
         setNewClientInBooking({ name: '', phone: '', email: '' })
-        alert('Клиент успешно создан!')
+        
+        alert('Клиент успешно создан и выбран!')
       }
     } catch (err) {
       console.error(err)
@@ -3761,7 +3767,7 @@ const SpecialistDashboard = () => {
                         >
                           <option value="">Выберите клиента</option>
                           {clients.map(client => (
-                            <option key={client.id} value={client.id}>
+                            <option key={client.id} value={client.id.toString()}>
                               {client.name} {client.phone && `(${client.phone})`}
                             </option>
                           ))}
