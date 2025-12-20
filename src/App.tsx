@@ -139,6 +139,28 @@ const Landing = () => {
       </div>
     </div>
 
+      {/* Link Profile Section */}
+      <div className="mb-32">
+        <div className="bg-gradient-to-r from-primary/10 via-secondary/5 to-primary/10 rounded-[3rem] p-12 border-2 border-primary/20 shadow-xl">
+          <div className="max-w-3xl mx-auto text-center">
+            <div className="inline-flex items-center justify-center gap-3 mb-6">
+              <Sparkles className="h-6 w-6 text-primary" />
+              <h2 className="text-2xl font-black text-foreground">Для специалистов</h2>
+            </div>
+            <p className="text-lg text-muted-foreground mb-8 font-medium leading-relaxed">
+              Подключите свой профиль с Linkeon и получайте идеально подобранных клиентов
+            </p>
+            <Link 
+              to="/onboarding"
+              className="inline-flex items-center gap-3 bg-primary text-white px-8 py-4 rounded-2xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-primary/30 hover:bg-primary/90"
+            >
+              <User className="h-5 w-5" />
+              Подключить свой профиль с Linkeon
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Advantages Section */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-32">
         <div className="bg-muted p-8 rounded-[2rem] border border-border hover:shadow-xl transition-all">
