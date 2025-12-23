@@ -94,6 +94,19 @@ const Landing = () => {
 
   return (
   <div className="max-w-7xl mx-auto px-4 py-20">
+      {/* Development Notice */}
+      <div className="mb-8">
+        <div className="bg-orange-50 border-2 border-orange-400 rounded-2xl p-6 text-center max-w-3xl mx-auto shadow-lg">
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <BatteryCharging className="h-6 w-6 text-orange-600" />
+            <h2 className="text-xl font-black text-orange-900">Продукт находится в разработке</h2>
+          </div>
+          <p className="text-sm text-orange-800 font-medium">
+            Мы активно работаем над улучшением платформы. Некоторые функции могут работать некорректно или быть временно недоступны.
+          </p>
+        </div>
+      </div>
+
       <div className="text-center max-w-4xl mx-auto mb-20">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold mb-6">
           <Sparkles className="h-4 w-4" />
