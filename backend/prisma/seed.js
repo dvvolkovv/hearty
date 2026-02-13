@@ -37,7 +37,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var client_1 = require("@prisma/client");
-var bcrypt_1 = require("bcrypt");
+var bcrypt = require("bcrypt");
 var prisma = new client_1.PrismaClient();
 function main() {
     return __awaiter(this, void 0, void 0, function () {
@@ -46,7 +46,7 @@ function main() {
             switch (_e.label) {
                 case 0:
                     console.log('🌱 Seeding database...');
-                    return [4 /*yield*/, bcrypt_1.default.hash('password123', 10)
+                    return [4 /*yield*/, bcrypt.hash('password123', 10)
                         // ========================================
                         // 1. Создаем админа
                         // ========================================
