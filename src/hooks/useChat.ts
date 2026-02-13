@@ -1,21 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSocket } from '../contexts/SocketContext';
-import toast from 'react-hot-toast';
-
-export interface Message {
-  id: string;
-  chatRoomId: string;
-  senderId: string;
-  text: string;
-  isRead: boolean;
-  readAt: string | null;
-  createdAt: string;
-  sender: {
-    id: string;
-    firstName: string;
-    lastName: string;
-  };
-}
+import { Message } from '../api/chat';
 
 export interface TypingIndicator {
   roomId: string;

@@ -139,7 +139,7 @@ export const useNotifications = () => {
       return;
     }
 
-    const handleAllRead = (data: { userId: string }) => {
+    const handleAllRead = () => {
       console.log('🔔 All notifications marked as read');
       setNotifications((prev) =>
         prev.map((n) => ({

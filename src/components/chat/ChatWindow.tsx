@@ -45,8 +45,8 @@ export const ChatWindow = ({
   // Get recipient info (specialist or client depending on user role)
   const recipient = room.specialist || room.client;
   const recipientId = recipient?.id || '';
-  const recipientName = 'name' in recipient ? recipient.name : recipient?.name || 'Пользователь';
-  const recipientImage = 'image' in recipient ? recipient.image : recipient?.avatar || null;
+  const recipientName = recipient?.name || 'Пользователь';
+  const recipientImage = (recipient && 'image' in recipient ? recipient.image : recipient && 'avatar' in recipient ? recipient.avatar : null);
 
   // Load initial messages on mount
   useEffect(() => {
