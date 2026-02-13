@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { Search, User, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Zap, Target, FileText, Upload, Briefcase, Rocket, Compass, BatteryCharging, CloudLightning, Users, Smile, Anchor, Wallet, CheckCircle2, Clock, ArrowLeft, MessageSquare, Check, XCircle, PlusCircle, RefreshCw, ChevronRight, Home } from 'lucide-react'
 import logoHearty from './assets/logo_hearty.jpg'
 
