@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { Search, User, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Zap, Target, FileText, Upload, Briefcase, Rocket, Compass, BatteryCharging, CloudLightning, Users, Smile, Anchor, Wallet, CheckCircle2, Clock, ArrowLeft, MessageSquare, Check, XCircle, PlusCircle, RefreshCw } from 'lucide-react'
+import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom'
+import { Search, User, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Zap, Target, FileText, Upload, Briefcase, Rocket, Compass, BatteryCharging, CloudLightning, Users, Smile, Anchor, Wallet, CheckCircle2, Clock, ArrowLeft, MessageSquare, Check, XCircle, PlusCircle, RefreshCw, ChevronRight, Home } from 'lucide-react'
 import logoHearty from './assets/logo_hearty.jpg'
 
 // Constants
@@ -11,11 +11,36 @@ const getApiUrl = () => {
 }
 const API_URL = getApiUrl()
 const BASE_URL = API_URL.replace('/api', '')
+const IS_PRODUCTION = import.meta.env.PROD
 console.log('Final API URL:', API_URL)
 
 const getImageUrl = (imagePath: string) => {
   if (imagePath.startsWith('http')) return imagePath
   return `${BASE_URL}${imagePath}`
+}
+
+// Breadcrumbs Component
+const Breadcrumbs = ({ items }: { items: { label: string; path?: string }[] }) => {
+  return (
+    <nav className="flex items-center gap-2 text-sm mb-6 flex-wrap">
+      <Link to="/" className="flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors">
+        <Home className="h-3 w-3" />
+        <span>Главная</span>
+      </Link>
+      {items.map((item, index) => (
+        <div key={index} className="flex items-center gap-2">
+          <ChevronRight className="h-3 w-3 text-muted-foreground" />
+          {item.path ? (
+            <Link to={item.path} className="text-muted-foreground hover:text-primary transition-colors">
+              {item.label}
+            </Link>
+          ) : (
+            <span className="text-foreground font-medium">{item.label}</span>
+          )}
+        </div>
+      ))}
+    </nav>
+  )
 }
 
 // Layout Component
@@ -33,13 +58,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </Link>
             
             <div className="hidden md:flex items-center gap-8">
-              <Link to="/specialists" className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">Витрина</Link>
-              <Link to="/onboarding" className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">Стать специалистом</Link>
-              <Link 
+              <Link to="/specialists" className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">Специалисты</Link>
+              <Link to="/onboarding" className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">Для психологов</Link>
+              <Link
                 to="/dashboard"
                 className="bg-primary text-white px-5 py-2 rounded-full text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
               >
-                Личный кабинет
+                Войти
               </Link>
             </div>
 
@@ -54,14 +79,14 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         {/* Mobile menu */}
         {isMenuOpen && (
           <div className="md:hidden border-t bg-white px-4 py-6 flex flex-col gap-4 animate-in slide-in-from-top duration-300">
-            <Link to="/specialists" className="text-lg font-bold" onClick={() => setIsMenuOpen(false)}>Витрина</Link>
-            <Link to="/onboarding" className="text-lg font-bold" onClick={() => setIsMenuOpen(false)}>Для специалистов</Link>
-            <Link 
-              to="/dashboard" 
+            <Link to="/specialists" className="text-lg font-bold" onClick={() => setIsMenuOpen(false)}>Специалисты</Link>
+            <Link to="/onboarding" className="text-lg font-bold" onClick={() => setIsMenuOpen(false)}>Для психологов</Link>
+            <Link
+              to="/dashboard"
               className="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary/20 text-center"
               onClick={() => setIsMenuOpen(false)}
             >
-              Личный кабинет
+              Войти
             </Link>
           </div>
         )}
@@ -94,63 +119,64 @@ const Landing = () => {
 
   return (
   <div className="max-w-7xl mx-auto px-4 py-20">
-      {/* Development Notice */}
-      <div className="mb-8">
-        <div className="bg-orange-50 border-2 border-orange-400 rounded-2xl p-6 text-center max-w-3xl mx-auto shadow-lg">
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <BatteryCharging className="h-6 w-6 text-orange-600" />
-            <h2 className="text-xl font-black text-orange-900">Продукт находится в разработке</h2>
+      {/* Development Notice - only in development */}
+      {!IS_PRODUCTION && (
+        <div className="mb-8">
+          <div className="bg-orange-50 border-2 border-orange-400 rounded-2xl p-6 text-center max-w-3xl mx-auto shadow-lg">
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <BatteryCharging className="h-6 w-6 text-orange-600" />
+              <h2 className="text-xl font-black text-orange-900">Продукт находится в разработке</h2>
+            </div>
+            <p className="text-sm text-orange-800 font-medium">
+              Мы активно работаем над улучшением платформы. Некоторые функции могут работать некорректно или быть временно недоступны.
+            </p>
           </div>
-          <p className="text-sm text-orange-800 font-medium">
-            Мы активно работаем над улучшением платформы. Некоторые функции могут работать некорректно или быть временно недоступны.
-          </p>
         </div>
-      </div>
+      )}
 
-      <div className="text-center max-w-4xl mx-auto mb-20">
+      <div className="text-center max-w-4xl mx-auto mb-16">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold mb-6">
           <Sparkles className="h-4 w-4" />
-          Новый стандарт подбора психолога
+          Подбор психолога с помощью ИИ
         </div>
-        <h1 className="text-6xl font-black tracking-tight mb-8 leading-[1.1]">
-          Найдите своего идеального <br />
-          психолога или коуча
-      </h1>
-        <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
-          Поиск специалистов на основе глубокого профилирования Linkeon. 
-          Ваше ментальное здоровье — наш приоритет.
+        <h1 className="text-5xl md:text-6xl font-black tracking-tight mb-6 leading-[1.1]">
+          Найдите своего психолога на основе ценностей
+        </h1>
+        <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
+          Технология Linkeon анализирует не симптомы, а ваши глубинные запросы
         </p>
-        
-        <div className="flex flex-col gap-4 max-w-3xl mx-auto">
-          <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4 p-3 bg-white rounded-3xl shadow-2xl border-border border">
-            <div className="flex-1 flex items-center px-4 gap-3 bg-muted rounded-2xl">
-          <Search className="text-muted-foreground h-5 w-5" />
-          <input 
-            type="text" 
-                placeholder="Что вас беспокоит? (напр. стресс, выгорание)" 
-                className="w-full py-4 bg-transparent outline-none text-sm font-medium text-muted-foreground"
+
+        <div className="flex flex-col gap-4 max-w-2xl mx-auto">
+          <form onSubmit={handleSearch} className="flex flex-col gap-3">
+            <div className="flex items-center px-6 gap-3 bg-white rounded-2xl shadow-xl border-2 border-border hover:border-primary/30 transition-all">
+              <Search className="text-muted-foreground h-5 w-5 flex-shrink-0" />
+              <input
+                type="text"
+                placeholder="Что вас беспокоит? (тревога, выгорание, карьера...)"
+                className="w-full py-4 bg-transparent outline-none text-sm font-medium placeholder:text-muted-foreground"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-            <button type="submit" className="bg-primary text-white px-10 py-4 rounded-2xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-primary/30">
-          Найти
-        </button>
+              />
+            </div>
+            <button type="submit" className="w-full bg-primary text-white py-4 rounded-2xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-primary/30">
+              Найти специалиста
+            </button>
           </form>
-          
-          <div className="flex items-center justify-center gap-3 py-2 px-4 rounded-2xl bg-white/50 backdrop-blur-sm border border-border w-fit mx-auto animate-in fade-in slide-in-from-top duration-700">
-            <span className="text-sm font-medium text-muted-foreground">Или</span>
-            <Link 
-              to="/diagnostic" 
-              className="flex items-center gap-2 text-primary hover:text-primary/80 transition-all font-bold text-sm group"
+
+          <div className="text-center">
+            <span className="text-sm font-medium text-muted-foreground">или</span>
+            <Link
+              to="/diagnostic"
+              className="block mt-2 text-primary hover:text-primary/80 transition-all font-bold text-sm group"
             >
-              <Sparkles className="h-4 w-4 group-hover:rotate-12 transition-transform" />
-              пройдите предварительную сессию с ИИ ассистентом
-              <span className="text-xs font-medium opacity-60">(чтобы точнее сформулировать запрос)</span>
+              <div className="flex items-center justify-center gap-2">
+                <Sparkles className="h-4 w-4 group-hover:rotate-12 transition-transform" />
+                <span>Пройти AI-диагностику для точного подбора</span>
+              </div>
             </Link>
           </div>
+        </div>
       </div>
-    </div>
 
       {/* Link Profile Section */}
       <div className="mb-32">
@@ -537,65 +563,77 @@ const SpecialistsList = () => {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {loading ? (
-            [1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-96 bg-muted animate-pulse rounded-[2.5rem]" />)
+            [1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="bg-white rounded-3xl overflow-hidden shadow-sm animate-pulse">
+                <div className="h-48 bg-muted"></div>
+                <div className="p-6 space-y-4">
+                  <div className="h-4 bg-muted rounded w-3/4"></div>
+                  <div className="h-3 bg-muted rounded w-1/2"></div>
+                  <div className="h-2 bg-muted rounded w-full"></div>
+                  <div className="h-2 bg-muted rounded w-5/6"></div>
+                  <div className="flex gap-2">
+                    <div className="h-6 w-16 bg-muted rounded"></div>
+                    <div className="h-6 w-20 bg-muted rounded"></div>
+                  </div>
+                </div>
+              </div>
+            ))
           ) : (
             specialists.map(sp => (
-              <div key={sp.id} className="bg-white border-white border-2 rounded-[2.5rem] p-8 hover:shadow-2xl transition-all group relative flex flex-col shadow-xl shadow-black/5">
-                <Link to={`/specialist/${sp.id}`} className="flex-1">
-                  <div className="absolute top-0 right-0 p-6">
-                    <div className="bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full">
+              <div key={sp.id} className="bg-white rounded-3xl overflow-hidden hover:shadow-2xl transition-all group border border-border">
+                <Link to={`/specialist/${sp.id}`} className="block">
+                  <div className="relative h-48 overflow-hidden bg-muted">
+                    {sp.image ? (
+                      <img
+                        src={getImageUrl(sp.image)}
+                        alt={sp.name}
+                        className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="h-full w-full bg-primary/10 flex items-center justify-center">
+                        <User className="h-20 w-20 text-primary opacity-40" />
+                      </div>
+                    )}
+                    <div className="absolute top-4 right-4 bg-primary text-white px-4 py-2 rounded-full font-black text-sm shadow-lg">
+                      {(sp.price / 100).toLocaleString()} ₽
+                    </div>
+                    <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm text-green-700 text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-full">
                       Доступен
                     </div>
                   </div>
-                  <div className="h-20 w-20 rounded-2xl overflow-hidden mb-8 group-hover:scale-110 transition-transform">
-                    {sp.image ? (
-                      <img src={getImageUrl(sp.image)} alt={sp.name} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="h-full w-full bg-primary/10 flex items-center justify-center">
-                        <User className="h-10 w-10 text-primary" />
-                      </div>
-                    )}
-                  </div>
-                  <h3 className="text-2xl font-black mb-1 group-hover:text-primary transition-colors">{sp.name}</h3>
-                  <div className="flex items-center gap-1 mb-4">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-bold">{sp.rating}</span>
-                    <span className="text-xs text-muted-foreground font-medium">({sp.reviews} отзывов)</span>
-                  </div>
-                  <p className="text-sm text-primary font-bold mb-4">{sp.specialty}</p>
-                  <p className="text-sm text-muted-foreground mb-8 leading-relaxed line-clamp-3">
-                    {sp.description}
-                  </p>
-                  <div className="flex flex-wrap gap-2 mb-8">
-                    {sp.tags.slice(0, 3).map((tag: string) => (
-                      <span key={tag} className="text-[11px] font-bold bg-muted px-2 py-1 rounded-md text-muted-foreground uppercase">{tag}</span>
-      ))}
-    </div>
                 </Link>
 
-                <div className="border-t pt-8 mt-auto">
-                  <div className="flex flex-col gap-6">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <span className="block text-[10px] font-black text-muted-foreground uppercase mb-1">Стоимость</span>
-                        <span className="text-2xl font-black text-foreground">{sp.price} ₽</span>
-                      </div>
-                      <Link 
-                        to={`/specialist/${sp.id}`}
-                        className="text-primary font-black text-xs uppercase tracking-widest hover:underline"
-                      >
-                        Подробнее
-                      </Link>
-                    </div>
-                    <Link 
-                      to={`/book/${sp.id}`}
-                      className="w-full bg-black text-white py-4 rounded-2xl text-center text-sm font-black hover:bg-primary transition-all shadow-lg shadow-black/10"
-                    >
-                      Записаться на сессию
-                    </Link>
+                <div className="p-6 flex flex-col">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <span className="text-sm font-bold">{sp.rating}</span>
+                    <span className="text-xs text-muted-foreground">({sp.totalReviews} отзывов)</span>
                   </div>
+
+                  <Link to={`/specialist/${sp.id}`}>
+                    <h3 className="text-xl font-black mb-1 group-hover:text-primary transition-colors">{sp.name}</h3>
+                    <p className="text-sm text-primary font-bold mb-3">{sp.specialty}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-4 leading-relaxed">
+                      {sp.description}
+                    </p>
+                  </Link>
+
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {sp.tags.map((tag: string) => (
+                      <span key={tag} className="text-[11px] font-bold bg-muted px-3 py-1 rounded-full text-muted-foreground uppercase">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  <Link
+                    to={`/book/${sp.id}`}
+                    className="w-full bg-primary text-white py-4 rounded-2xl text-center text-sm font-black hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 mt-auto"
+                  >
+                    Записаться на сессию
+                  </Link>
                 </div>
               </div>
             ))
@@ -914,13 +952,10 @@ const SpecialistProfile = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12 md:py-20">
-      <Link 
-        to="/specialists" 
-        className="inline-flex items-center gap-2 text-muted-foreground font-bold hover:text-primary transition-all mb-8 group"
-      >
-        <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-        Назад в витрину
-      </Link>
+      <Breadcrumbs items={[
+        { label: 'Специалисты', path: '/specialists' },
+        { label: specialist.name }
+      ]} />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* Left Column: Photo & Base Info */}
         <div className="lg:col-span-1">
@@ -2518,52 +2553,54 @@ const SpecialistDashboard = () => {
           <h1 className="text-4xl font-black text-foreground mb-2">Добрый день, {specialist.name.split(' ')[0]}!</h1>
           <p className="text-muted-foreground font-medium">Управление вашим профилем и расписанием.</p>
         </div>
-        <div className="flex flex-wrap gap-4">
-          <div className="bg-white p-1 rounded-2xl border border-border flex">
-            <button 
-              onClick={() => setActiveTab('overview')}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'overview' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
-            >
-              Обзор
-            </button>
-            <button 
-              onClick={() => setActiveTab('schedule')}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'schedule' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
-            >
-              Расписание
-            </button>
-            <button 
-              onClick={() => setActiveTab('profile')}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'profile' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
-            >
-              Профиль
-            </button>
-            <button 
-              onClick={() => setActiveTab('reviews')}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all relative ${activeTab === 'reviews' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
-            >
-              Отзывы
-              {pendingReviews.length > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 w-5 bg-secondary rounded-full flex items-center justify-center text-[10px] font-black text-white">
-                  {pendingReviews.length}
-                </span>
-              )}
-            </button>
-            <button 
-              onClick={() => {
-                setActiveTab('clients')
-                setSelectedClient(null)
-                setClientViewMode('notes')
-              }}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all relative ${activeTab === 'clients' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
-            >
-              Клиенты
-              {chats.some(c => c.unreadCount > 0) && (
-                <span className="absolute -top-1 -right-1 h-5 w-5 bg-secondary rounded-full flex items-center justify-center text-[10px] font-black text-white">
-                  {chats.reduce((sum, c) => sum + c.unreadCount, 0)}
-                </span>
-              )}
-            </button>
+        <div className="flex flex-col lg:flex-row gap-4 w-full lg:w-auto">
+          <div className="overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0">
+            <div className="bg-white p-1 rounded-2xl border border-border flex gap-1 min-w-max">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`px-4 lg:px-6 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'overview' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
+              >
+                Обзор
+              </button>
+              <button
+                onClick={() => setActiveTab('schedule')}
+                className={`px-4 lg:px-6 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'schedule' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
+              >
+                Расписание
+              </button>
+              <button
+                onClick={() => setActiveTab('profile')}
+                className={`px-4 lg:px-6 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'profile' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
+              >
+                Профиль
+              </button>
+              <button
+                onClick={() => setActiveTab('reviews')}
+                className={`px-4 lg:px-6 py-2 rounded-xl text-sm font-bold transition-all relative whitespace-nowrap ${activeTab === 'reviews' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
+              >
+                Отзывы
+                {pendingReviews.length > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-secondary rounded-full flex items-center justify-center text-[10px] font-black text-white">
+                    {pendingReviews.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('clients')
+                  setSelectedClient(null)
+                  setClientViewMode('notes')
+                }}
+                className={`px-4 lg:px-6 py-2 rounded-xl text-sm font-bold transition-all relative whitespace-nowrap ${activeTab === 'clients' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-primary'}`}
+              >
+                Клиенты
+                {chats.some(c => c.unreadCount > 0) && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-secondary rounded-full flex items-center justify-center text-[10px] font-black text-white">
+                    {chats.reduce((sum, c) => sum + c.unreadCount, 0)}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
           <a 
             href="https://my.linkeon.io"
