@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { Search, User, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Zap, Target, FileText, Upload, Briefcase, Rocket, Compass, BatteryCharging, CloudLightning, Users, Smile, Anchor, Wallet, CheckCircle2, Clock, ArrowLeft, MessageSquare, Check, XCircle, PlusCircle, RefreshCw, ChevronRight, Home } from 'lucide-react'
+import { Search, User, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Zap, Target, FileText, Upload, Briefcase, Rocket, Compass, BatteryCharging, CloudLightning, Users, Smile, Anchor, Wallet, CheckCircle2, Clock, ArrowLeft, MessageSquare, Check, XCircle, PlusCircle, RefreshCw, ChevronRight, Home, LogOut } from 'lucide-react'
 import logoHearty from './assets/logo_hearty.jpg'
 import { SpecialistDashboard as SpecialistAnalyticsDashboard } from './pages/analytics/SpecialistDashboard'
 import { AdminDashboard as AdminDashboardPage } from './pages/admin/AdminDashboard'
@@ -8,6 +8,19 @@ import { ChatTestPage } from './pages/ChatTestPage'
 import { SocketProvider } from './contexts/SocketContext'
 import { Toaster } from 'react-hot-toast'
 import { usePageTitle } from './hooks/usePageTitle'
+import { AuthProvider } from './contexts/AuthContext'
+import { ProtectedRoute } from './components/ProtectedRoute'
+import { useAuth } from './hooks/useAuth'
+import { Login } from './pages/Login'
+import { RegisterClient } from './pages/RegisterClient'
+import { RegisterSpecialist } from './pages/RegisterSpecialist'
+import { ForgotPassword } from './pages/ForgotPassword'
+import { ResetPassword } from './pages/ResetPassword'
+import { VerifyEmail } from './pages/VerifyEmail'
+import { Profile } from './pages/Profile'
+import { Messages } from './pages/Messages'
+import { Bookings } from './pages/Bookings'
+import { Payments } from './pages/Payments'
 
 // Constants
 const getApiUrl = () => {
@@ -72,55 +85,94 @@ const Breadcrumbs = ({ items }: { items: { label: string; path?: string }[] }) =
   )
 }
 
-// Layout Component
-const Layout = ({ children }: { children: React.ReactNode }) => {
+// Navigation Component (needs access to AuthContext)
+const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { isAuthenticated, logout } = useAuth()
 
   return (
-    <div className="min-h-screen bg-background font-sans text-foreground">
-      <nav className="border-b bg-white/80 backdrop-blur-xl sticky top-0 z-50 border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <Link to="/" className="flex items-center gap-3">
-              <img src={logoHearty} alt="Hearty" className="h-12 w-12 object-contain" />
-              <span className="text-xl font-bold tracking-tight text-foreground">Hearty</span>
-            </Link>
-            
-            <div className="hidden md:flex items-center gap-8">
-              <Link to="/specialists" className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">Специалисты</Link>
-              <Link to="/onboarding" className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">Для психологов</Link>
+    <nav className="border-b bg-white/80 backdrop-blur-xl sticky top-0 z-50 border-border">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16 items-center">
+          <Link to="/" className="flex items-center gap-3">
+            <img src={logoHearty} alt="Hearty" className="h-12 w-12 object-contain" />
+            <span className="text-xl font-bold tracking-tight text-foreground">Hearty</span>
+          </Link>
+
+          <div className="hidden md:flex items-center gap-8">
+            <Link to="/specialists" className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">Специалисты</Link>
+            <Link to="/onboarding" className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">Для психологов</Link>
+
+            {isAuthenticated ? (
+              <div className="flex items-center gap-4">
+                <Link to="/dashboard" className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">
+                  Кабинет
+                </Link>
+                <button
+                  onClick={logout}
+                  className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Выйти
+                </button>
+              </div>
+            ) : (
               <Link
-                to="/dashboard"
+                to="/login"
                 className="bg-primary text-white px-5 py-2 rounded-full text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
               >
                 Войти
               </Link>
-            </div>
+            )}
+          </div>
 
-            <div className="md:hidden">
-              <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2" aria-label={isMenuOpen ? "Закрыть меню" : "Открыть меню"}>
-                {isMenuOpen ? <X /> : <Menu />}
-              </button>
-            </div>
+          <div className="md:hidden">
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2" aria-label={isMenuOpen ? "Закрыть меню" : "Открыть меню"}>
+              {isMenuOpen ? <X /> : <Menu />}
+            </button>
           </div>
         </div>
+      </div>
 
-        {/* Mobile menu */}
-        {isMenuOpen && (
-          <div className="md:hidden border-t bg-white px-4 py-6 flex flex-col gap-4 animate-in slide-in-from-top duration-300">
-            <Link to="/specialists" className="text-lg font-bold" onClick={() => setIsMenuOpen(false)}>Специалисты</Link>
-            <Link to="/onboarding" className="text-lg font-bold" onClick={() => setIsMenuOpen(false)}>Для психологов</Link>
+      {/* Mobile menu */}
+      {isMenuOpen && (
+        <div className="md:hidden border-t bg-white px-4 py-6 flex flex-col gap-4 animate-in slide-in-from-top duration-300">
+          <Link to="/specialists" className="text-lg font-bold" onClick={() => setIsMenuOpen(false)}>Специалисты</Link>
+          <Link to="/onboarding" className="text-lg font-bold" onClick={() => setIsMenuOpen(false)}>Для психологов</Link>
+
+          {isAuthenticated ? (
+            <>
+              <Link to="/dashboard" className="text-lg font-bold" onClick={() => setIsMenuOpen(false)}>
+                Кабинет
+              </Link>
+              <button
+                onClick={() => { logout(); setIsMenuOpen(false) }}
+                className="w-full bg-muted text-foreground py-4 rounded-2xl font-bold text-center flex items-center justify-center gap-2"
+              >
+                <LogOut className="h-5 w-5" />
+                Выйти
+              </button>
+            </>
+          ) : (
             <Link
-              to="/dashboard"
+              to="/login"
               className="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary/20 text-center"
               onClick={() => setIsMenuOpen(false)}
             >
               Войти
             </Link>
-          </div>
-        )}
-      </nav>
+          )}
+        </div>
+      )}
+    </nav>
+  )
+}
 
+// Layout Component
+const Layout = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="min-h-screen bg-background font-sans text-foreground">
+      <Navigation />
       <main>{children}</main>
 
       <footer className="border-t bg-white py-12 mt-20">
@@ -2252,6 +2304,32 @@ const Diagnostic = () => {
 }
 
 const DashboardSelector = () => {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    // Auto-redirect based on user role
+    if (user?.role === 'CLIENT') {
+      navigate('/dashboard/client', { replace: true })
+    } else if (user?.role === 'SPECIALIST') {
+      navigate('/dashboard/specialist', { replace: true })
+    } else if (user?.role === 'ADMIN') {
+      navigate('/dashboard/admin', { replace: true })
+    }
+  }, [user, navigate])
+
+  // Show selector only if role is not determined yet (shouldn't happen normally)
+  if (user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent mb-4"></div>
+          <p className="text-muted-foreground">Перенаправление...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-20">
       <div className="text-center mb-16">
@@ -2260,7 +2338,7 @@ const DashboardSelector = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Link 
+        <Link
           to="/dashboard/client"
           className="bg-white border-2 border-border rounded-[3rem] p-12 shadow-xl hover:shadow-2xl transition-all hover:border-primary/50 group"
         >
@@ -2278,7 +2356,7 @@ const DashboardSelector = () => {
           </div>
         </Link>
 
-        <Link 
+        <Link
           to="/dashboard/specialist"
           className="bg-white border-2 border-border rounded-[3rem] p-12 shadow-xl hover:shadow-2xl transition-all hover:border-primary/50 group"
         >
@@ -4711,29 +4789,90 @@ const SpecialistDashboard = () => {
 
 const App = () => {
   return (
-    <SocketProvider>
-      <Router>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/specialists" element={<SpecialistsList />} />
-            <Route path="/diagnostic" element={<Diagnostic />} />
-            <Route path="/tools" element={<AITools />} />
-            <Route path="/book/:id" element={<Booking />} />
-            <Route path="/specialist/:id" element={<SpecialistProfile />} />
-            <Route path="/dashboard" element={<DashboardSelector />} />
-            <Route path="/dashboard/client" element={<ClientDashboard />} />
-            <Route path="/dashboard/specialist" element={<SpecialistDashboard />} />
-            <Route path="/dashboard/specialist/analytics/:specialistId" element={<SpecialistAnalyticsDashboard />} />
-            <Route path="/dashboard/admin" element={<AdminDashboardPage />} />
-            <Route path="/test-chat" element={<ChatTestPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Layout>
-      </Router>
-      <Toaster position="top-right" />
-    </SocketProvider>
+    <AuthProvider>
+      <SocketProvider>
+        <Router>
+          <Layout>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<Landing />} />
+              <Route path="/specialists" element={<SpecialistsList />} />
+              <Route path="/specialist/:id" element={<SpecialistProfile />} />
+              <Route path="/diagnostic" element={<Diagnostic />} />
+              <Route path="/tools" element={<AITools />} />
+              <Route path="/onboarding" element={<Onboarding />} />
+
+              {/* Auth routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/register/client" element={<RegisterClient />} />
+              <Route path="/register/specialist" element={<RegisterSpecialist />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
+
+              {/* Protected routes */}
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <DashboardSelector />
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/client" element={
+                <ProtectedRoute requiredRole="CLIENT">
+                  <ClientDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/specialist" element={
+                <ProtectedRoute requiredRole="SPECIALIST">
+                  <SpecialistDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/specialist/analytics/:specialistId" element={
+                <ProtectedRoute requiredRole="SPECIALIST">
+                  <SpecialistAnalyticsDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/admin" element={
+                <ProtectedRoute requiredRole="ADMIN">
+                  <AdminDashboardPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/book/:id" element={
+                <ProtectedRoute>
+                  <Booking />
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } />
+              <Route path="/messages" element={
+                <ProtectedRoute>
+                  <Messages />
+                </ProtectedRoute>
+              } />
+              <Route path="/bookings" element={
+                <ProtectedRoute>
+                  <Bookings />
+                </ProtectedRoute>
+              } />
+              <Route path="/payments" element={
+                <ProtectedRoute>
+                  <Payments />
+                </ProtectedRoute>
+              } />
+
+              {/* Test/Dev routes */}
+              <Route path="/test-chat" element={<ChatTestPage />} />
+
+              {/* 404 */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Layout>
+        </Router>
+        <Toaster position="top-right" />
+      </SocketProvider>
+    </AuthProvider>
   )
 }
 
