@@ -375,9 +375,17 @@ const Landing = () => {
 const SpecialistsList = () => {
   const [specialists, setSpecialists] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchParams] = useSearchParams()
   const filter = searchParams.get('filter')
-  
+
+  // Filters & Sorting State
+  const [sortBy, setSortBy] = useState<'price-asc' | 'price-desc' | 'rating' | 'experience' | 'default'>('default')
+  const [priceRange, setPriceRange] = useState<'all' | 'budget' | 'medium' | 'premium'>('all')
+  const [minRating, setMinRating] = useState<number>(0)
+  const [formatFilter, setFormatFilter] = useState<'all' | 'Онлайн' | 'Лично'>('all')
+  const [showFilters, setShowFilters] = useState(false)
+
   // AI Chat State
   const [chatMessages, setChatMessages] = useState([
     { role: 'ai', content: 'Привет! Я помогу подобрать специалиста именно под ваш запрос. Расскажите немного, что вас сейчас беспокоит?' }
@@ -410,9 +418,9 @@ const SpecialistsList = () => {
 
     try {
       // AI endpoint not implemented - using mock response
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      const mockReply = 'Спасибо за ваш вопрос! AI диагностика временно недоступна. Эта функция будет добавлена в ближайшее время. Пока что вы можете выбрать специалиста из нашего каталога.'
-      setChatMessages([...newMessages, { role: 'ai', content: mockReply }])
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      const mockReply = 'Спасибо за ваш вопрос! AI диагностика сейчас находится в разработке и будет доступна в ближайшее время.\n\nА пока вы можете выбрать специалиста из нашего каталога или изучить профили наших экспертов.'
+      setChatMessages([...newMessages, { role: 'ai', content: mockReply, showCTA: true }])
     } catch (err) {
       console.error(err)
     } finally {
@@ -420,36 +428,82 @@ const SpecialistsList = () => {
     }
   }
 
-  useEffect(() => {
+  const loadSpecialists = () => {
+    setLoading(true)
+    setError(null)
+
     fetch(`${API_URL}/specialists`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}: Не удалось загрузить специалистов`)
+        return res.json()
+      })
       .then(data => {
+        let filtered = data
+
+        // Apply tag/text filter
         if (filter) {
           if (filter === 'Для вас') {
-            // Simulate "For You" by showing high rated specialists (>= 4.9)
-            setSpecialists(data.filter((sp: any) => sp.rating >= 4.9))
+            filtered = filtered.filter((sp: any) => sp.rating >= 4.9)
           } else {
-            const filtered = data.filter((sp: any) => {
-              const searchStr = filter.toLowerCase()
+            const searchStr = filter.toLowerCase()
+            filtered = filtered.filter((sp: any) => {
               return (
-                sp.specialty.toLowerCase().includes(searchStr) || 
+                sp.specialty.toLowerCase().includes(searchStr) ||
                 sp.tags.some((tag: string) => tag.toLowerCase().includes(searchStr)) ||
                 sp.description.toLowerCase().includes(searchStr) ||
                 sp.format.toLowerCase().includes(searchStr)
               )
             })
-            setSpecialists(filtered)
           }
-        } else {
-          setSpecialists(data)
         }
+
+        // Apply price range filter
+        if (priceRange !== 'all') {
+          filtered = filtered.filter((sp: any) => {
+            const price = sp.price / 100
+            if (priceRange === 'budget') return price <= 4000
+            if (priceRange === 'medium') return price > 4000 && price <= 6000
+            if (priceRange === 'premium') return price > 6000
+            return true
+          })
+        }
+
+        // Apply rating filter
+        if (minRating > 0) {
+          filtered = filtered.filter((sp: any) => sp.rating >= minRating)
+        }
+
+        // Apply format filter
+        if (formatFilter !== 'all') {
+          filtered = filtered.filter((sp: any) =>
+            sp.format.includes(formatFilter)
+          )
+        }
+
+        // Apply sorting
+        if (sortBy !== 'default') {
+          filtered = [...filtered].sort((a, b) => {
+            if (sortBy === 'price-asc') return a.price - b.price
+            if (sortBy === 'price-desc') return b.price - a.price
+            if (sortBy === 'rating') return b.rating - a.rating
+            if (sortBy === 'experience') return b.experience - a.experience
+            return 0
+          })
+        }
+
+        setSpecialists(filtered)
         setLoading(false)
       })
       .catch(err => {
         console.error(err)
+        setError(err.message || 'Произошла ошибка при загрузке специалистов')
         setLoading(false)
       })
-  }, [filter])
+  }
+
+  useEffect(() => {
+    loadSpecialists()
+  }, [filter, sortBy, priceRange, minRating, formatFilter])
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-20">
@@ -484,6 +538,186 @@ const SpecialistsList = () => {
         </div>
     </div>
 
+      {/* Filters and Sorting Panel */}
+      {filter !== 'Для вас' && (
+        <div className="mb-8 bg-white rounded-2xl border border-border p-6">
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+            {/* Sort Options */}
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-sm font-black text-muted-foreground uppercase tracking-wider">Сортировать:</span>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: 'default', label: 'По умолчанию' },
+                  { value: 'rating', label: 'По рейтингу' },
+                  { value: 'price-asc', label: 'Цена ↑' },
+                  { value: 'price-desc', label: 'Цена ↓' },
+                  { value: 'experience', label: 'По опыту' }
+                ].map(option => (
+                  <button
+                    key={option.value}
+                    onClick={() => setSortBy(option.value as any)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                      sortBy === option.value
+                        ? 'bg-primary text-white shadow-md'
+                        : 'bg-muted text-muted-foreground hover:bg-primary/10'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Filter Toggle */}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 px-5 py-2 rounded-xl bg-primary/5 text-primary font-bold text-sm hover:bg-primary/10 transition-all border-2 border-primary/20"
+            >
+              <Search className="h-4 w-4" />
+              {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
+            </button>
+          </div>
+
+          {/* Expandable Filters */}
+          {showFilters && (
+            <div className="mt-6 pt-6 border-t border-border grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-top duration-300">
+              {/* Price Range Filter */}
+              <div>
+                <label className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 block">
+                  Диапазон цен
+                </label>
+                <div className="flex flex-col gap-2">
+                  {[
+                    { value: 'all', label: 'Любая цена' },
+                    { value: 'budget', label: 'До 4000 ₽' },
+                    { value: 'medium', label: '4000-6000 ₽' },
+                    { value: 'premium', label: 'От 6000 ₽' }
+                  ].map(option => (
+                    <button
+                      key={option.value}
+                      onClick={() => setPriceRange(option.value as any)}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold text-left transition-all ${
+                        priceRange === option.value
+                          ? 'bg-primary text-white'
+                          : 'bg-muted text-muted-foreground hover:bg-primary/10'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Rating Filter */}
+              <div>
+                <label className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 block">
+                  Минимальный рейтинг
+                </label>
+                <div className="flex flex-col gap-2">
+                  {[
+                    { value: 0, label: 'Любой рейтинг' },
+                    { value: 4.5, label: '4.5+ звезд' },
+                    { value: 4.7, label: '4.7+ звезд' },
+                    { value: 4.9, label: '4.9+ звезд' }
+                  ].map(option => (
+                    <button
+                      key={option.value}
+                      onClick={() => setMinRating(option.value)}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold text-left transition-all flex items-center gap-2 ${
+                        minRating === option.value
+                          ? 'bg-primary text-white'
+                          : 'bg-muted text-muted-foreground hover:bg-primary/10'
+                      }`}
+                    >
+                      {option.value > 0 && <Star className="h-4 w-4 fill-current" />}
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Format Filter */}
+              <div>
+                <label className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 block">
+                  Формат работы
+                </label>
+                <div className="flex flex-col gap-2">
+                  {[
+                    { value: 'all', label: 'Любой формат' },
+                    { value: 'Онлайн', label: 'Только онлайн' },
+                    { value: 'Лично', label: 'Только лично' }
+                  ].map(option => (
+                    <button
+                      key={option.value}
+                      onClick={() => setFormatFilter(option.value as any)}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold text-left transition-all ${
+                        formatFilter === option.value
+                          ? 'bg-primary text-white'
+                          : 'bg-muted text-muted-foreground hover:bg-primary/10'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Active Filters Summary */}
+          {(priceRange !== 'all' || minRating > 0 || formatFilter !== 'all' || sortBy !== 'default') && (
+            <div className="mt-4 pt-4 border-t border-border flex flex-wrap items-center gap-2">
+              <span className="text-xs font-black text-muted-foreground uppercase tracking-wider">
+                Активные фильтры:
+              </span>
+              {priceRange !== 'all' && (
+                <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold flex items-center gap-2">
+                  Цена: {priceRange === 'budget' ? 'до 4000₽' : priceRange === 'medium' ? '4000-6000₽' : 'от 6000₽'}
+                  <button onClick={() => setPriceRange('all')} className="hover:text-primary/70">
+                    <XCircle className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {minRating > 0 && (
+                <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold flex items-center gap-2">
+                  Рейтинг: {minRating}+
+                  <button onClick={() => setMinRating(0)} className="hover:text-primary/70">
+                    <XCircle className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {formatFilter !== 'all' && (
+                <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold flex items-center gap-2">
+                  Формат: {formatFilter}
+                  <button onClick={() => setFormatFilter('all')} className="hover:text-primary/70">
+                    <XCircle className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {sortBy !== 'default' && (
+                <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold flex items-center gap-2">
+                  Сортировка активна
+                  <button onClick={() => setSortBy('default')} className="hover:text-primary/70">
+                    <XCircle className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              <button
+                onClick={() => {
+                  setPriceRange('all')
+                  setMinRating(0)
+                  setFormatFilter('all')
+                  setSortBy('default')
+                }}
+                className="ml-auto px-4 py-1 bg-destructive/10 text-destructive rounded-full text-xs font-bold hover:bg-destructive/20 transition-all"
+              >
+                Сбросить все
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {filter === 'Для вас' && (
         <div className="mb-16 animate-in fade-in slide-in-from-top duration-700">
           <div className="bg-white border-2 border-primary/20 rounded-[3rem] overflow-hidden shadow-2xl shadow-primary/5 flex flex-col md:flex-row h-[calc(100vh-300px)] md:h-[500px] max-h-[800px]">
@@ -509,25 +743,67 @@ const SpecialistsList = () => {
               </div>
             </div>
             <div className="flex-1 flex flex-col bg-background min-h-0">
-              <div 
+              {/* AI Status Indicator */}
+              <div className="px-4 md:px-8 pt-4 pb-2 border-b border-border bg-white/50 backdrop-blur-sm flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 bg-orange-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs font-bold text-muted-foreground">AI в разработке</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-bold text-primary">Персональный ассистент</span>
+                </div>
+              </div>
+
+              <div
                 ref={chatContainerRef}
                 className="flex-1 p-4 md:p-8 overflow-y-auto space-y-4 scroll-smooth min-h-0"
               >
-                {chatMessages.map((m, i) => (
-                  <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] p-4 rounded-2xl font-medium text-sm leading-relaxed ${
-                      m.role === 'user' 
-                        ? 'bg-primary text-white rounded-tr-none' 
-                        : 'bg-muted text-foreground rounded-tl-none border border-border'
-                    }`}>
-                      {m.content}
+                {chatMessages.map((m: any, i) => (
+                  <div key={i} className="space-y-3">
+                    <div className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[85%] p-4 rounded-2xl font-medium text-sm leading-relaxed whitespace-pre-line ${
+                        m.role === 'user'
+                          ? 'bg-primary text-white rounded-tr-none'
+                          : 'bg-muted text-foreground rounded-tl-none border border-border'
+                      }`}>
+                        {m.content}
+                      </div>
                     </div>
+
+                    {/* CTA Buttons after AI message */}
+                    {m.role === 'ai' && m.showCTA && (
+                      <div className="flex justify-start pl-4">
+                        <div className="flex flex-col sm:flex-row gap-2 max-w-[85%]">
+                          <Link
+                            to="/specialists"
+                            className="bg-primary text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                          >
+                            <Search className="h-4 w-4" />
+                            Посмотреть каталог
+                          </Link>
+                          <Link
+                            to="/specialists"
+                            onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
+                            className="bg-white border-2 border-primary text-primary px-6 py-3 rounded-xl text-sm font-bold hover:bg-primary/5 transition-all flex items-center justify-center gap-2"
+                          >
+                            <Users className="h-4 w-4" />
+                            Лучшие специалисты
+                          </Link>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
                 {isTyping && (
                   <div className="flex justify-start">
-                    <div className="bg-muted px-4 py-2 rounded-full animate-pulse text-[10px] font-black uppercase text-muted-foreground">
-                      Ассистент подбирает слова...
+                    <div className="bg-primary/10 text-primary px-4 py-2 rounded-full animate-pulse text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                      <div className="flex gap-1">
+                        <div className="h-1.5 w-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                        <div className="h-1.5 w-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                        <div className="h-1.5 w-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                      </div>
+                      Ассистент думает
                     </div>
                   </div>
                 )}
@@ -555,12 +831,41 @@ const SpecialistsList = () => {
         </div>
       )}
 
-      {specialists.length === 0 && !loading ? (
+      {/* Error State */}
+      {error && !loading ? (
         <div className="text-center py-20">
-          <p className="text-xl font-bold text-muted-foreground">К сожалению, по вашему запросу ничего не найдено.</p>
-          <Link to="/specialists" className="text-primary font-bold hover:underline mt-4 inline-block">
-            Посмотреть всех специалистов
-          </Link>
+          <div className="max-w-md mx-auto bg-white rounded-3xl border-2 border-destructive/20 p-10 shadow-lg">
+            <div className="h-16 w-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <XCircle className="h-8 w-8 text-destructive" />
+            </div>
+            <h3 className="text-2xl font-black text-foreground mb-3">Что-то пошло не так</h3>
+            <p className="text-muted-foreground font-medium mb-6">{error}</p>
+            <button
+              onClick={loadSpecialists}
+              className="bg-primary text-white px-8 py-3 rounded-2xl font-black text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center gap-2 mx-auto"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Попробовать снова
+            </button>
+          </div>
+        </div>
+      ) : specialists.length === 0 && !loading ? (
+        <div className="text-center py-20">
+          <div className="max-w-md mx-auto bg-white rounded-3xl border-2 border-border p-10">
+            <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+              <Search className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-2xl font-black text-foreground mb-3">Ничего не найдено</h3>
+            <p className="text-muted-foreground font-medium mb-6">
+              По вашему запросу не найдено ни одного специалиста. Попробуйте изменить фильтры или посмотрите всех специалистов.
+            </p>
+            <Link
+              to="/specialists"
+              className="bg-primary text-white px-8 py-3 rounded-2xl font-black text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 inline-block"
+            >
+              Посмотреть всех специалистов
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -901,8 +1206,10 @@ const AITools = () => {
 
 const SpecialistProfile = () => {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [specialist, setSpecialist] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [reviewForm, setReviewForm] = useState({
     author: '',
@@ -911,15 +1218,31 @@ const SpecialistProfile = () => {
   })
   const [submittingReview, setSubmittingReview] = useState(false)
 
-  useEffect(() => {
+  const loadProfile = () => {
+    setLoading(true)
+    setError(null)
+
     fetch(`${API_URL}/specialists`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Не удалось загрузить данные')
+        return res.json()
+      })
       .then(data => {
         const found = data.find((s: any) => s.id === parseInt(id || '0'))
+        if (!found) {
+          setError('Специалист не найден')
+        }
         setSpecialist(found)
         setLoading(false)
       })
-      .catch(() => setLoading(false))
+      .catch(err => {
+        setError(err.message || 'Произошла ошибка при загрузке профиля')
+        setLoading(false)
+      })
+  }
+
+  useEffect(() => {
+    loadProfile()
   }, [id])
 
   const handleSubmitReview = async (e: React.FormEvent) => {
@@ -947,8 +1270,60 @@ const SpecialistProfile = () => {
     }
   }
 
-  if (loading) return <div className="p-20 text-center">Загрузка профиля...</div>
-  if (!specialist) return <div className="p-20 text-center">Специалист не найден</div>
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-20">
+        <div className="bg-white rounded-3xl overflow-hidden shadow-sm animate-pulse">
+          <div className="h-96 bg-muted"></div>
+          <div className="p-10 space-y-6">
+            <div className="h-8 bg-muted rounded w-2/3"></div>
+            <div className="h-6 bg-muted rounded w-1/2"></div>
+            <div className="h-4 bg-muted rounded w-full"></div>
+            <div className="h-4 bg-muted rounded w-5/6"></div>
+            <div className="flex gap-2 mt-6">
+              <div className="h-8 w-24 bg-muted rounded"></div>
+              <div className="h-8 w-24 bg-muted rounded"></div>
+              <div className="h-8 w-24 bg-muted rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !specialist) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-20">
+        <div className="bg-white rounded-3xl border-2 border-destructive/20 p-10 text-center shadow-lg">
+          <div className="h-16 w-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <XCircle className="h-8 w-8 text-destructive" />
+          </div>
+          <h3 className="text-2xl font-black text-foreground mb-3">
+            {error || 'Специалист не найден'}
+          </h3>
+          <p className="text-muted-foreground font-medium mb-8">
+            Проверьте правильность ссылки или вернитесь к списку специалистов
+          </p>
+          <div className="flex gap-4 justify-center flex-wrap">
+            <button
+              onClick={loadProfile}
+              className="bg-primary text-white px-8 py-3 rounded-2xl font-black text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Попробовать снова
+            </button>
+            <Link
+              to="/specialists"
+              className="bg-muted text-foreground px-8 py-3 rounded-2xl font-black text-sm hover:bg-muted/80 transition-all flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              К списку специалистов
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12 md:py-20">
@@ -1170,9 +1545,14 @@ const SpecialistProfile = () => {
 
 const Booking = () => {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [specialist, setSpecialist] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [bookingError, setBookingError] = useState<string | null>(null)
   const [booked, setBooked] = useState(false)
+  const [currentStep, setCurrentStep] = useState(1)
   const [selectedDate, setSelectedDate] = useState<string>('')
   const [selectedTime, setSelectedTime] = useState<string>('')
   const [useCustomTime, setUseCustomTime] = useState(false)
@@ -1186,52 +1566,139 @@ const Booking = () => {
     message: ''
   })
 
-  useEffect(() => {
+  const steps = [
+    { number: 1, title: 'Дата и время', icon: Calendar },
+    { number: 2, title: 'Ваши данные', icon: User },
+    { number: 3, title: 'Подтверждение', icon: CheckCircle2 }
+  ]
+
+  const canProceedToStep2 = () => {
+    if (useCustomTime) {
+      return customDate && customTime
+    }
+    return selectedDate && selectedTime
+  }
+
+  const canProceedToStep3 = () => {
+    return formData.name.trim() && formData.phone.trim()
+  }
+
+  const loadSpecialist = () => {
+    setLoading(true)
+    setError(null)
+
     fetch(`${API_URL}/specialists`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Не удалось загрузить данные')
+        return res.json()
+      })
       .then(data => {
         const found = data.find((s: any) => s.id === parseInt(id || '0'))
+        if (!found) {
+          setError('Специалист не найден')
+        }
         setSpecialist(found)
         setLoading(false)
       })
+      .catch(err => {
+        setError(err.message || 'Произошла ошибка при загрузке')
+        setLoading(false)
+      })
+  }
+
+  useEffect(() => {
+    loadSpecialist()
   }, [id])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setBookingError(null)
+
     const finalDate = useCustomTime ? customDate : selectedDate
     const finalTime = useCustomTime ? customTime : selectedTime
-    
+
     if (!finalDate || !finalTime) {
-      alert('Пожалуйста, выберите дату и время')
+      setBookingError('Пожалуйста, выберите дату и время')
       return
     }
-    
+
     setFinalBookingDate(finalDate)
     setFinalBookingTime(finalTime)
-    setLoading(true)
+    setSubmitting(true)
+
     try {
-      await fetch(`${API_URL}/bookings`, {
+      const res = await fetch(`${API_URL}/bookings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          ...formData, 
-          specialistId: id, 
-          date: finalDate, 
+        body: JSON.stringify({
+          ...formData,
+          specialistId: id,
+          date: finalDate,
           time: finalTime,
           isCustomTime: useCustomTime
         })
       })
+      if (!res.ok) throw new Error('Не удалось создать бронирование')
       setBooked(true)
-    } catch (err) {
-      console.error(err)
-      alert('Ошибка при отправке запроса')
+    } catch (err: any) {
+      setBookingError(err.message || 'Произошла ошибка при отправке запроса. Попробуйте еще раз.')
     } finally {
-      setLoading(false)
+      setSubmitting(false)
     }
   }
 
-  if (loading && !specialist) return <div className="p-20 text-center">Загрузка...</div>
-  if (!specialist && !loading) return <div className="p-20 text-center">Специалист не найден</div>
+  if (loading && !specialist) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-20">
+        <div className="bg-white rounded-3xl overflow-hidden shadow-sm animate-pulse">
+          <div className="h-64 bg-muted"></div>
+          <div className="p-10 space-y-6">
+            <div className="h-8 bg-muted rounded w-2/3"></div>
+            <div className="h-6 bg-muted rounded w-1/2"></div>
+            <div className="grid grid-cols-3 gap-4 mt-6">
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className="h-12 bg-muted rounded"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || (!specialist && !loading)) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-20">
+        <div className="bg-white rounded-3xl border-2 border-destructive/20 p-10 text-center shadow-lg">
+          <div className="h-16 w-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <XCircle className="h-8 w-8 text-destructive" />
+          </div>
+          <h3 className="text-2xl font-black text-foreground mb-3">
+            {error || 'Специалист не найден'}
+          </h3>
+          <p className="text-muted-foreground font-medium mb-8">
+            Проверьте правильность ссылки или вернитесь к списку специалистов
+          </p>
+          <div className="flex gap-4 justify-center flex-wrap">
+            <button
+              onClick={loadSpecialist}
+              className="bg-primary text-white px-8 py-3 rounded-2xl font-black text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Попробовать снова
+            </button>
+            <Link
+              to="/specialists"
+              className="bg-muted text-foreground px-8 py-3 rounded-2xl font-black text-sm hover:bg-muted/80 transition-all flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              К списку специалистов
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const availableDates = Object.keys(specialist.slots || {})
 
@@ -1317,11 +1784,66 @@ const Booking = () => {
           
           {/* Calendar & Form Side */}
           <div className="lg:col-span-3 p-12">
+            {/* Stepper */}
+            <div className="mb-12">
+              <div className="flex items-center justify-between relative">
+                {steps.map((step, index) => {
+                  const Icon = step.icon
+                  const isCompleted = currentStep > step.number
+                  const isCurrent = currentStep === step.number
+                  const isDisabled = currentStep < step.number
+
+                  return (
+                    <div key={step.number} className="flex-1 relative">
+                      <div className="flex flex-col items-center">
+                        {/* Step Circle */}
+                        <div
+                          className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-sm transition-all relative z-10 ${
+                            isCompleted
+                              ? 'bg-green-500 text-white shadow-lg shadow-green-500/30'
+                              : isCurrent
+                              ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-110'
+                              : 'bg-muted text-muted-foreground'
+                          }`}
+                        >
+                          {isCompleted ? (
+                            <Check className="h-6 w-6" />
+                          ) : (
+                            <Icon className="h-5 w-5" />
+                          )}
+                        </div>
+
+                        {/* Step Title */}
+                        <span
+                          className={`mt-3 text-xs font-bold text-center transition-all ${
+                            isCurrent ? 'text-primary' : isCompleted ? 'text-green-600' : 'text-muted-foreground'
+                          }`}
+                        >
+                          {step.title}
+                        </span>
+                      </div>
+
+                      {/* Connector Line */}
+                      {index < steps.length - 1 && (
+                        <div
+                          className={`absolute top-6 left-[calc(50%+24px)] w-[calc(100%-48px)] h-1 transition-all ${
+                            currentStep > step.number ? 'bg-green-500' : 'bg-muted'
+                          }`}
+                          style={{ transform: 'translateY(-50%)' }}
+                        />
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-10">
-              {/* Date Selection */}
-              <div>
+              {/* Step 1: Date Selection */}
+              {currentStep === 1 && (
+              <div className="animate-in fade-in slide-in-from-right duration-300">
                 <div className="flex items-center justify-between mb-4">
-                  <label className="block text-[10px] font-black uppercase text-muted-foreground">1. Выберите дату</label>
+                  <label className="block text-sm font-black text-foreground">Выберите дату и время</label>
                   <button
                     type="button"
                     onClick={() => {
@@ -1399,64 +1921,194 @@ const Booking = () => {
                 )}
               </div>
 
-              {/* Time Selection */}
-              {!useCustomTime && selectedDate && specialist.slots[selectedDate] && (
-                <div className="animate-in fade-in slide-in-from-top duration-300">
-                  <label className="block text-[10px] font-black uppercase text-muted-foreground mb-4">2. Выберите время (московское)</label>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                    {specialist.slots[selectedDate].map((time: string) => (
-                      <button
-                        key={time}
-                        type="button"
-                        onClick={() => setSelectedTime(time)}
-                        className={`p-3 rounded-xl border-2 text-sm font-bold transition-all ${
-                          selectedTime === time 
-                            ? 'border-primary bg-primary/5 text-primary' 
-                            : 'border-muted bg-white hover:border-primary/20'
-                        }`}
-                      >
-                        {time}
-                      </button>
-                    ))}
+                {/* Time Selection */}
+                {!useCustomTime && selectedDate && specialist.slots[selectedDate] && (
+                  <div className="mt-6 animate-in fade-in slide-in-from-top duration-300">
+                    <label className="block text-sm font-bold text-foreground mb-4">Выберите время (московское)</label>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                      {specialist.slots[selectedDate].map((time: string) => (
+                        <button
+                          key={time}
+                          type="button"
+                          onClick={() => setSelectedTime(time)}
+                          className={`p-3 rounded-xl border-2 text-sm font-bold transition-all ${
+                            selectedTime === time
+                              ? 'border-primary bg-primary/5 text-primary'
+                              : 'border-muted bg-white hover:border-primary/20'
+                          }`}
+                        >
+                          {time}
+                        </button>
+                      ))}
+                    </div>
                   </div>
+                )}
+
+                {/* Step 1 Navigation */}
+                <div className="flex justify-end mt-8">
+                  <button
+                    type="button"
+                    onClick={() => canProceedToStep2() && setCurrentStep(2)}
+                    disabled={!canProceedToStep2()}
+                    className="bg-primary text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    Далее
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
                 </div>
+              </div>
               )}
 
-              {/* Personal Info */}
-              {((!useCustomTime && selectedTime) || (useCustomTime && customDate && customTime)) && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-top duration-300">
-                  <label className="block text-[10px] font-black uppercase text-muted-foreground">3. Контактные данные</label>
+              {/* Step 2: Personal Info */}
+              {currentStep === 2 && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-right duration-300">
+                  <label className="block text-sm font-black text-foreground">Контактные данные</label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input 
-                      required
-            type="text" 
+                    <input
+                      type="text"
                       value={formData.name}
                       onChange={e => setFormData({...formData, name: e.target.value})}
                       className="w-full bg-muted/50 border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
                       placeholder="Ваше имя"
                     />
-                    <input 
-                      required
-                      type="tel" 
+                    <input
+                      type="tel"
                       value={formData.phone}
                       onChange={e => setFormData({...formData, phone: e.target.value})}
                       className="w-full bg-muted/50 border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
                       placeholder="+7 (900) 000-00-00"
                     />
                   </div>
-                  <textarea 
+                  <textarea
                     value={formData.message}
                     onChange={e => setFormData({...formData, message: e.target.value})}
                     className="w-full bg-muted/50 border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all h-24 resize-none"
                     placeholder="Кратко опишите ваш запрос (необязательно)"
                   />
-                  <button 
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary/30 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
-                  >
-                    {loading ? 'Отправка...' : 'Подтвердить запись'}
-          </button>
+
+                  {/* Step 2 Navigation */}
+                  <div className="flex gap-3 justify-between mt-8">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(1)}
+                      className="bg-muted text-foreground px-8 py-3 rounded-2xl font-bold hover:bg-muted/80 transition-all flex items-center gap-2"
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                      Назад
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => canProceedToStep3() && setCurrentStep(3)}
+                      disabled={!canProceedToStep3()}
+                      className="bg-primary text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      Далее
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Confirmation */}
+              {currentStep === 3 && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-right duration-300">
+                  <label className="block text-sm font-black text-foreground mb-6">Подтверждение записи</label>
+
+                  {/* Summary Card */}
+                  <div className="bg-gradient-to-br from-primary/5 to-secondary/5 border-2 border-primary/20 rounded-3xl p-8 space-y-6">
+                    <div className="flex items-start gap-4">
+                      <div className="h-12 w-12 bg-primary/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+                        <Calendar className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-black uppercase text-muted-foreground mb-1">Дата и время</p>
+                        <p className="text-lg font-black text-foreground">
+                          {(useCustomTime ? customDate : selectedDate) &&
+                            new Date(useCustomTime ? customDate : selectedDate).toLocaleDateString('ru-RU', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            })}
+                        </p>
+                        <p className="text-sm font-bold text-primary">{useCustomTime ? customTime : selectedTime}</p>
+                        {useCustomTime && (
+                          <p className="text-xs text-muted-foreground mt-1">Требует подтверждения специалиста</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-4">
+                      <div className="h-12 w-12 bg-primary/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+                        <User className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-black uppercase text-muted-foreground mb-1">Контактные данные</p>
+                        <p className="text-lg font-black text-foreground">{formData.name}</p>
+                        <p className="text-sm font-bold text-muted-foreground">{formData.phone}</p>
+                        {formData.message && (
+                          <p className="text-sm text-muted-foreground mt-2 italic">«{formData.message}»</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-4">
+                      <div className="h-12 w-12 bg-primary/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+                        <Wallet className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-black uppercase text-muted-foreground mb-1">Стоимость сессии</p>
+                        <p className="text-2xl font-black text-foreground">{specialist.price} ₽</p>
+                        <p className="text-xs text-muted-foreground mt-1">Оплата после подтверждения</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Booking Error */}
+                  {bookingError && (
+                    <div className="bg-destructive/10 border-2 border-destructive/20 rounded-xl p-4 flex items-start gap-3">
+                      <XCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-destructive mb-1">Ошибка бронирования</p>
+                        <p className="text-xs text-destructive/80 font-medium">{bookingError}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setBookingError(null)}
+                        className="text-destructive/50 hover:text-destructive transition-colors"
+                      >
+                        <XCircle className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Step 3 Navigation */}
+                  <div className="flex gap-3 justify-between mt-8">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(2)}
+                      className="bg-muted text-foreground px-8 py-3 rounded-2xl font-bold hover:bg-muted/80 transition-all flex items-center gap-2"
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                      Назад
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="bg-primary text-white px-10 py-4 rounded-2xl font-bold shadow-lg shadow-primary/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {submitting ? (
+                        <>
+                          <RefreshCw className="h-5 w-5 animate-spin" />
+                          Отправка...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="h-5 w-5" />
+                          Подтвердить запись
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               )}
             </form>
