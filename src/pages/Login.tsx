@@ -158,13 +158,13 @@ export const Login = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
-                to="/register-client"
+                to="/register/client"
                 className="flex-1 text-center bg-muted hover:bg-muted/80 text-foreground px-6 py-3 rounded-xl font-bold text-sm transition-all border-2 border-transparent hover:border-primary/20"
               >
                 Клиент
               </Link>
               <Link
-                to="/register-specialist"
+                to="/register/specialist"
                 className="flex-1 text-center bg-muted hover:bg-muted/80 text-foreground px-6 py-3 rounded-xl font-bold text-sm transition-all border-2 border-transparent hover:border-primary/20"
               >
                 Специалист
