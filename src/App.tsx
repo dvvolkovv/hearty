@@ -5,7 +5,7 @@ import logoHearty from './assets/logo_hearty.jpg'
 
 // Constants
 const getApiUrl = () => {
-  const url = import.meta.env.VITE_API_URL || 'https://backendhearty-test.up.railway.app/api'
+  const url = import.meta.env.VITE_API_URL || 'https://heartypro-back-production.up.railway.app/api'
   if (url.startsWith('http')) return url
   return `https://${url}`
 }
