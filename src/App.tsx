@@ -2,6 +2,10 @@ import { useState, useEffect, useRef } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { Search, User, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Zap, Target, FileText, Upload, Briefcase, Rocket, Compass, BatteryCharging, CloudLightning, Users, Smile, Anchor, Wallet, CheckCircle2, Clock, ArrowLeft, MessageSquare, Check, XCircle, PlusCircle, RefreshCw, ChevronRight, Home } from 'lucide-react'
 import logoHearty from './assets/logo_hearty.jpg'
+import { SpecialistDashboard as SpecialistAnalyticsDashboard } from './pages/analytics/SpecialistDashboard'
+import { AdminDashboard as AdminDashboardPage } from './pages/admin/AdminDashboard'
+import { SocketProvider } from './contexts/SocketContext'
+import { Toaster } from 'react-hot-toast'
 
 // Constants
 const getApiUrl = () => {
@@ -4646,22 +4650,27 @@ const SpecialistDashboard = () => {
 
 const App = () => {
   return (
-    <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/specialists" element={<SpecialistsList />} />
-          <Route path="/diagnostic" element={<Diagnostic />} />
-          <Route path="/tools" element={<AITools />} />
-          <Route path="/book/:id" element={<Booking />} />
-          <Route path="/specialist/:id" element={<SpecialistProfile />} />
-          <Route path="/dashboard" element={<DashboardSelector />} />
-          <Route path="/dashboard/client" element={<ClientDashboard />} />
-          <Route path="/dashboard/specialist" element={<SpecialistDashboard />} />
-        </Routes>
-      </Layout>
-    </Router>
+    <SocketProvider>
+      <Router>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/specialists" element={<SpecialistsList />} />
+            <Route path="/diagnostic" element={<Diagnostic />} />
+            <Route path="/tools" element={<AITools />} />
+            <Route path="/book/:id" element={<Booking />} />
+            <Route path="/specialist/:id" element={<SpecialistProfile />} />
+            <Route path="/dashboard" element={<DashboardSelector />} />
+            <Route path="/dashboard/client" element={<ClientDashboard />} />
+            <Route path="/dashboard/specialist" element={<SpecialistDashboard />} />
+            <Route path="/dashboard/specialist/analytics/:specialistId" element={<SpecialistAnalyticsDashboard />} />
+            <Route path="/dashboard/admin" element={<AdminDashboardPage />} />
+          </Routes>
+        </Layout>
+      </Router>
+      <Toaster position="top-right" />
+    </SocketProvider>
   )
 }
 
