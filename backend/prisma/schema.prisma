@@ -1,0 +1,533 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========================================
+// USERS & AUTHENTICATION
+// ========================================
+
+enum UserRole {
+  CLIENT
+  SPECIALIST
+  ADMIN
+}
+
+enum UserStatus {
+  PENDING    // Ожидает подтверждения email
+  ACTIVE     // Активный
+  SUSPENDED  // Заблокирован
+  DELETED    // Удален (soft delete)
+}
+
+model User {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  passwordHash  String
+  role          UserRole
+  status        UserStatus  @default(PENDING)
+
+  // Profile
+  firstName     String?
+  lastName      String?
+  phone         String?
+  avatar        String?
+
+  // Verification
+  emailVerified Boolean     @default(false)
+  verificationToken String?
+  resetPasswordToken String?
+  resetPasswordExpires DateTime?
+
+  // Timestamps
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  lastLoginAt   DateTime?
+
+  // Relations
+  specialist    Specialist?
+  client        Client?
+
+  @@index([email])
+}
+
+// ========================================
+// SPECIALISTS
+// ========================================
+
+enum SpecialistStatus {
+  PENDING    // Ожидает модерации
+  APPROVED   // Одобрен
+  REJECTED   // Отклонен
+  SUSPENDED  // Приостановлен
+}
+
+model Specialist {
+  id            String      @id @default(uuid())
+  userId        String      @unique
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Profile
+  name          String      // Публичное имя
+  specialty     String      // "Психолог, Гештальт-терапевт"
+  description   String      @db.Text
+  fullDescription String?   @db.Text
+  image         String?
+
+  // Professional info
+  education     String[]    // Массив образования
+  certifications String[]   // Сертификаты
+  experience    Int?        // Лет опыта
+
+  // Work settings
+  price         Int         // Цена за сессию в копейках (5000 руб = 500000)
+  sessionDuration Int       @default(60) // Длительность сессии в минутах
+  location      String?     // "Москва"
+  format        String[]    // ["Онлайн", "Лично"]
+  tags          String[]    // ["Гештальт", "Выгорание"]
+
+  // Contact
+  phone         String?
+  email         String?
+  website       String?
+  socialLinks   Json?       // {instagram: "", telegram: "", vk: ""}
+
+  // Stats
+  rating        Float       @default(0)
+  totalReviews  Int         @default(0)
+  totalSessions Int         @default(0)
+
+  // Status & moderation
+  status        SpecialistStatus @default(PENDING)
+  moderationNote String?    // Причина отклонения
+
+  // AI profile (для матчинга)
+  aiProfile     Json?       // Векторы, предпочтения из AI Linkeon
+
+  // Balance
+  balance       Int         @default(0) // В копейках
+
+  // Timestamps
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  timeSlots     TimeSlot[]
+  bookings      Booking[]
+  reviews       Review[]
+  clientNotes   ClientNote[]
+  chatRooms     ChatRoom[]
+  sessions      Session[]
+  transactions  Transaction[]
+  withdrawalRequests WithdrawalRequest[]
+
+  @@index([status])
+  @@index([rating])
+}
+
+// ========================================
+// CLIENTS
+// ========================================
+
+model Client {
+  id            String      @id @default(uuid())
+  userId        String      @unique
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Profile
+  name          String?
+  dateOfBirth   DateTime?
+
+  // Preferences (from AI Diagnostic)
+  preferences   Json?       // Запросы, предпочтения
+  aiProfile     Json?       // Векторы для матчинга
+
+  // Timestamps
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  bookings      Booking[]
+  reviews       Review[]
+  clientNotes   ClientNote[]
+  chatRooms     ChatRoom[]
+  sessions      Session[]
+  transactions  Transaction[]
+
+  @@index([userId])
+}
+
+// ========================================
+// TIME SLOTS (доступное время специалистов)
+// ========================================
+
+model TimeSlot {
+  id            String      @id @default(uuid())
+  specialistId  String
+  specialist    Specialist  @relation(fields: [specialistId], references: [id], onDelete: Cascade)
+
+  date          DateTime    @db.Date
+  time          String      // "10:00", "11:00" и т.д.
+
+  isBooked      Boolean     @default(false)
+  bookingId     String?     @unique
+
+  createdAt     DateTime    @default(now())
+
+  @@unique([specialistId, date, time])
+  @@index([specialistId, date])
+}
+
+// ========================================
+// BOOKINGS
+// ========================================
+
+enum BookingStatus {
+  PENDING       // Создано, ожидает оплаты
+  CONFIRMED     // Оплачено, подтверждено
+  COMPLETED     // Сессия прошла
+  CANCELLED     // Отменено
+  NO_SHOW       // Клиент не пришел
+}
+
+model Booking {
+  id            String      @id @default(uuid())
+
+  clientId      String
+  client        Client      @relation(fields: [clientId], references: [id])
+
+  specialistId  String
+  specialist    Specialist  @relation(fields: [specialistId], references: [id])
+
+  date          DateTime    @db.Date
+  time          String      // "10:00"
+
+  status        BookingStatus @default(PENDING)
+
+  // Payment
+  price         Int         // Цена в копейках на момент бронирования
+  isPaid        Boolean     @default(false)
+  paymentId     String?     // ID платежа в платежной системе
+
+  // Additional info
+  clientMessage String?     @db.Text // Сообщение от клиента
+
+  // Cancellation
+  cancelledAt   DateTime?
+  cancelledBy   String?     // userId кто отменил
+  cancellationReason String? @db.Text
+
+  // Timestamps
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  session       Session?
+  transaction   Transaction?
+
+  @@index([clientId])
+  @@index([specialistId])
+  @@index([date])
+  @@index([status])
+}
+
+// ========================================
+// SESSIONS (проведенные сессии)
+// ========================================
+
+model Session {
+  id            String      @id @default(uuid())
+
+  bookingId     String      @unique
+  booking       Booking     @relation(fields: [bookingId], references: [id])
+
+  clientId      String
+  client        Client      @relation(fields: [clientId], references: [id])
+
+  specialistId  String
+  specialist    Specialist  @relation(fields: [specialistId], references: [id])
+
+  // Session info
+  startedAt     DateTime?
+  endedAt       DateTime?
+  duration      Int?        // Фактическая длительность в минутах
+
+  // Recording (если есть)
+  recordingUrl  String?
+
+  // Notes
+  specialistNotes String?   @db.Text
+
+  // Timestamps
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([clientId])
+  @@index([specialistId])
+}
+
+// ========================================
+// REVIEWS
+// ========================================
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Review {
+  id            String      @id @default(uuid())
+
+  clientId      String
+  client        Client      @relation(fields: [clientId], references: [id])
+
+  specialistId  String
+  specialist    Specialist  @relation(fields: [specialistId], references: [id])
+
+  rating        Int         // 1-5
+  text          String?     @db.Text
+
+  // Detailed ratings (опционально)
+  professionalismRating Int?
+  empathyRating Int?
+  resultRating  Int?
+
+  status        ReviewStatus @default(PENDING)
+  moderationNote String?
+
+  // Timestamps
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([specialistId, status])
+  @@index([clientId])
+}
+
+// ========================================
+// CLIENT NOTES (заметки специалиста о клиенте)
+// ========================================
+
+model ClientNote {
+  id            String      @id @default(uuid())
+
+  specialistId  String
+  specialist    Specialist  @relation(fields: [specialistId], references: [id], onDelete: Cascade)
+
+  clientId      String
+  client        Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  text          String      @db.Text
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([specialistId, clientId])
+}
+
+// ========================================
+// CHAT
+// ========================================
+
+model ChatRoom {
+  id            String      @id @default(uuid())
+
+  clientId      String
+  client        Client      @relation(fields: [clientId], references: [id])
+
+  specialistId  String
+  specialist    Specialist  @relation(fields: [specialistId], references: [id])
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  messages      Message[]
+
+  @@unique([clientId, specialistId])
+  @@index([clientId])
+  @@index([specialistId])
+}
+
+model Message {
+  id            String      @id @default(uuid())
+
+  chatRoomId    String
+  chatRoom      ChatRoom    @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+
+  senderId      String      // userId отправителя
+  senderRole    UserRole    // CLIENT или SPECIALIST
+
+  text          String      @db.Text
+
+  isRead        Boolean     @default(false)
+  readAt        DateTime?
+
+  // Attachments (опционально)
+  attachments   String[]
+
+  createdAt     DateTime    @default(now())
+
+  @@index([chatRoomId])
+  @@index([senderId])
+}
+
+// ========================================
+// TRANSACTIONS (платежи)
+// ========================================
+
+enum TransactionType {
+  BOOKING_PAYMENT      // Оплата бронирования
+  REFUND              // Возврат
+  SPECIALIST_PAYOUT   // Выплата специалисту
+  PLATFORM_FEE        // Комиссия платформы
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model Transaction {
+  id            String      @id @default(uuid())
+
+  type          TransactionType
+  status        TransactionStatus @default(PENDING)
+
+  amount        Int         // В копейках
+  platformFee   Int         @default(0) // Комиссия платформы
+
+  // Участники
+  clientId      String?
+  client        Client?     @relation(fields: [clientId], references: [id])
+
+  specialistId  String?
+  specialist    Specialist? @relation(fields: [specialistId], references: [id])
+
+  bookingId     String?     @unique
+  booking       Booking?    @relation(fields: [bookingId], references: [id])
+
+  // Payment provider info
+  paymentProvider String?   // "yookassa", "stripe"
+  paymentId     String?     // ID в системе провайдера
+
+  metadata      Json?       // Дополнительная информация
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([clientId])
+  @@index([specialistId])
+  @@index([status])
+}
+
+// ========================================
+// WITHDRAWAL REQUESTS (заявки на вывод средств)
+// ========================================
+
+enum WithdrawalStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  REJECTED
+}
+
+model WithdrawalRequest {
+  id            String      @id @default(uuid())
+
+  specialistId  String
+  specialist    Specialist  @relation(fields: [specialistId], references: [id])
+
+  amount        Int         // В копейках
+
+  // Реквизиты
+  paymentMethod String      // "card", "bank_account"
+  paymentDetails Json       // {cardNumber: "1234...", ...}
+
+  status        WithdrawalStatus @default(PENDING)
+
+  processedAt   DateTime?
+  processedBy   String?     // userId админа
+
+  rejectionReason String?   @db.Text
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([specialistId])
+  @@index([status])
+}
+
+// ========================================
+// NOTIFICATIONS
+// ========================================
+
+enum NotificationType {
+  EMAIL
+  PUSH
+  SMS
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model Notification {
+  id            String      @id @default(uuid())
+
+  userId        String
+  type          NotificationType
+
+  subject       String?
+  message       String      @db.Text
+
+  // Metadata
+  templateId    String?     // ID шаблона
+  data          Json?       // Данные для шаблона
+
+  status        NotificationStatus @default(PENDING)
+  sentAt        DateTime?
+  error         String?     @db.Text
+
+  createdAt     DateTime    @default(now())
+
+  @@index([userId])
+  @@index([status])
+}
+
+// ========================================
+// AI CONVERSATIONS (история диалогов с AI)
+// ========================================
+
+enum AIBotType {
+  DIAGNOSTIC   // Диагностический бот для клиентов
+  LINKEON      // Онбординг бот для специалистов
+  EKATERINA    // Контент-генератор для специалистов
+}
+
+model AIConversation {
+  id            String      @id @default(uuid())
+
+  userId        String
+  botType       AIBotType
+
+  messages      Json[]      // [{role: "user", content: "..."}, {role: "assistant", content: "..."}]
+
+  // Результат (если есть)
+  result        Json?       // Профиль, рекомендации и т.д.
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([userId, botType])
+}
