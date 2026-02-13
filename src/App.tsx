@@ -387,7 +387,7 @@ const SpecialistsList = () => {
   const [showFilters, setShowFilters] = useState(false)
 
   // AI Chat State
-  const [chatMessages, setChatMessages] = useState([
+  const [chatMessages, setChatMessages] = useState<Array<{ role: string; content: string; showCTA?: boolean }>>([
     { role: 'ai', content: 'Привет! Я помогу подобрать специалиста именно под ваш запрос. Расскажите немного, что вас сейчас беспокоит?' }
   ])
   const [chatInput, setChatInput] = useState('')
@@ -1206,7 +1206,6 @@ const AITools = () => {
 
 const SpecialistProfile = () => {
   const { id } = useParams()
-  const navigate = useNavigate()
   const [specialist, setSpecialist] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -1545,7 +1544,6 @@ const SpecialistProfile = () => {
 
 const Booking = () => {
   const { id } = useParams()
-  const navigate = useNavigate()
   const [specialist, setSpecialist] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -1791,7 +1789,6 @@ const Booking = () => {
                   const Icon = step.icon
                   const isCompleted = currentStep > step.number
                   const isCurrent = currentStep === step.number
-                  const isDisabled = currentStep < step.number
 
                   return (
                     <div key={step.number} className="flex-1 relative">
