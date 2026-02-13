@@ -7,6 +7,7 @@ import { AdminDashboard as AdminDashboardPage } from './pages/admin/AdminDashboa
 import { ChatTestPage } from './pages/ChatTestPage'
 import { SocketProvider } from './contexts/SocketContext'
 import { Toaster } from 'react-hot-toast'
+import { usePageTitle } from './hooks/usePageTitle'
 
 // Constants
 const getApiUrl = () => {
@@ -18,6 +19,29 @@ const API_URL = getApiUrl()
 const BASE_URL = API_URL.replace('/api', '')
 const IS_PRODUCTION = import.meta.env.PROD
 console.log('Final API URL:', API_URL)
+
+// Helper to format user-friendly error messages
+const getUserFriendlyError = (error: any): string => {
+  // Don't show technical JavaScript errors to users
+  const technicalErrorPatterns = [
+    /is not a function/i,
+    /cannot read property/i,
+    /undefined/i,
+    /null/i,
+    /\.map/i,
+    /\.filter/i,
+    /\.find/i
+  ]
+
+  const errorMessage = error?.message || String(error)
+  const isTechnicalError = technicalErrorPatterns.some(pattern => pattern.test(errorMessage))
+
+  if (isTechnicalError) {
+    return 'Произошла ошибка при загрузке данных. Пожалуйста, обновите страницу.'
+  }
+
+  return errorMessage
+}
 
 const getImageUrl = (imagePath: string) => {
   if (imagePath.startsWith('http')) return imagePath
@@ -114,6 +138,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
 // Pages
 const Landing = () => {
+  usePageTitle('Найдите своего психолога', '')
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
 
@@ -305,7 +330,7 @@ const Landing = () => {
               <div className="h-14 w-14 bg-muted rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
                 <BatteryCharging className="text-primary h-7 w-7" />
               </div>
-              <h3 className="text-xl font-black mb-4 text-foreground">Ресурс</h3>
+              <h3 className="text-xl font-black mb-4 text-foreground">Выгорание</h3>
               <ul className="space-y-3 text-sm font-medium text-muted-foreground">
                 <li className="flex items-center gap-2">• Энергия</li>
                 <li className="flex items-center gap-2">• Выгорание</li>
@@ -326,7 +351,7 @@ const Landing = () => {
               <div className="h-14 w-14 bg-muted rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
                 <CloudLightning className="text-primary h-7 w-7" />
               </div>
-              <h3 className="text-xl font-black mb-4 text-foreground">Состояния</h3>
+              <h3 className="text-xl font-black mb-4 text-foreground">Тревога</h3>
               <ul className="space-y-3 text-sm font-medium text-muted-foreground">
                 <li className="flex items-center gap-2">• Тревога и страхи</li>
                 <li className="flex items-center gap-2">• Депрессия</li>
@@ -350,7 +375,7 @@ const Landing = () => {
               <div className="h-14 w-14 bg-muted rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
                 <Smile className="text-primary h-7 w-7" />
               </div>
-              <h3 className="text-xl font-black mb-4 text-foreground">Самоценность</h3>
+              <h3 className="text-xl font-black mb-4 text-foreground">Самооценка</h3>
               <ul className="space-y-3 text-sm font-medium text-muted-foreground">
                 <li className="flex items-center gap-2">• Неуверенность</li>
                 <li className="flex items-center gap-2">• Самопринятие</li>
@@ -378,6 +403,7 @@ const Landing = () => {
 }
 
 const SpecialistsList = () => {
+  usePageTitle('Специалисты')
   const [specialists, setSpecialists] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -500,8 +526,8 @@ const SpecialistsList = () => {
         setLoading(false)
       })
       .catch(err => {
-        console.error(err)
-        setError(err.message || 'Произошла ошибка при загрузке специалистов')
+        console.error('Specialists loading error:', err)
+        setError(getUserFriendlyError(err))
         setLoading(false)
       })
   }
@@ -955,6 +981,7 @@ const SpecialistsList = () => {
 }
 
 const Onboarding = () => {
+  usePageTitle('Для психологов')
   const [messages, setMessages] = useState([
     { role: 'ai', content: 'Здравствуйте! Я Linkeon. Моя задача — заглянуть за рамки ваших дипломов. Расскажите, в чем заключается ваша истинная философия работы? Какие ценности и какой энергетический настрой вы приносите в каждую сессию?' }
   ])
@@ -2273,7 +2300,39 @@ const DashboardSelector = () => {
   )
 }
 
+const NotFound = () => {
+  usePageTitle('Страница не найдена')
+  const navigate = useNavigate()
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="text-center max-w-2xl">
+        <h1 className="text-9xl font-black text-primary mb-4">404</h1>
+        <h2 className="text-3xl font-bold mb-4">Страница не найдена</h2>
+        <p className="text-lg text-muted-foreground mb-8">
+          К сожалению, запрашиваемая страница не существует или была перемещена.
+        </p>
+        <div className="flex gap-4 justify-center">
+          <button
+            onClick={() => navigate('/')}
+            className="bg-primary text-white px-8 py-3 rounded-full font-bold hover:scale-105 transition-all shadow-lg shadow-primary/30"
+          >
+            На главную
+          </button>
+          <button
+            onClick={() => navigate(-1)}
+            className="bg-white border-2 border-border px-8 py-3 rounded-full font-bold hover:border-primary/30 transition-all"
+          >
+            Назад
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const ClientDashboard = () => {
+  usePageTitle('Кабинет клиента')
   const [bookings, setBookings] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'bookings' | 'messages'>('bookings')
@@ -2597,6 +2656,7 @@ const ClientDashboard = () => {
 }
 
 const SpecialistDashboard = () => {
+  usePageTitle('Кабинет специалиста')
   const [stats, setStats] = useState<any>(null)
   const [bookings, setBookings] = useState<any[]>([])
   const [specialist, setSpecialist] = useState<any>(null)
@@ -4668,6 +4728,7 @@ const App = () => {
             <Route path="/dashboard/specialist/analytics/:specialistId" element={<SpecialistAnalyticsDashboard />} />
             <Route path="/dashboard/admin" element={<AdminDashboardPage />} />
             <Route path="/test-chat" element={<ChatTestPage />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>
       </Router>
