@@ -2026,7 +2026,7 @@ const SpecialistDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [statsRes, bookingsRes, specialistsRes, reviewsRes, clientsRes] = await Promise.all([
+      const [statsRes, bookingsRes, specialistsRes, reviewsRes] = await Promise.all([
         fetch(`${API_URL}/analytics/specialist/1/dashboard`),
         fetch(`${API_URL}/bookings?specialistId=1`),
         fetch(`${API_URL}/specialists`),
@@ -2037,13 +2037,13 @@ const SpecialistDashboard = () => {
       const bookingsData = await bookingsRes.json()
       const specialistsData = await specialistsRes.json()
       const reviewsData = await reviewsRes.json()
-      const clientsData = await clientsRes.json()
-      
+      // NOTES_DISABLED: const clientsData = await clientsRes.json()
+
       setStats(statsData)
       setBookings(bookingsData)
       setSpecialist(specialistsData.find((s: any) => s.id === 1))
       setPendingReviews(reviewsData)
-      setClients(clientsData)
+      setClients([])
     } catch (err) {
       console.error(err)
     } finally {
