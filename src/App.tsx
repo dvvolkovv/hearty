@@ -4788,6 +4788,7 @@ const SpecialistDashboard = () => {
 }
 
 const App = () => {
+  // Auth routes are available at /register/client and /register/specialist
   return (
     <AuthProvider>
       <SocketProvider>
