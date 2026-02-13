@@ -2381,6 +2381,7 @@ const DashboardSelector = () => {
 const NotFound = () => {
   usePageTitle('Страница не найдена')
   const navigate = useNavigate()
+  const location = window.location
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
@@ -2389,6 +2390,9 @@ const NotFound = () => {
         <h2 className="text-3xl font-bold mb-4">Страница не найдена</h2>
         <p className="text-lg text-muted-foreground mb-8">
           К сожалению, запрашиваемая страница не существует или была перемещена.
+        </p>
+        <p className="text-xs text-muted-foreground mb-4 font-mono bg-muted p-2 rounded">
+          DEBUG: Path={location.pathname} | Build=2025-02-13-v3
         </p>
         <div className="flex gap-4 justify-center">
           <button
