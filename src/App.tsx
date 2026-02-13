@@ -4,6 +4,7 @@ import { Search, User, Menu, X, Heart, Sparkles, Calendar, Send, Star, Shield, Z
 import logoHearty from './assets/logo_hearty.jpg'
 import { SpecialistDashboard as SpecialistAnalyticsDashboard } from './pages/analytics/SpecialistDashboard'
 import { AdminDashboard as AdminDashboardPage } from './pages/admin/AdminDashboard'
+import { ChatTestPage } from './pages/ChatTestPage'
 import { SocketProvider } from './contexts/SocketContext'
 import { Toaster } from 'react-hot-toast'
 
@@ -4666,6 +4667,7 @@ const App = () => {
             <Route path="/dashboard/specialist" element={<SpecialistDashboard />} />
             <Route path="/dashboard/specialist/analytics/:specialistId" element={<SpecialistAnalyticsDashboard />} />
             <Route path="/dashboard/admin" element={<AdminDashboardPage />} />
+            <Route path="/test-chat" element={<ChatTestPage />} />
           </Routes>
         </Layout>
       </Router>
