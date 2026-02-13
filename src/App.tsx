@@ -2054,9 +2054,9 @@ const SpecialistDashboard = () => {
   const loadClientNotes = async (clientName: string) => {
     setLoadingNotes(true)
     try {
-      const res = await // NOTES_DISABLED: fetch(`${API_URL}/notes/specialist/1/clients/${encodeURIComponent(clientName)}/notes`)
-      const notes = await res.json()
-      setClientNotes(notes)
+      // NOTES_DISABLED: Feature not implemented on backend
+      console.log('Notes feature disabled for client:', clientName)
+      setClientNotes([])
     } catch (err) {
       console.error(err)
     } finally {
@@ -2088,16 +2088,9 @@ const SpecialistDashboard = () => {
     if (!newNote.trim() || !selectedClient || !selectedClient.name) return
 
     try {
-      const res = await // NOTES_DISABLED: fetch(`${API_URL}/notes/specialist/1/clients/${encodeURIComponent(selectedClient.name)}/notes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: newNote })
-      })
-      const data = await res.json()
-      if (data.success) {
-        setNewNote('')
-        await loadClientNotes(selectedClient.name)
-      }
+      // NOTES_DISABLED: Feature not implemented on backend
+      console.log('Add note disabled:', newNote)
+      alert('Функция заметок временно недоступна')
     } catch (err) {
       console.error(err)
       alert('Ошибка при добавлении заметки')
@@ -2109,13 +2102,9 @@ const SpecialistDashboard = () => {
     if (!selectedClient || !selectedClient.name) return
 
     try {
-      const res = await // NOTES_DISABLED: fetch(`${API_URL}/notes/specialist/1/clients/${encodeURIComponent(selectedClient.name)}/notes/${noteId}`, {
-        method: 'DELETE'
-      })
-      const data = await res.json()
-      if (data.success) {
-        await loadClientNotes(selectedClient.name)
-      }
+      // NOTES_DISABLED: Feature not implemented on backend
+      console.log('Delete note disabled:', noteId)
+      alert('Функция заметок временно недоступна')
     } catch (err) {
       console.error(err)
       alert('Ошибка при удалении заметки')
@@ -2131,35 +2120,9 @@ const SpecialistDashboard = () => {
 
     setSavingClient(true)
     try {
-      const res = await // NOTES_DISABLED: fetch(`${API_URL}/notes/specialist/1/clients`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(clientForm)
-      })
-      const data = await res.json()
-      if (data.success) {
-        setClientForm({ name: '', phone: '', email: '', notes: '' })
-        setShowAddClientForm(false)
-        
-        // Refresh clients list
-        try {
-          const clientsRes = await // NOTES_DISABLED: fetch(`${API_URL}/notes/specialist/1/clients`)
-          const clientsData = await clientsRes.json()
-          setClients(clientsData)
-          
-          // Select the newly added client
-          const newClient = clientsData.find((c: any) => c.name === data.client.name)
-          if (newClient) {
-            await handleSelectClient(newClient)
-          }
-        } catch (err) {
-          console.error(err)
-        }
-        
-        alert('Клиент успешно добавлен')
-      } else {
-        alert(data.error || 'Ошибка при добавлении клиента')
-      }
+      // NOTES_DISABLED: Feature not implemented on backend
+      console.log('Add client disabled:', clientForm)
+      alert('Функция управления клиентами временно недоступна')
     } catch (err) {
       console.error(err)
       alert('Ошибка при добавлении клиента')
@@ -2178,23 +2141,9 @@ const SpecialistDashboard = () => {
 
     setSavingClient(true)
     try {
-      const res = await // NOTES_DISABLED: fetch(`${API_URL}/notes/specialist/1/clients/${encodeURIComponent(selectedClient.name)}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(clientForm)
-      })
-      const data = await res.json()
-      if (data.success) {
-        setShowEditClientForm(false)
-        await fetchData()
-        // Update selected client
-        const updatedClient = { ...selectedClient, ...data.client }
-        setSelectedClient(updatedClient)
-        await loadClientNotes(data.client.name || selectedClient.name)
-        alert('Данные клиента обновлены')
-      } else {
-        alert(data.error || 'Ошибка при обновлении клиента')
-      }
+      // NOTES_DISABLED: Feature not implemented on backend
+      console.log('Edit client disabled:', clientForm)
+      alert('Функция управления клиентами временно недоступна')
     } catch (err) {
       console.error(err)
       alert('Ошибка при обновлении клиента')
@@ -2374,33 +2323,9 @@ const SpecialistDashboard = () => {
 
     setCreatingClientInBooking(true)
     try {
-      const res = await // NOTES_DISABLED: fetch(`${API_URL}/notes/specialist/1/clients`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newClientInBooking)
-      })
-      const data = await res.json()
-      if (data.success) {
-        const newClient = data.client
-        if (!newClient || !newClient.name) {
-          alert('Ошибка: клиент не был создан корректно')
-          return
-        }
-        const updatedClients = [...clients, newClient]
-        setClients(updatedClients)
-        
-        // Устанавливаем созданного клиента в форму встречи
-        setBookingForm(prev => ({
-          ...prev,
-          clientName: newClient.name
-        }))
-        
-        // Скрываем форму создания клиента
-        setShowNewClientInBooking(false)
-        setNewClientInBooking({ name: '', phone: '', email: '' })
-        
-        alert('Клиент успешно создан и выбран!')
-      }
+      // NOTES_DISABLED: Feature not implemented on backend
+      console.log('Create client in booking disabled:', newClientInBooking)
+      alert('Функция управления клиентами временно недоступна')
     } catch (err) {
       console.error(err)
       alert('Ошибка при создании клиента')
