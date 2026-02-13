@@ -74,7 +74,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </div>
 
             <div className="md:hidden">
-              <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2">
+              <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2" aria-label={isMenuOpen ? "Закрыть меню" : "Открыть меню"}>
                 {isMenuOpen ? <X /> : <Menu />}
               </button>
             </div>
@@ -105,7 +105,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <img src={logoHearty} alt="Hearty" className="h-8 w-8 object-contain" />
             <span className="font-bold">Hearty</span>
           </div>
-          <p className="text-muted-foreground text-sm">© 2025 Hearty Platform. Часть экосистемы Linkeon.</p>
+          <p className="text-muted-foreground text-sm">© 2026 Hearty Platform. Часть экосистемы Linkeon.</p>
         </div>
       </footer>
     </div>
@@ -443,7 +443,7 @@ const SpecialistsList = () => {
         return res.json()
       })
       .then(data => {
-        let filtered = data
+        let filtered = data.specialists
 
         // Apply tag/text filter
         if (filter) {
@@ -1232,7 +1232,7 @@ const SpecialistProfile = () => {
         return res.json()
       })
       .then(data => {
-        const found = data.find((s: any) => s.id === parseInt(id || '0'))
+        const found = data.specialists.find((s: any) => s.id === parseInt(id || '0'))
         if (!found) {
           setError('Специалист не найден')
         }
@@ -1596,7 +1596,7 @@ const Booking = () => {
         return res.json()
       })
       .then(data => {
-        const found = data.find((s: any) => s.id === parseInt(id || '0'))
+        const found = data.specialists.find((s: any) => s.id === parseInt(id || '0'))
         if (!found) {
           setError('Специалист не найден')
         }
@@ -2314,7 +2314,7 @@ const ClientDashboard = () => {
     if (activeTab === 'messages') {
       fetch(`${API_URL}/chat/rooms`)
         .then(res => res.json())
-        .then(setChats)
+        .then(data => setChats(data.rooms))
         .catch(console.error)
     }
   }, [activeTab, clientName])
@@ -2729,7 +2729,7 @@ const SpecialistDashboard = () => {
 
       setStats(statsData)
       setBookings(bookingsData)
-      setSpecialist(specialistsData.find((s: any) => s.id === 1))
+      setSpecialist(specialistsData.specialists.find((s: any) => s.id === 1))
       setPendingReviews(reviewsData)
       setClients([])
     } catch (err) {
@@ -2859,7 +2859,7 @@ const SpecialistDashboard = () => {
     if (activeTab === 'clients') {
       fetch(`${API_URL}/chat/rooms`)
         .then(res => res.json())
-        .then(setChats)
+        .then(data => setChats(data.rooms))
         .catch(console.error)
     }
   }, [activeTab])

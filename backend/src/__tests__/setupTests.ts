@@ -50,8 +50,18 @@ afterEach(async () => {
     'User'
   ]
 
+  // Use TRUNCATE CASCADE for faster cleanup (PostgreSQL)
   for (const table of tables) {
-    await prisma.$executeRawUnsafe(`DELETE FROM "${table}";`)
+    try {
+      await prisma.$executeRawUnsafe(`TRUNCATE TABLE "${table}" CASCADE;`)
+    } catch (error) {
+      // Fallback to DELETE if TRUNCATE fails
+      try {
+        await prisma.$executeRawUnsafe(`DELETE FROM "${table}";`)
+      } catch (err) {
+        // Ignore errors for tables that don't exist yet
+      }
+    }
   }
 })
 
