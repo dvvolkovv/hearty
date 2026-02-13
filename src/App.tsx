@@ -383,13 +383,10 @@ const SpecialistsList = () => {
     setIsTyping(true)
 
     try {
-      const res = await fetch(`${API_URL}/ai/diagnostic`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: chatInput })
-      })
-      const data = await res.json()
-      setChatMessages([...newMessages, { role: 'ai', content: data.reply }])
+      // AI endpoint not implemented - using mock response
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      const mockReply = 'Спасибо за ваш вопрос! AI диагностика временно недоступна. Эта функция будет добавлена в ближайшее время. Пока что вы можете выбрать специалиста из нашего каталога.'
+      setChatMessages([...newMessages, { role: 'ai', content: mockReply }])
     } catch (err) {
       console.error(err)
     } finally {
@@ -635,13 +632,10 @@ const Onboarding = () => {
     setIsTyping(true)
 
     try {
-      const res = await fetch(`${API_URL}/ai/linkeon`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input })
-      })
-      const data = await res.json()
-      setMessages([...newMessages, { role: 'ai', content: data.reply }])
+      // AI endpoint not implemented - using mock response
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      const mockReply = 'Спасибо за интерес к Linkeon! AI анализ ценностей временно недоступен. Эта функция будет добавлена в ближайшее время.'
+      setMessages([...newMessages, { role: 'ai', content: mockReply }])
     } catch (err) {
       console.error(err)
     } finally {
@@ -791,13 +785,10 @@ const AITools = () => {
     setIsTyping(true)
 
     try {
-      const res = await fetch(`${API_URL}/ai/ekaterina`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input })
-      })
-      const data = await res.json()
-      setMessages([...newMessages, { role: 'ai', content: data.reply }])
+      // AI endpoint not implemented - using mock response
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      const mockReply = 'Спасибо за ваш запрос! Агент Екатерина временно недоступен. Функция генерации контента будет добавлена в ближайшее время.'
+      setMessages([...newMessages, { role: 'ai', content: mockReply }])
     } catch (err) {
       console.error(err)
       setMessages([...newMessages, { role: 'ai', content: 'Извините, произошла ошибка. Попробуйте еще раз.' }])
@@ -1467,13 +1458,10 @@ const Diagnostic = () => {
     setIsTyping(true)
 
     try {
-      const res = await fetch(`${API_URL}/ai/diagnostic`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input })
-      })
-      const data = await res.json()
-      setMessages([...newMessages, { role: 'ai', content: data.reply }])
+      // AI endpoint not implemented - using mock response
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      const mockReply = 'Спасибо за интерес к AI диагностике! Эта функция временно недоступна и будет добавлена в ближайшее время. Пока вы можете выбрать специалиста из каталога или записаться на консультацию.'
+      setMessages([...newMessages, { role: 'ai', content: mockReply }])
     } catch (err) {
       console.error(err)
     } finally {
@@ -1636,7 +1624,7 @@ const ClientDashboard = () => {
 
   useEffect(() => {
     if (activeTab === 'messages') {
-      fetch(`${API_URL}/clients/${encodeURIComponent(clientName)}/chats`)
+      fetch(`${API_URL}/chat/rooms`)
         .then(res => res.json())
         .then(setChats)
         .catch(console.error)
@@ -1645,7 +1633,7 @@ const ClientDashboard = () => {
 
   useEffect(() => {
     if (selectedChat) {
-      fetch(`${API_URL}/clients/${encodeURIComponent(clientName)}/chats/${selectedChat.specialistId}/messages`)
+      fetch(`${API_URL}/chat/rooms/${selectedChat.specialistId}/messages`)
         .then(res => res.json())
         .then(setChatMessages)
         .catch(console.error)
@@ -1660,7 +1648,7 @@ const ClientDashboard = () => {
     setIsTyping(true)
     
     try {
-      const res = await fetch(`${API_URL}/clients/${encodeURIComponent(clientName)}/chats/${selectedChat.specialistId}/messages`, {
+      const res = await fetch(`${API_URL}/chat/rooms/${selectedChat.specialistId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: messageText })
@@ -2039,11 +2027,11 @@ const SpecialistDashboard = () => {
   const fetchData = async () => {
     try {
       const [statsRes, bookingsRes, specialistsRes, reviewsRes, clientsRes] = await Promise.all([
-        fetch(`${API_URL}/specialists/1/stats`),
-        fetch(`${API_URL}/specialists/1/bookings`),
+        fetch(`${API_URL}/analytics/specialist/1/dashboard`),
+        fetch(`${API_URL}/bookings?specialistId=1`),
         fetch(`${API_URL}/specialists`),
-        fetch(`${API_URL}/specialists/1/reviews/pending`),
-        fetch(`${API_URL}/specialists/1/clients`)
+        fetch(`${API_URL}/reviews/specialist/1?status=pending`),
+        // NOTES_DISABLED: fetch(`${API_URL}/notes/specialist/1/clients`)
       ])
       const statsData = await statsRes.json()
       const bookingsData = await bookingsRes.json()
@@ -2066,7 +2054,7 @@ const SpecialistDashboard = () => {
   const loadClientNotes = async (clientName: string) => {
     setLoadingNotes(true)
     try {
-      const res = await fetch(`${API_URL}/specialists/1/clients/${encodeURIComponent(clientName)}/notes`)
+      const res = await // NOTES_DISABLED: fetch(`${API_URL}/notes/specialist/1/clients/${encodeURIComponent(clientName)}/notes`)
       const notes = await res.json()
       setClientNotes(notes)
     } catch (err) {
@@ -2100,7 +2088,7 @@ const SpecialistDashboard = () => {
     if (!newNote.trim() || !selectedClient || !selectedClient.name) return
 
     try {
-      const res = await fetch(`${API_URL}/specialists/1/clients/${encodeURIComponent(selectedClient.name)}/notes`, {
+      const res = await // NOTES_DISABLED: fetch(`${API_URL}/notes/specialist/1/clients/${encodeURIComponent(selectedClient.name)}/notes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: newNote })
@@ -2121,7 +2109,7 @@ const SpecialistDashboard = () => {
     if (!selectedClient || !selectedClient.name) return
 
     try {
-      const res = await fetch(`${API_URL}/specialists/1/clients/${encodeURIComponent(selectedClient.name)}/notes/${noteId}`, {
+      const res = await // NOTES_DISABLED: fetch(`${API_URL}/notes/specialist/1/clients/${encodeURIComponent(selectedClient.name)}/notes/${noteId}`, {
         method: 'DELETE'
       })
       const data = await res.json()
@@ -2143,7 +2131,7 @@ const SpecialistDashboard = () => {
 
     setSavingClient(true)
     try {
-      const res = await fetch(`${API_URL}/specialists/1/clients`, {
+      const res = await // NOTES_DISABLED: fetch(`${API_URL}/notes/specialist/1/clients`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(clientForm)
@@ -2155,7 +2143,7 @@ const SpecialistDashboard = () => {
         
         // Refresh clients list
         try {
-          const clientsRes = await fetch(`${API_URL}/specialists/1/clients`)
+          const clientsRes = await // NOTES_DISABLED: fetch(`${API_URL}/notes/specialist/1/clients`)
           const clientsData = await clientsRes.json()
           setClients(clientsData)
           
@@ -2190,7 +2178,7 @@ const SpecialistDashboard = () => {
 
     setSavingClient(true)
     try {
-      const res = await fetch(`${API_URL}/specialists/1/clients/${encodeURIComponent(selectedClient.name)}`, {
+      const res = await // NOTES_DISABLED: fetch(`${API_URL}/notes/specialist/1/clients/${encodeURIComponent(selectedClient.name)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(clientForm)
@@ -2232,7 +2220,7 @@ const SpecialistDashboard = () => {
 
   useEffect(() => {
     if (activeTab === 'clients') {
-      fetch(`${API_URL}/specialists/1/chats`)
+      fetch(`${API_URL}/chat/rooms`)
         .then(res => res.json())
         .then(setChats)
         .catch(console.error)
@@ -2241,7 +2229,7 @@ const SpecialistDashboard = () => {
 
   useEffect(() => {
     if (selectedClient && selectedClient.name && clientViewMode === 'chat') {
-      fetch(`${API_URL}/specialists/1/chats/${encodeURIComponent(selectedClient.name)}/messages`)
+      fetch(`${API_URL}/chat/rooms/${encodeURIComponent(selectedClient.name)}/messages`)
         .then(res => res.json())
         .then(setChatMessages)
         .catch(console.error)
@@ -2256,7 +2244,7 @@ const SpecialistDashboard = () => {
     setIsTyping(true)
     
     try {
-      const res = await fetch(`${API_URL}/specialists/1/chats/${encodeURIComponent(selectedClient.name)}/messages`, {
+      const res = await fetch(`${API_URL}/chat/rooms/${encodeURIComponent(selectedClient.name)}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: messageText })
@@ -2274,7 +2262,7 @@ const SpecialistDashboard = () => {
 
   const handleApproveReview = async (reviewId: number) => {
     try {
-      const res = await fetch(`${API_URL}/specialists/1/reviews/${reviewId}/approve`, {
+      const res = await fetch(`${API_URL}/admin/reviews/${reviewId}/approve`, {
         method: 'POST'
       })
       const data = await res.json()
@@ -2293,7 +2281,7 @@ const SpecialistDashboard = () => {
     if (!confirm('Вы уверены, что хотите отклонить этот отзыв?')) return
     
     try {
-      const res = await fetch(`${API_URL}/specialists/1/reviews/${reviewId}/reject`, {
+      const res = await fetch(`${API_URL}/admin/reviews/${reviewId}/reject`, {
         method: 'POST'
       })
       const data = await res.json()
@@ -2316,7 +2304,7 @@ const SpecialistDashboard = () => {
 
     setSavingSlots(true)
     try {
-      const res = await fetch(`${API_URL}/specialists/1/slots`, {
+      const res = await fetch(`${API_URL}/specialists/1/availability`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ date: editingDate, slots: newSlots })
@@ -2386,7 +2374,7 @@ const SpecialistDashboard = () => {
 
     setCreatingClientInBooking(true)
     try {
-      const res = await fetch(`${API_URL}/specialists/1/clients`, {
+      const res = await // NOTES_DISABLED: fetch(`${API_URL}/notes/specialist/1/clients`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newClientInBooking)
@@ -2442,7 +2430,7 @@ const SpecialistDashboard = () => {
       }
 
       // Отправляем на сервер
-      const res = await fetch(`${API_URL}/specialists/1/bookings`, {
+      const res = await fetch(`${API_URL}/bookings?specialistId=1`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newBooking)
@@ -2481,7 +2469,7 @@ const SpecialistDashboard = () => {
 
     setUploadingPhoto(true)
     try {
-      const res = await fetch(`${API_URL}/specialists/1/upload-photo`, {
+      const res = await fetch(`${API_URL}/upload/specialist/image`, {
         method: 'POST',
         body: formData
       })
@@ -2528,7 +2516,7 @@ const SpecialistDashboard = () => {
         }
       })
 
-      const res = await fetch(`${API_URL}/specialists/1/profile`, {
+      const res = await fetch(`${API_URL}/specialists/1`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -2562,7 +2550,7 @@ const SpecialistDashboard = () => {
       if (data.success) {
         setBookings(bookings.map(b => b.id === bookingId ? { ...b, status: newStatus } : b))
         // Refresh stats
-        const statsRes = await fetch(`${API_URL}/specialists/1/stats`)
+        const statsRes = await fetch(`${API_URL}/analytics/specialist/1/dashboard`)
         const statsData = await statsRes.json()
         setStats(statsData)
       }
