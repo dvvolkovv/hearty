@@ -1919,7 +1919,6 @@ const Booking = () => {
                     </div>
                   </div>
                 )}
-              </div>
 
                 {/* Time Selection */}
                 {!useCustomTime && selectedDate && specialist.slots[selectedDate] && (
