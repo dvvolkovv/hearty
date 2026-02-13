@@ -46,6 +46,10 @@ model User {
   resetPasswordToken String?
   resetPasswordExpires DateTime?
 
+  // Ban info
+  bannedAt      DateTime?
+  banReason     String?     @db.Text
+
   // Timestamps
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
@@ -474,6 +478,7 @@ enum NotificationType {
   EMAIL
   PUSH
   SMS
+  IN_APP  // In-app уведомления
 }
 
 enum NotificationStatus {
@@ -494,15 +499,21 @@ model Notification {
   // Metadata
   templateId    String?     // ID шаблона
   data          Json?       // Данные для шаблона
+  actionUrl     String?     // URL для перехода (для in-app уведомлений)
 
   status        NotificationStatus @default(PENDING)
   sentAt        DateTime?
   error         String?     @db.Text
 
+  // For IN_APP notifications
+  isRead        Boolean     @default(false)
+  readAt        DateTime?
+
   createdAt     DateTime    @default(now())
 
   @@index([userId])
   @@index([status])
+  @@index([userId, isRead])  // For efficient unread count queries
 }
 
 // ========================================
