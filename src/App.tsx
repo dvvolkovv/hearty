@@ -3024,7 +3024,15 @@ const SpecialistDashboard = () => {
       ])
       if (statsRes.ok) {
         const statsData = await statsRes.json()
-        setStats(statsData)
+        const m = statsData.data?.metrics || statsData.metrics || statsData
+        setStats({
+          newRequests: m.totalBookings || 0,
+          totalSessions: m.completedSessions || 0,
+          rating: m.averageRating || 0,
+          earned: m.balance || m.pendingPayouts || 0,
+        })
+      } else {
+        setStats({ newRequests: 0, totalSessions: 0, rating: 0, earned: 0 })
       }
       if (bookingsRes.ok) {
         const bookingsData = await bookingsRes.json()
@@ -3471,8 +3479,16 @@ const SpecialistDashboard = () => {
         // Refresh stats
         if (specialistId) {
           const statsRes = await fetch(`${API_URL}/analytics/specialist/${specialistId}/dashboard`, { headers: authHeaders() })
-          const statsData = await statsRes.json()
-          setStats(statsData)
+          if (statsRes.ok) {
+            const statsData = await statsRes.json()
+            const m = statsData.data?.metrics || statsData.metrics || statsData
+            setStats({
+              newRequests: m.totalBookings || 0,
+              totalSessions: m.completedSessions || 0,
+              rating: m.averageRating || 0,
+              earned: m.balance || m.pendingPayouts || 0,
+            })
+          }
         }
       }
     } catch (err) {
@@ -3591,10 +3607,10 @@ const SpecialistDashboard = () => {
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
             {[
-              { label: 'Новые заявки', value: stats.newRequests, icon: Clock, color: 'text-orange-500', bg: 'bg-orange-50' },
-              { label: 'Всего сессий', value: stats.totalSessions, icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50' },
-              { label: 'Ваш рейтинг', value: stats.rating, icon: Star, color: 'text-yellow-500', bg: 'bg-yellow-50' },
-              { label: 'Доход (₽)', value: stats.earned.toLocaleString(), icon: Wallet, color: 'text-primary', bg: 'bg-primary/5' },
+              { label: 'Новые заявки', value: stats?.newRequests ?? 0, icon: Clock, color: 'text-orange-500', bg: 'bg-orange-50' },
+              { label: 'Всего сессий', value: stats?.totalSessions ?? 0, icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50' },
+              { label: 'Ваш рейтинг', value: stats?.rating ?? 0, icon: Star, color: 'text-yellow-500', bg: 'bg-yellow-50' },
+              { label: 'Доход (₽)', value: (stats?.earned ?? 0).toLocaleString(), icon: Wallet, color: 'text-primary', bg: 'bg-primary/5' },
             ].map((stat, i) => (
               <div key={i} className="bg-white p-6 rounded-[2rem] border border-border shadow-sm">
                 <div className={`h-12 w-12 ${stat.bg} ${stat.color} rounded-2xl flex items-center justify-center mb-4`}>
