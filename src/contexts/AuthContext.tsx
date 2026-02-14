@@ -35,7 +35,7 @@ interface AuthContextType {
   isAuthenticated: boolean
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
-  register: (data: RegisterData) => Promise<void>
+  register: (data: RegisterData) => Promise<{ message: string }>
   logout: () => void
   refreshUser: () => Promise<void>
 }
@@ -75,9 +75,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const register = async (data: RegisterData) => {
-    await registerApi(data)
-    // После регистрации показываем сообщение о верификации email
-    // Не логиним автоматически
+    const result = await registerApi(data)
+    return { message: result.message }
   }
 
   const logout = () => {

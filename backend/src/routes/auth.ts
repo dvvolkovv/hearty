@@ -5,6 +5,7 @@ import prisma from '../config/database'
 import { authenticate, generateToken, AuthRequest } from '../middleware/auth'
 import { sendVerificationEmail, sendPasswordResetEmail } from '../services/email'
 import { AppError } from '../middleware/errorHandler'
+import config from '../config/env'
 
 const router = Router()
 
@@ -35,8 +36,9 @@ router.post('/register', async (req, res, next) => {
     // Хешируем пароль
     const passwordHash = await bcrypt.hash(password, 10)
 
-    // Генерируем токен верификации
-    const verificationToken = crypto.randomBytes(32).toString('hex')
+    // Если SMTP настроен — требуем верификацию, иначе — автоактивация
+    const smtpConfigured = !!(config.smtp.user && config.smtp.password)
+    const verificationToken = smtpConfigured ? crypto.randomBytes(32).toString('hex') : null
 
     // Создаем пользователя с профилем
     const user = await prisma.user.create({
@@ -47,6 +49,11 @@ router.post('/register', async (req, res, next) => {
         firstName,
         lastName,
         verificationToken,
+        // Автоактивация если SMTP не настроен
+        ...(!smtpConfigured && {
+          emailVerified: true,
+          status: 'ACTIVE',
+        }),
         // Создаем связанный профиль
         ...(role === 'SPECIALIST' && {
           specialist: {
@@ -74,11 +81,15 @@ router.post('/register', async (req, res, next) => {
       }
     })
 
-    // Отправляем email верификации
-    await sendVerificationEmail(email, verificationToken)
+    // Отправляем email верификации (только если SMTP настроен)
+    if (smtpConfigured && verificationToken) {
+      await sendVerificationEmail(email, verificationToken)
+    }
 
     res.status(201).json({
-      message: 'Registration successful. Please check your email for verification.',
+      message: smtpConfigured
+        ? 'Registration successful. Please check your email for verification.'
+        : 'Registration successful. You can now log in.',
       userId: user.id
     })
   } catch (error) {

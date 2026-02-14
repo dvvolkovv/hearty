@@ -17,6 +17,7 @@ export const RegisterClient = () => {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const [needsVerification, setNeedsVerification] = useState(true)
   const { register } = useAuth()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,13 +68,14 @@ export const RegisterClient = () => {
 
     setIsLoading(true)
     try {
-      await register({
+      const result = await register({
         email: formData.email,
         password: formData.password,
         role: 'CLIENT',
         firstName: formData.firstName,
         lastName: formData.lastName
       })
+      setNeedsVerification(result.message.includes('email'))
       setIsSuccess(true)
     } catch (err: any) {
       // User-friendly error messages
@@ -116,13 +118,27 @@ export const RegisterClient = () => {
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-4">Регистрация успешна!</h1>
             <div className="bg-primary/5 border-2 border-primary/20 rounded-2xl p-6 mb-6">
-              <Mail className="w-8 h-8 text-primary mx-auto mb-3" aria-hidden="true" />
-              <p className="text-sm text-foreground font-medium mb-2">
-                Проверьте вашу почту <span className="font-bold text-primary">{formData.email}</span>
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Мы отправили письмо для подтверждения регистрации
-              </p>
+              {needsVerification ? (
+                <>
+                  <Mail className="w-8 h-8 text-primary mx-auto mb-3" aria-hidden="true" />
+                  <p className="text-sm text-foreground font-medium mb-2">
+                    Проверьте вашу почту <span className="font-bold text-primary">{formData.email}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Мы отправили письмо для подтверждения регистрации
+                  </p>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto mb-3" aria-hidden="true" />
+                  <p className="text-sm text-foreground font-medium mb-2">
+                    Аккаунт активирован!
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Вы можете войти с email <span className="font-bold text-primary">{formData.email}</span>
+                  </p>
+                </>
+              )}
             </div>
             <Link
               to="/login"

@@ -17,6 +17,7 @@ export const RegisterSpecialist = () => {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const [needsVerification, setNeedsVerification] = useState(true)
   const { register } = useAuth()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,13 +68,14 @@ export const RegisterSpecialist = () => {
 
     setIsLoading(true)
     try {
-      await register({
+      const result = await register({
         email: formData.email,
         password: formData.password,
         role: 'SPECIALIST',
         firstName: formData.firstName,
         lastName: formData.lastName
       })
+      setNeedsVerification(result.message.includes('email'))
       setIsSuccess(true)
     } catch (err: any) {
       // User-friendly error messages
@@ -120,14 +122,29 @@ export const RegisterSpecialist = () => {
               <p className="text-sm text-foreground font-medium mb-3">
                 Добро пожаловать в Hearty, {formData.firstName}!
               </p>
-              <p className="text-xs text-muted-foreground mb-2">
-                Проверьте вашу почту <span className="font-bold text-primary">{formData.email}</span> для подтверждения регистрации
-              </p>
-              <div className="mt-4 pt-4 border-t border-border">
-                <p className="text-xs text-muted-foreground">
-                  После подтверждения вы сможете пройти процесс онбординга и начать принимать клиентов
-                </p>
-              </div>
+              {needsVerification ? (
+                <>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Проверьте вашу почту <span className="font-bold text-primary">{formData.email}</span> для подтверждения регистрации
+                  </p>
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <p className="text-xs text-muted-foreground">
+                      После подтверждения вы сможете пройти процесс онбординга и начать принимать клиентов
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Аккаунт активирован! Войдите с email <span className="font-bold text-primary">{formData.email}</span>
+                  </p>
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <p className="text-xs text-muted-foreground">
+                      После входа вы сможете пройти процесс онбординга и начать принимать клиентов
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
             <Link
               to="/login"

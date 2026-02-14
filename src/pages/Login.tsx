@@ -34,9 +34,14 @@ export const Login = () => {
       navigate(from, { replace: true })
     } catch (err: any) {
       // User-friendly error messages
-      if (err.message?.toLowerCase().includes('unauthorized') || err.message?.toLowerCase().includes('invalid')) {
+      const msg = err.message?.toLowerCase() || ''
+      if (msg.includes('verify') || msg.includes('email first')) {
+        setError('Пожалуйста, подтвердите email перед входом. Проверьте почту')
+      } else if (msg.includes('suspended')) {
+        setError('Аккаунт заблокирован. Обратитесь в поддержку')
+      } else if (msg.includes('unauthorized') || msg.includes('invalid')) {
         setError('Неверный email или пароль')
-      } else if (err.message?.toLowerCase().includes('network') || err.message?.toLowerCase().includes('fetch')) {
+      } else if (msg.includes('network') || msg.includes('fetch')) {
         setError('Проблема с подключением к серверу. Проверьте интернет-соединение')
       } else {
         setError('Не удалось войти в систему. Попробуйте ещё раз')
