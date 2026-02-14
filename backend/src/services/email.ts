@@ -1,23 +1,30 @@
 const nodemailer = require('nodemailer')
 import config from '../config/env'
 
-// Временно закомментировано для тестирования
-const transporter = {
-  sendMail: async (options: any) => {
-    console.log('Email would be sent:', options)
-    return Promise.resolve()
+const createTransporter = () => {
+  if (config.smtp.user && config.smtp.password) {
+    console.log('Email service: using SMTP transporter')
+    return nodemailer.createTransport({
+      host: config.smtp.host,
+      port: config.smtp.port,
+      secure: config.smtp.port === 465,
+      auth: {
+        user: config.smtp.user,
+        pass: config.smtp.password,
+      },
+    })
+  }
+
+  console.log('Email service: SMTP not configured, using mock transporter')
+  return {
+    sendMail: async (options: any) => {
+      console.log('Mock email sent:', { to: options.to, subject: options.subject })
+      return Promise.resolve()
+    }
   }
 }
 
-// const transporter = nodemailer.createTransporter({
-//   host: config.smtp.host,
-//   port: config.smtp.port,
-//   secure: false,
-//   auth: {
-//     user: config.smtp.user,
-//     pass: config.smtp.password,
-//   },
-// })
+const transporter = createTransporter()
 
 export const sendVerificationEmail = async (email: string, token: string) => {
   const verificationUrl = `${config.appUrl}/verify-email/${token}`
@@ -31,7 +38,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2>Добро пожаловать в Hearty!</h2>
           <p>Для завершения регистрации, пожалуйста, подтвердите ваш email:</p>
-          <a href="${verificationUrl}" style="display: inline-block; padding: 12px 24px; background: #7C3AED; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">
+          <a href="${verificationUrl}" style="display: inline-block; padding: 12px 24px; background: #0891B2; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">
             Подтвердить email
           </a>
           <p>Или скопируйте эту ссылку в браузер:</p>
@@ -62,7 +69,7 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2>Сброс пароля</h2>
           <p>Вы запросили сброс пароля. Нажмите на кнопку ниже для создания нового пароля:</p>
-          <a href="${resetUrl}" style="display: inline-block; padding: 12px 24px; background: #7C3AED; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">
+          <a href="${resetUrl}" style="display: inline-block; padding: 12px 24px; background: #0891B2; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">
             Сбросить пароль
           </a>
           <p>Или скопируйте эту ссылку в браузер:</p>
@@ -106,7 +113,7 @@ export const sendBookingConfirmation = async (
             <p><strong>Стоимость:</strong> ${data.price / 100} ₽</p>
           </div>
           <p>Ссылка на сессию будет отправлена за 15 минут до начала.</p>
-          <a href="${config.appUrl}/dashboard" style="display: inline-block; padding: 12px 24px; background: #7C3AED; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">
+          <a href="${config.appUrl}/dashboard" style="display: inline-block; padding: 12px 24px; background: #0891B2; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">
             Перейти в личный кабинет
           </a>
         </div>

@@ -2218,19 +2218,40 @@ const Diagnostic = () => {
 
   const handleSend = async () => {
     if (!input.trim()) return
-    
+
     const newMessages = [...messages, { role: 'user', content: input }]
     setMessages(newMessages)
     setInput('')
     setIsTyping(true)
 
     try {
-      // AI endpoint not implemented - using mock response
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      const mockReply = 'Спасибо за интерес к AI диагностике! Эта функция временно недоступна и будет добавлена в ближайшее время. Пока вы можете выбрать специалиста из каталога или записаться на консультацию.'
-      setMessages([...newMessages, { role: 'ai', content: mockReply }])
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+      const response = await fetch(`${API_URL}/diagnostic/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: newMessages }),
+      })
+
+      if (!response.ok) throw new Error('AI service error')
+
+      const data = await response.json()
+      const aiReply = data.reply || 'Извините, не удалось получить ответ.'
+
+      // Check if AI suggested tags for specialist search
+      const tagMatch = aiReply.match(/\[ТЕГИ:\s*(.+?)\]/)
+      if (tagMatch) {
+        const cleanReply = aiReply.replace(/\[ТЕГИ:\s*.+?\]/, '').trim()
+        const tags = tagMatch[1].split(',').map((t: string) => t.trim())
+        setMessages([...newMessages, {
+          role: 'ai',
+          content: cleanReply + '\n\nПодходящие направления: ' + tags.join(', ')
+        }])
+      } else {
+        setMessages([...newMessages, { role: 'ai', content: aiReply }])
+      }
     } catch (err) {
       console.error(err)
+      setMessages([...newMessages, { role: 'ai', content: 'Извините, произошла ошибка. Попробуйте ещё раз или выберите специалиста из каталога.' }])
     } finally {
       setIsTyping(false)
     }
@@ -2373,6 +2394,127 @@ const DashboardSelector = () => {
             </div>
           </div>
         </Link>
+      </div>
+    </div>
+  )
+}
+
+const TermsOfService = () => {
+  usePageTitle('Условия использования')
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="max-w-3xl mx-auto px-4 py-16">
+        <Link to="/" className="inline-flex items-center gap-2 text-primary hover:text-primary/80 mb-8 font-medium">
+          <ArrowLeft className="h-4 w-4" />
+          На главную
+        </Link>
+        <h1 className="text-4xl font-black mb-8">Условия использования</h1>
+        <div className="prose prose-lg max-w-none space-y-6 text-muted-foreground">
+          <p className="text-foreground font-medium">Дата вступления в силу: 1 января 2026 г.</p>
+
+          <h2 className="text-2xl font-bold text-foreground mt-8">1. Общие положения</h2>
+          <p>Настоящие Условия использования (далее — «Условия») регулируют порядок использования платформы Hearty (далее — «Платформа»), расположенной по адресу hearty.pro. Используя Платформу, вы соглашаетесь с настоящими Условиями.</p>
+          <p>Платформа Hearty является сервисом для поиска и подбора специалистов в области психологии и коучинга. Платформа предоставляет технологическую инфраструктуру для взаимодействия между клиентами и специалистами.</p>
+
+          <h2 className="text-2xl font-bold text-foreground mt-8">2. Регистрация и аккаунт</h2>
+          <p>Для использования полного функционала Платформы необходима регистрация. При регистрации вы обязуетесь предоставить достоверную информацию и поддерживать её в актуальном состоянии.</p>
+          <ul className="list-disc pl-6 space-y-2">
+            <li>Вы несёте ответственность за сохранность своих учётных данных</li>
+            <li>Один пользователь может иметь только один аккаунт</li>
+            <li>Минимальный возраст для регистрации — 18 лет</li>
+            <li>Платформа оставляет за собой право заблокировать аккаунт при нарушении Условий</li>
+          </ul>
+
+          <h2 className="text-2xl font-bold text-foreground mt-8">3. Услуги специалистов</h2>
+          <p>Платформа не является поставщиком медицинских или психологических услуг. Специалисты, представленные на Платформе, действуют как независимые профессионалы. Платформа не несёт ответственности за качество оказываемых ими услуг.</p>
+          <p>Все специалисты проходят верификацию через систему Linkeon, однако это не является гарантией квалификации или результата.</p>
+
+          <h2 className="text-2xl font-bold text-foreground mt-8">4. Оплата и возвраты</h2>
+          <p>Оплата за консультации производится через Платформу. Платформа взимает сервисный сбор в размере 15% от стоимости сессии. Возврат средств возможен в случае отмены записи не менее чем за 24 часа до назначенного времени.</p>
+
+          <h2 className="text-2xl font-bold text-foreground mt-8">5. Ограничение ответственности</h2>
+          <p>Платформа предоставляется «как есть». Мы не гарантируем бесперебойную работу сервиса и не несём ответственности за любые убытки, связанные с использованием Платформы.</p>
+
+          <h2 className="text-2xl font-bold text-foreground mt-8">6. Изменение условий</h2>
+          <p>Мы оставляем за собой право изменять настоящие Условия. Уведомление об изменениях будет направлено на электронную почту зарегистрированных пользователей.</p>
+
+          <h2 className="text-2xl font-bold text-foreground mt-8">7. Контакты</h2>
+          <p>По вопросам, связанным с Условиями использования, обращайтесь по адресу: <a href="mailto:support@hearty.pro" className="text-primary hover:underline">support@hearty.pro</a></p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const PrivacyPolicy = () => {
+  usePageTitle('Политика конфиденциальности')
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="max-w-3xl mx-auto px-4 py-16">
+        <Link to="/" className="inline-flex items-center gap-2 text-primary hover:text-primary/80 mb-8 font-medium">
+          <ArrowLeft className="h-4 w-4" />
+          На главную
+        </Link>
+        <h1 className="text-4xl font-black mb-8">Политика конфиденциальности</h1>
+        <div className="prose prose-lg max-w-none space-y-6 text-muted-foreground">
+          <p className="text-foreground font-medium">Дата вступления в силу: 1 января 2026 г.</p>
+
+          <h2 className="text-2xl font-bold text-foreground mt-8">1. Какие данные мы собираем</h2>
+          <p>При использовании Платформы Hearty мы можем собирать следующие данные:</p>
+          <ul className="list-disc pl-6 space-y-2">
+            <li><strong>Данные регистрации:</strong> имя, фамилия, адрес электронной почты, пароль (в зашифрованном виде)</li>
+            <li><strong>Данные профиля:</strong> фотография, контактная информация, профессиональные данные (для специалистов)</li>
+            <li><strong>Данные использования:</strong> информация о бронированиях, сообщениях, отзывах</li>
+            <li><strong>Технические данные:</strong> IP-адрес, тип браузера, данные об устройстве</li>
+            <li><strong>Данные AI-диагностики:</strong> ответы на вопросы диагностики (анонимизированные)</li>
+          </ul>
+
+          <h2 className="text-2xl font-bold text-foreground mt-8">2. Как мы используем данные</h2>
+          <p>Собранные данные используются для:</p>
+          <ul className="list-disc pl-6 space-y-2">
+            <li>Предоставления и улучшения сервиса</li>
+            <li>Подбора специалистов с помощью технологии Linkeon</li>
+            <li>Обработки платежей и бронирований</li>
+            <li>Отправки уведомлений о записях и сообщениях</li>
+            <li>Обеспечения безопасности аккаунтов</li>
+            <li>Аналитики и улучшения качества сервиса</li>
+          </ul>
+
+          <h2 className="text-2xl font-bold text-foreground mt-8">3. Защита данных</h2>
+          <p>Мы применяем технические и организационные меры для защиты ваших данных:</p>
+          <ul className="list-disc pl-6 space-y-2">
+            <li>Шифрование паролей (bcrypt)</li>
+            <li>Передача данных по протоколу HTTPS</li>
+            <li>Аутентификация через JWT-токены</li>
+            <li>Ограничение доступа к данным на основе ролей</li>
+          </ul>
+
+          <h2 className="text-2xl font-bold text-foreground mt-8">4. Передача данных третьим лицам</h2>
+          <p>Мы не продаём и не передаём ваши персональные данные третьим лицам, за исключением:</p>
+          <ul className="list-disc pl-6 space-y-2">
+            <li>Платёжных систем (для обработки оплаты)</li>
+            <li>По требованию законодательства</li>
+            <li>С вашего явного согласия</li>
+          </ul>
+
+          <h2 className="text-2xl font-bold text-foreground mt-8">5. Конфиденциальность переписки</h2>
+          <p>Сообщения между клиентами и специалистами являются конфиденциальными. Платформа не использует содержание чатов для маркетинговых целей. Доступ к переписке имеют только участники диалога.</p>
+
+          <h2 className="text-2xl font-bold text-foreground mt-8">6. Ваши права</h2>
+          <p>Вы имеете право:</p>
+          <ul className="list-disc pl-6 space-y-2">
+            <li>Запросить копию своих данных</li>
+            <li>Потребовать исправления неточных данных</li>
+            <li>Потребовать удаления своего аккаунта и данных</li>
+            <li>Отозвать согласие на обработку данных</li>
+          </ul>
+
+          <h2 className="text-2xl font-bold text-foreground mt-8">7. Файлы cookie</h2>
+          <p>Платформа использует необходимые файлы cookie для обеспечения работы аутентификации и сохранения настроек пользователя. Мы не используем рекламные cookie.</p>
+
+          <h2 className="text-2xl font-bold text-foreground mt-8">8. Контакты</h2>
+          <p>По вопросам конфиденциальности обращайтесь: <a href="mailto:privacy@hearty.pro" className="text-primary hover:underline">privacy@hearty.pro</a></p>
+        </div>
       </div>
     </div>
   )
@@ -4801,6 +4943,8 @@ const App = () => {
               <Route path="/diagnostic" element={<Diagnostic />} />
               <Route path="/tools" element={<AITools />} />
               <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
 
               {/* Auth routes */}
               <Route path="/login" element={<Login />} />

@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 /**
  * Helper function to make authenticated API requests
@@ -68,7 +68,7 @@ export interface SendMessagePayload {
  * Get all chat rooms for current user
  */
 export const getChatRooms = async (): Promise<{ rooms: ChatRoom[] }> => {
-  return apiRequest<{ rooms: ChatRoom[] }>('/api/chat/rooms');
+  return apiRequest<{ rooms: ChatRoom[] }>('/chat/rooms');
 };
 
 /**
@@ -92,7 +92,7 @@ export const getChatMessages = async (
   if (params?.offset) query.set('offset', params.offset.toString());
 
   const queryString = query.toString();
-  const endpoint = `/api/chat/rooms/${roomId}/messages${queryString ? `?${queryString}` : ''}`;
+  const endpoint = `/chat/rooms/${roomId}/messages${queryString ? `?${queryString}` : ''}`;
 
   return apiRequest(endpoint);
 };
@@ -106,7 +106,7 @@ export const sendMessage = async (
   message: string;
   data: Message;
 }> => {
-  return apiRequest('/api/chat/messages', {
+  return apiRequest('/chat/messages', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
@@ -121,7 +121,7 @@ export const markMessageAsRead = async (
   message: string;
   data: Message;
 }> => {
-  return apiRequest(`/api/chat/messages/${messageId}/read`, {
+  return apiRequest(`/chat/messages/${messageId}/read`, {
     method: 'PUT',
   });
 };
@@ -135,7 +135,7 @@ export const markRoomMessagesAsRead = async (
   message: string;
   count: number;
 }> => {
-  return apiRequest(`/api/chat/rooms/${roomId}/read-all`, {
+  return apiRequest(`/chat/rooms/${roomId}/read-all`, {
     method: 'PUT',
   });
 };

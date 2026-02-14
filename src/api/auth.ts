@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
 interface LoginResponse {
   token: string
@@ -22,7 +22,7 @@ interface RegisterData {
 }
 
 export const loginApi = async (email: string, password: string): Promise<LoginResponse> => {
-  const response = await fetch(`${API_URL}/api/auth/login`, {
+  const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password })
@@ -37,7 +37,7 @@ export const loginApi = async (email: string, password: string): Promise<LoginRe
 }
 
 export const registerApi = async (data: RegisterData): Promise<{ message: string; userId: string }> => {
-  const response = await fetch(`${API_URL}/api/auth/register`, {
+  const response = await fetch(`${API_URL}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
@@ -54,7 +54,7 @@ export const registerApi = async (data: RegisterData): Promise<{ message: string
 export const getMeApi = async (): Promise<{ user: any }> => {
   const token = localStorage.getItem('token')
 
-  const response = await fetch(`${API_URL}/api/auth/me`, {
+  const response = await fetch(`${API_URL}/auth/me`, {
     headers: {
       'Authorization': `Bearer ${token}`
     }
@@ -68,7 +68,7 @@ export const getMeApi = async (): Promise<{ user: any }> => {
 }
 
 export const forgotPasswordApi = async (email: string): Promise<{ message: string }> => {
-  const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
+  const response = await fetch(`${API_URL}/auth/forgot-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email })
@@ -83,7 +83,7 @@ export const forgotPasswordApi = async (email: string): Promise<{ message: strin
 }
 
 export const resetPasswordApi = async (token: string, newPassword: string): Promise<{ message: string }> => {
-  const response = await fetch(`${API_URL}/api/auth/reset-password`, {
+  const response = await fetch(`${API_URL}/auth/reset-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token, newPassword })
@@ -98,7 +98,7 @@ export const resetPasswordApi = async (token: string, newPassword: string): Prom
 }
 
 export const verifyEmailApi = async (token: string): Promise<{ message: string }> => {
-  const response = await fetch(`${API_URL}/api/auth/verify-email/${token}`)
+  const response = await fetch(`${API_URL}/auth/verify-email/${token}`)
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Verification failed' }))

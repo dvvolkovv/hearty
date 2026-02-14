@@ -1,6 +1,7 @@
 import express from 'express'
 import { createServer } from 'http'
 import cors from 'cors'
+import rateLimit from 'express-rate-limit'
 import config from './config/env'
 import prisma from './config/database'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler'
@@ -18,6 +19,7 @@ import uploadRoutes from './routes/upload'
 import notificationsRoutes from './routes/notifications'
 import searchRoutes from './routes/search'
 import analyticsRoutes from './routes/analytics'
+import diagnosticRoutes from './routes/diagnostic'
 
 const app = express()
 const PORT = config.port
@@ -33,6 +35,28 @@ app.use(cors({
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(express.static('public'))
+
+// Rate limiting
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later' },
+})
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many authentication attempts, please try again later' },
+})
+
+app.use('/api/', generalLimiter)
+app.use('/api/auth/login', authLimiter)
+app.use('/api/auth/register', authLimiter)
+app.use('/api/auth/forgot-password', authLimiter)
 
 // Health check
 app.get('/health', (req, res) => {
@@ -53,6 +77,7 @@ app.use('/api/upload', uploadRoutes)
 app.use('/api/notifications', notificationsRoutes)
 app.use('/api/search', searchRoutes)
 app.use('/api/analytics', analyticsRoutes)
+app.use('/api/diagnostic', diagnosticRoutes)
 
 // 404 handler
 app.use(notFoundHandler)

@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 /**
  * Helper function to make authenticated API requests
@@ -63,7 +63,7 @@ export const getNotifications = async (params?: {
   if (params?.unreadOnly) query.set('unreadOnly', params.unreadOnly.toString());
 
   const queryString = query.toString();
-  const endpoint = `/api/notifications${queryString ? `?${queryString}` : ''}`;
+  const endpoint = `/notifications${queryString ? `?${queryString}` : ''}`;
 
   return apiRequest(endpoint);
 };
@@ -74,7 +74,7 @@ export const getNotifications = async (params?: {
 export const getUnreadCount = async (): Promise<{
   data: { count: number };
 }> => {
-  return apiRequest('/api/notifications/unread-count');
+  return apiRequest('/notifications/unread-count');
 };
 
 /**
@@ -86,7 +86,7 @@ export const markNotificationAsRead = async (
   message: string;
   data: Notification;
 }> => {
-  return apiRequest(`/api/notifications/${notificationId}/read`, {
+  return apiRequest(`/notifications/${notificationId}/read`, {
     method: 'PUT',
   });
 };
@@ -98,7 +98,7 @@ export const markAllNotificationsAsRead = async (): Promise<{
   message: string;
   data: { count: number };
 }> => {
-  return apiRequest('/api/notifications/read-all', {
+  return apiRequest('/notifications/read-all', {
     method: 'PUT',
   });
 };
@@ -112,7 +112,7 @@ export const deleteNotification = async (
   message: string;
   data: { id: string };
 }> => {
-  return apiRequest(`/api/notifications/${notificationId}`, {
+  return apiRequest(`/notifications/${notificationId}`, {
     method: 'DELETE',
   });
 };
@@ -124,7 +124,7 @@ export const deleteAllReadNotifications = async (): Promise<{
   message: string;
   data: { count: number };
 }> => {
-  return apiRequest('/api/notifications/read/all', {
+  return apiRequest('/notifications/read/all', {
     method: 'DELETE',
   });
 };
