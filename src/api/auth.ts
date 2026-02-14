@@ -30,7 +30,7 @@ export const loginApi = async (email: string, password: string): Promise<LoginRe
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Login failed' }))
-    throw new Error(error.message || `HTTP ${response.status}`)
+    throw new Error(error.error || error.message || `HTTP ${response.status}`)
   }
 
   return response.json()
@@ -45,7 +45,7 @@ export const registerApi = async (data: RegisterData): Promise<{ message: string
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Registration failed' }))
-    throw new Error(error.message || `HTTP ${response.status}`)
+    throw new Error(error.error || error.message || `HTTP ${response.status}`)
   }
 
   return response.json()
@@ -76,7 +76,7 @@ export const forgotPasswordApi = async (email: string): Promise<{ message: strin
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Request failed' }))
-    throw new Error(error.message || `HTTP ${response.status}`)
+    throw new Error(error.error || error.message || `HTTP ${response.status}`)
   }
 
   return response.json()
@@ -91,7 +91,7 @@ export const resetPasswordApi = async (token: string, newPassword: string): Prom
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Reset failed' }))
-    throw new Error(error.message || `HTTP ${response.status}`)
+    throw new Error(error.error || error.message || `HTTP ${response.status}`)
   }
 
   return response.json()
@@ -102,7 +102,7 @@ export const verifyEmailApi = async (token: string): Promise<{ message: string }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Verification failed' }))
-    throw new Error(error.message || `HTTP ${response.status}`)
+    throw new Error(error.error || error.message || `HTTP ${response.status}`)
   }
 
   return response.json()
