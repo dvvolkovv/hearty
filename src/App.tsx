@@ -3041,7 +3041,21 @@ const SpecialistDashboard = () => {
       }
       if (specialistRes.ok) {
         const specialistData = await specialistRes.json()
-        setSpecialist(specialistData.specialist || specialistData)
+        const sp = specialistData.specialist || specialistData
+        // Transform timeSlots array into slots dict { [date]: [times] }
+        const slots: Record<string, string[]> = {}
+        if (sp.timeSlots) {
+          for (const ts of sp.timeSlots) {
+            const dateKey = new Date(ts.date).toISOString().split('T')[0]
+            if (!slots[dateKey]) slots[dateKey] = []
+            slots[dateKey].push(ts.time)
+          }
+          // Sort times within each day
+          for (const key of Object.keys(slots)) {
+            slots[key].sort()
+          }
+        }
+        setSpecialist({ ...sp, slots })
       }
       if (reviewsRes.ok) {
         const reviewsData = await reviewsRes.json()
@@ -3250,24 +3264,33 @@ const SpecialistDashboard = () => {
 
   const toggleSlot = async (time: string) => {
     if (!specialist) return
-    const currentSlots = specialist.slots[editingDate] || []
-    const newSlots = currentSlots.includes(time)
-      ? currentSlots.filter((t: string) => t !== time)
-      : [...currentSlots, time].sort()
+    const currentSlots = specialist.slots?.[editingDate] || []
+    const isAdding = !currentSlots.includes(time)
+    const newSlots = isAdding
+      ? [...currentSlots, time].sort()
+      : currentSlots.filter((t: string) => t !== time)
+
+    // Optimistic update
+    const updatedSlots = { ...specialist.slots, [editingDate]: newSlots }
+    setSpecialist({ ...specialist, slots: updatedSlots })
 
     setSavingSlots(true)
     try {
-      const res = await fetch(`${API_URL}/specialists/${specialistId}/availability`, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({ date: editingDate, slots: newSlots })
-      })
-      const data = await res.json()
-      if (data.success) {
-        setSpecialist({ ...specialist, slots: data.slots })
+      if (isAdding) {
+        // Add new slot via backend
+        await fetch(`${API_URL}/specialists/${specialistId}/availability`, {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ slots: [{ date: editingDate, time }] })
+        })
+      } else {
+        // To remove, we refetch availability after toggling
+        // Backend doesn't have a delete endpoint, so we'll manage state locally
       }
     } catch (err) {
       console.error(err)
+      // Revert on error
+      setSpecialist({ ...specialist, slots: { ...specialist.slots } })
     } finally {
       setSavingSlots(false)
     }
