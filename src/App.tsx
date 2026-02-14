@@ -56,7 +56,8 @@ const getUserFriendlyError = (error: any): string => {
   return errorMessage
 }
 
-const getImageUrl = (imagePath: string) => {
+const getImageUrl = (imagePath: string | null | undefined) => {
+  if (!imagePath) return '/placeholder-avatar.png'
   if (imagePath.startsWith('http')) return imagePath
   return `${BASE_URL}${imagePath}`
 }
