@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { Calendar, Clock, MapPin, User, MessageCircle, X, CheckCircle, AlertCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
 interface Booking {
   id: string
@@ -62,7 +62,7 @@ export const Bookings = () => {
       if (clientId) params.set('clientId', clientId)
       if (specialistId) params.set('specialistId', specialistId)
 
-      const response = await fetch(`${API_URL}/api/bookings?${params}`, {
+      const response = await fetch(`${API_URL}/bookings?${params}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -87,11 +87,13 @@ export const Bookings = () => {
 
     setCancellingId(bookingId)
     try {
-      const response = await fetch(`${API_URL}/api/bookings/${bookingId}/cancel`, {
-        method: 'PATCH',
+      const response = await fetch(`${API_URL}/bookings/${bookingId}/status`, {
+        method: 'PUT',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+        },
+        body: JSON.stringify({ status: 'CANCELLED' })
       })
 
       if (!response.ok) {

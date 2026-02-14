@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { Eye, EyeOff, UserPlus, Heart, CheckCircle2, Rocket } from 'lucide-react'
+import { Eye, EyeOff, UserPlus, Heart } from 'lucide-react'
 
 export const RegisterSpecialist = () => {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -16,8 +17,6 @@ export const RegisterSpecialist = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [isSuccess, setIsSuccess] = useState(false)
-  const [needsVerification, setNeedsVerification] = useState(true)
   const { register } = useAuth()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,15 +67,16 @@ export const RegisterSpecialist = () => {
 
     setIsLoading(true)
     try {
-      const result = await register({
+      await register({
         email: formData.email,
         password: formData.password,
         role: 'SPECIALIST',
         firstName: formData.firstName,
         lastName: formData.lastName
       })
-      setNeedsVerification(result.message.includes('email'))
-      setIsSuccess(true)
+      // Auto-login happens inside register, redirect to dashboard
+      navigate('/dashboard', { replace: true })
+      return
     } catch (err: any) {
       // User-friendly error messages
       if (err.message?.toLowerCase().includes('already exists') || err.message?.toLowerCase().includes('duplicate')) {
@@ -107,56 +107,6 @@ export const RegisterSpecialist = () => {
   }
 
   const passwordStrength = getPasswordStrength(formData.password)
-
-  if (isSuccess) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-        <div className="w-full max-w-md">
-          <div className="bg-white border-2 border-border rounded-[3rem] p-12 shadow-xl text-center">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-green-50 rounded-2xl mb-6">
-              <CheckCircle2 className="w-12 h-12 text-green-500" aria-label="Успешная регистрация" />
-            </div>
-            <h1 className="text-2xl font-bold text-foreground mb-4">Регистрация успешна!</h1>
-            <div className="bg-gradient-to-r from-primary/10 via-secondary/5 to-primary/10 border-2 border-primary/20 rounded-2xl p-6 mb-6">
-              <Rocket className="w-8 h-8 text-primary mx-auto mb-3" aria-hidden="true" />
-              <p className="text-sm text-foreground font-medium mb-3">
-                Добро пожаловать в Hearty, {formData.firstName}!
-              </p>
-              {needsVerification ? (
-                <>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    Проверьте вашу почту <span className="font-bold text-primary">{formData.email}</span> для подтверждения регистрации
-                  </p>
-                  <div className="mt-4 pt-4 border-t border-border">
-                    <p className="text-xs text-muted-foreground">
-                      После подтверждения вы сможете пройти процесс онбординга и начать принимать клиентов
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    Аккаунт активирован! Войдите с email <span className="font-bold text-primary">{formData.email}</span>
-                  </p>
-                  <div className="mt-4 pt-4 border-t border-border">
-                    <p className="text-xs text-muted-foreground">
-                      После входа вы сможете пройти процесс онбординга и начать принимать клиентов
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
-            <Link
-              to="/login"
-              className="inline-block w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
-            >
-              Перейти к входу
-            </Link>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-primary/5 via-background to-secondary/5">

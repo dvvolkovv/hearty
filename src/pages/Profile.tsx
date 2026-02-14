@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { User, Mail, Phone, Lock, Camera, Save } from 'lucide-react'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
 export const Profile = () => {
   const { user, refreshUser } = useAuth()
@@ -29,7 +29,7 @@ export const Profile = () => {
     setSuccess('')
 
     try {
-      const response = await fetch(`${API_URL}/api/users/${user?.id}`, {
+      const response = await fetch(`${API_URL}/users/${user?.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -69,7 +69,7 @@ export const Profile = () => {
     setSuccess('')
 
     try {
-      const response = await fetch(`${API_URL}/api/users/${user?.id}/password`, {
+      const response = await fetch(`${API_URL}/users/${user?.id}/password`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -110,7 +110,7 @@ export const Profile = () => {
     setError('')
 
     try {
-      const response = await fetch(`${API_URL}/api/users/${user?.id}/avatar`, {
+      const response = await fetch(`${API_URL}/users/${user?.id}/avatar`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

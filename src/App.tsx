@@ -2552,6 +2552,7 @@ const NotFound = () => {
 
 const ClientDashboard = () => {
   usePageTitle('Кабинет клиента')
+  const { user } = useAuth()
   const [bookings, setBookings] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'bookings' | 'messages'>('bookings')
@@ -2561,7 +2562,11 @@ const ClientDashboard = () => {
   const [chatInput, setChatInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const chatContainerRef = useRef<HTMLDivElement>(null)
-  const clientName = 'Марина' // Mock имя клиента
+
+  const authHeaders = () => ({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${localStorage.getItem('token')}`
+  })
 
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
@@ -2577,51 +2582,57 @@ const ClientDashboard = () => {
   }, [chatMessages, isTyping])
 
   useEffect(() => {
-    // Mock данные для клиента
-    const mockBookings = [
-      { id: 1, specialistName: 'Алексей Иванов', specialistId: 1, date: '2025-12-20', time: '10:00', status: 'confirmed', specialty: 'Психолог, Гештальт-терапевт' },
-      { id: 2, specialistName: 'Мария Петрова', specialistId: 2, date: '2025-12-22', time: '14:00', status: 'pending', specialty: 'Коуч, Бизнес-консультант' }
-    ]
-    setTimeout(() => {
-      setBookings(mockBookings)
-      setLoading(false)
-    }, 500)
-  }, [])
+    // Load real bookings from API
+    const loadBookings = async () => {
+      try {
+        const res = await fetch(`${API_URL}/bookings`, { headers: authHeaders() })
+        if (res.ok) {
+          const data = await res.json()
+          setBookings(data.bookings || [])
+        }
+      } catch (err) {
+        console.error('Failed to load bookings:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadBookings()
+  }, [user])
 
   useEffect(() => {
     if (activeTab === 'messages') {
-      fetch(`${API_URL}/chat/rooms`)
+      fetch(`${API_URL}/chat/rooms`, { headers: authHeaders() })
         .then(res => res.json())
-        .then(data => setChats(data.rooms))
+        .then(data => setChats(data.rooms || []))
         .catch(console.error)
     }
-  }, [activeTab, clientName])
+  }, [activeTab])
 
   useEffect(() => {
     if (selectedChat) {
-      fetch(`${API_URL}/chat/rooms/${selectedChat.specialistId}/messages`)
+      fetch(`${API_URL}/chat/rooms/${selectedChat.id}/messages`, { headers: authHeaders() })
         .then(res => res.json())
-        .then(setChatMessages)
+        .then(data => setChatMessages(data.messages || []))
         .catch(console.error)
     }
-  }, [selectedChat, clientName])
+  }, [selectedChat])
 
   const handleSendMessage = async () => {
     if (!chatInput.trim() || !selectedChat) return
-    
+
     const messageText = chatInput
     setChatInput('')
     setIsTyping(true)
-    
+
     try {
-      const res = await fetch(`${API_URL}/chat/rooms/${selectedChat.specialistId}/messages`, {
+      const res = await fetch(`${API_URL}/chat/messages`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: messageText })
+        headers: authHeaders(),
+        body: JSON.stringify({ roomId: selectedChat.id, text: messageText })
       })
       const data = await res.json()
-      if (data.success) {
-        setChatMessages([...chatMessages, data.message])
+      if (data.data) {
+        setChatMessages(prev => [...prev, data.data])
       }
     } catch (err) {
       console.error(err)
@@ -2876,6 +2887,8 @@ const ClientDashboard = () => {
 
 const SpecialistDashboard = () => {
   usePageTitle('Кабинет специалиста')
+  const { user } = useAuth()
+  const specialistId = user?.specialist?.id
   const [stats, setStats] = useState<any>(null)
   const [bookings, setBookings] = useState<any[]>([])
   const [specialist, setSpecialist] = useState<any>(null)
@@ -2887,6 +2900,11 @@ const SpecialistDashboard = () => {
   const [chatInput, setChatInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const chatContainerRef = useRef<HTMLDivElement>(null)
+
+  const authHeaders = () => ({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${localStorage.getItem('token')}`
+  })
 
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
@@ -2992,24 +3010,27 @@ const SpecialistDashboard = () => {
   }
 
   const fetchData = async () => {
+    if (!specialistId) {
+      setLoading(false)
+      return
+    }
     try {
-      const [statsRes, bookingsRes, specialistsRes, reviewsRes] = await Promise.all([
-        fetch(`${API_URL}/analytics/specialist/1/dashboard`),
-        fetch(`${API_URL}/bookings?specialistId=1`),
-        fetch(`${API_URL}/specialists`),
-        fetch(`${API_URL}/reviews/specialist/1?status=pending`),
-        // NOTES_DISABLED: fetch(`${API_URL}/notes/specialist/1/clients`)
+      const headers = authHeaders()
+      const [statsRes, bookingsRes, specialistRes, reviewsRes] = await Promise.all([
+        fetch(`${API_URL}/analytics/specialist/${specialistId}/dashboard`, { headers }),
+        fetch(`${API_URL}/bookings`, { headers }),
+        fetch(`${API_URL}/specialists/${specialistId}`),
+        fetch(`${API_URL}/reviews/specialist/${specialistId}?status=pending`, { headers }),
       ])
       const statsData = await statsRes.json()
       const bookingsData = await bookingsRes.json()
-      const specialistsData = await specialistsRes.json()
+      const specialistData = await specialistRes.json()
       const reviewsData = await reviewsRes.json()
-      // NOTES_DISABLED: const clientsData = await clientsRes.json()
 
       setStats(statsData)
-      setBookings(bookingsData)
-      setSpecialist(specialistsData.specialists.find((s: any) => s.id === 1))
-      setPendingReviews(reviewsData)
+      setBookings(bookingsData.bookings || [])
+      setSpecialist(specialistData)
+      setPendingReviews(reviewsData.reviews || [])
       setClients([])
     } catch (err) {
       console.error(err)
@@ -3132,42 +3153,42 @@ const SpecialistDashboard = () => {
 
   useEffect(() => {
     fetchData()
-  }, [])
+  }, [specialistId])
 
   useEffect(() => {
     if (activeTab === 'clients') {
-      fetch(`${API_URL}/chat/rooms`)
+      fetch(`${API_URL}/chat/rooms`, { headers: authHeaders() })
         .then(res => res.json())
-        .then(data => setChats(data.rooms))
+        .then(data => setChats(data.rooms || []))
         .catch(console.error)
     }
   }, [activeTab])
 
   useEffect(() => {
-    if (selectedClient && selectedClient.name && clientViewMode === 'chat') {
-      fetch(`${API_URL}/chat/rooms/${encodeURIComponent(selectedClient.name)}/messages`)
+    if (selectedClient && selectedClient.id && clientViewMode === 'chat') {
+      fetch(`${API_URL}/chat/rooms/${selectedClient.id}/messages`, { headers: authHeaders() })
         .then(res => res.json())
-        .then(setChatMessages)
+        .then(data => setChatMessages(data.messages || []))
         .catch(console.error)
     }
   }, [selectedClient, clientViewMode])
 
   const handleSendMessage = async () => {
-    if (!chatInput.trim() || !selectedClient || !selectedClient.name) return
-    
+    if (!chatInput.trim() || !selectedClient) return
+
     const messageText = chatInput
     setChatInput('')
     setIsTyping(true)
-    
+
     try {
-      const res = await fetch(`${API_URL}/chat/rooms/${encodeURIComponent(selectedClient.name)}/messages`, {
+      const res = await fetch(`${API_URL}/chat/messages`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: messageText })
+        headers: authHeaders(),
+        body: JSON.stringify({ roomId: selectedClient.id, text: messageText })
       })
       const data = await res.json()
-      if (data.success) {
-        setChatMessages([...chatMessages, data.message])
+      if (data.data) {
+        setChatMessages(prev => [...prev, data.data])
       }
     } catch (err) {
       console.error(err)
@@ -3179,12 +3200,12 @@ const SpecialistDashboard = () => {
   const handleApproveReview = async (reviewId: number) => {
     try {
       const res = await fetch(`${API_URL}/admin/reviews/${reviewId}/approve`, {
-        method: 'POST'
+        method: 'PUT',
+        headers: authHeaders()
       })
-      const data = await res.json()
-      if (data.success) {
+      if (res.ok) {
         setPendingReviews(pendingReviews.filter(r => r.id !== reviewId))
-        fetchData() // Refresh specialist data to update reviews
+        fetchData()
         alert('Отзыв одобрен и опубликован!')
       }
     } catch (err) {
@@ -3195,13 +3216,13 @@ const SpecialistDashboard = () => {
 
   const handleRejectReview = async (reviewId: number) => {
     if (!confirm('Вы уверены, что хотите отклонить этот отзыв?')) return
-    
+
     try {
       const res = await fetch(`${API_URL}/admin/reviews/${reviewId}/reject`, {
-        method: 'POST'
+        method: 'PUT',
+        headers: authHeaders()
       })
-      const data = await res.json()
-      if (data.success) {
+      if (res.ok) {
         setPendingReviews(pendingReviews.filter(r => r.id !== reviewId))
         alert('Отзыв отклонен')
       }
@@ -3220,9 +3241,9 @@ const SpecialistDashboard = () => {
 
     setSavingSlots(true)
     try {
-      const res = await fetch(`${API_URL}/specialists/1/availability`, {
+      const res = await fetch(`${API_URL}/specialists/${specialistId}/availability`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({ date: editingDate, slots: newSlots })
       })
       const data = await res.json()
@@ -3313,18 +3334,17 @@ const SpecialistDashboard = () => {
     setCreatingBooking(true)
     try {
       const newBooking = {
-        id: Date.now(), // Временный ID, в реальном приложении будет генерироваться на сервере
+        specialistId: specialistId,
         clientName: clientName,
         date: bookingForm.date,
         time: bookingForm.time,
         status: bookingForm.status,
-        specialistId: 1
       }
 
       // Отправляем на сервер
-      const res = await fetch(`${API_URL}/bookings?specialistId=1`, {
+      const res = await fetch(`${API_URL}/bookings`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify(newBooking)
       })
       
@@ -3363,6 +3383,7 @@ const SpecialistDashboard = () => {
     try {
       const res = await fetch(`${API_URL}/upload/specialist/image`, {
         method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: formData
       })
       const data = await res.json()
@@ -3408,18 +3429,18 @@ const SpecialistDashboard = () => {
         }
       })
 
-      const res = await fetch(`${API_URL}/specialists/1`, {
+      const res = await fetch(`${API_URL}/specialists/${specialistId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({
           phone: profileForm.phone,
           email: profileForm.email,
           socialLinks: Object.keys(socialLinks).length > 0 ? socialLinks : undefined
         })
       })
-      const data = await res.json()
-      if (data.success) {
-        setSpecialist({ ...specialist, ...data.specialist })
+      if (res.ok) {
+        const data = await res.json()
+        setSpecialist({ ...specialist, ...data })
         setEditingProfile(false)
         alert('Профиль успешно обновлен!')
       }
@@ -3435,16 +3456,17 @@ const SpecialistDashboard = () => {
     try {
       const res = await fetch(`${API_URL}/bookings/${bookingId}/status`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({ status: newStatus })
       })
-      const data = await res.json()
-      if (data.success) {
+      if (res.ok) {
         setBookings(bookings.map(b => b.id === bookingId ? { ...b, status: newStatus } : b))
         // Refresh stats
-        const statsRes = await fetch(`${API_URL}/analytics/specialist/1/dashboard`)
-        const statsData = await statsRes.json()
-        setStats(statsData)
+        if (specialistId) {
+          const statsRes = await fetch(`${API_URL}/analytics/specialist/${specialistId}/dashboard`, { headers: authHeaders() })
+          const statsData = await statsRes.json()
+          setStats(statsData)
+        }
       }
     } catch (err) {
       console.error(err)

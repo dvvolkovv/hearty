@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { CreditCard, CheckCircle, XCircle, Clock, Calendar, Download } from 'lucide-react'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
 interface Payment {
   id: string
@@ -41,7 +41,7 @@ export const Payments = () => {
 
     setLoading(true)
     try {
-      const response = await fetch(`${API_URL}/api/payments`, {
+      const response = await fetch(`${API_URL}/payments`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
