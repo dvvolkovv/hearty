@@ -57,9 +57,23 @@ const getUserFriendlyError = (error: any): string => {
 }
 
 const getImageUrl = (imagePath: string | null | undefined) => {
-  if (!imagePath) return '/placeholder-avatar.png'
+  if (!imagePath) return 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23e5e7eb" width="100" height="100"/><text x="50" y="55" font-size="40" text-anchor="middle" fill="%239ca3af">?</text></svg>')
   if (imagePath.startsWith('http')) return imagePath
   return `${BASE_URL}${imagePath}`
+}
+
+// Local date to YYYY-MM-DD string (avoids UTC timezone shift)
+const toLocalDateStr = (date: Date) => {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+// Parse YYYY-MM-DD as local date (not UTC)
+const parseLocalDate = (str: string) => {
+  const [y, m, d] = str.split('-').map(Number)
+  return new Date(y, m - 1, d)
 }
 
 // Breadcrumbs Component
@@ -183,6 +197,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <span className="font-bold">Hearty</span>
           </div>
           <p className="text-muted-foreground text-sm">© 2026 Hearty Platform. Часть экосистемы Linkeon.</p>
+          <div className="flex items-center justify-center gap-4 mt-3">
+            <Link to="/terms" className="text-xs text-muted-foreground hover:text-primary transition-colors">Условия использования</Link>
+            <span className="text-muted-foreground">·</span>
+            <Link to="/privacy" className="text-xs text-muted-foreground hover:text-primary transition-colors">Политика конфиденциальности</Link>
+          </div>
         </div>
       </footer>
     </div>
@@ -197,7 +216,7 @@ const Landing = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    navigate('/specialists')
+    navigate(search.trim() ? `/specialists?search=${encodeURIComponent(search.trim())}` : '/specialists')
   }
 
   return (
@@ -462,6 +481,7 @@ const SpecialistsList = () => {
   const [error, setError] = useState<string | null>(null)
   const [searchParams] = useSearchParams()
   const filter = searchParams.get('filter')
+  const searchQuery = searchParams.get('search')
 
   // Filters & Sorting State
   const [sortBy, setSortBy] = useState<'price-asc' | 'price-desc' | 'rating' | 'experience' | 'default'>('default')
@@ -531,14 +551,31 @@ const SpecialistsList = () => {
           } else {
             const searchStr = filter.toLowerCase()
             filtered = filtered.filter((sp: any) => {
+              const formatStr = Array.isArray(sp.format) ? sp.format.join(' ') : (sp.format || '')
               return (
-                sp.specialty.toLowerCase().includes(searchStr) ||
-                sp.tags.some((tag: string) => tag.toLowerCase().includes(searchStr)) ||
-                sp.description.toLowerCase().includes(searchStr) ||
-                sp.format.toLowerCase().includes(searchStr)
+                (sp.specialty || '').toLowerCase().includes(searchStr) ||
+                (sp.tags || []).some((tag: string) => tag.toLowerCase().includes(searchStr)) ||
+                (sp.description || '').toLowerCase().includes(searchStr) ||
+                formatStr.toLowerCase().includes(searchStr) ||
+                (sp.name || '').toLowerCase().includes(searchStr)
               )
             })
           }
+        }
+
+        // Apply search query from homepage
+        if (searchQuery) {
+          const q = searchQuery.toLowerCase()
+          filtered = filtered.filter((sp: any) => {
+            const formatStr = Array.isArray(sp.format) ? sp.format.join(' ') : (sp.format || '')
+            return (
+              (sp.specialty || '').toLowerCase().includes(q) ||
+              (sp.tags || []).some((tag: string) => tag.toLowerCase().includes(q)) ||
+              (sp.description || '').toLowerCase().includes(q) ||
+              formatStr.toLowerCase().includes(q) ||
+              (sp.name || '').toLowerCase().includes(q)
+            )
+          })
         }
 
         // Apply price range filter
@@ -559,9 +596,10 @@ const SpecialistsList = () => {
 
         // Apply format filter
         if (formatFilter !== 'all') {
-          filtered = filtered.filter((sp: any) =>
-            sp.format.includes(formatFilter)
-          )
+          filtered = filtered.filter((sp: any) => {
+            const formats = Array.isArray(sp.format) ? sp.format : [sp.format]
+            return formats.some((f: string) => f?.includes(formatFilter))
+          })
         }
 
         // Apply sorting
@@ -587,13 +625,13 @@ const SpecialistsList = () => {
 
   useEffect(() => {
     loadSpecialists()
-  }, [filter, sortBy, priceRange, minRating, formatFilter])
+  }, [filter, searchQuery, sortBy, priceRange, minRating, formatFilter])
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-20">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
         <div>
-          <h2 className="text-4xl font-black text-foreground">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-foreground">
             {filter === 'Для вас' ? 'Персональные рекомендации' : filter ? `Специалисты: ${filter}` : 'Наши специалисты'}
           </h2>
           <p className="text-muted-foreground font-medium mt-2">
@@ -603,7 +641,7 @@ const SpecialistsList = () => {
 
         {/* Filter Tags */}
         <div className="flex flex-wrap gap-2">
-          {["Для вас", "Все", "Онлайн", "Лично", "Бизнес", "Эффективность", "Личность", "Выгорание", "Тревога", "Отношения", "Самооценка"].map(tag => (
+          {["Для вас", "Все", "Онлайн", "Лично", "Бизнес", "Эффективность", "Личность", "Выгорание", "Тревога", "Отношения", "Самооценка", "События"].map(tag => (
             <Link
               key={tag}
               to={tag === "Все" ? "/specialists" : `/specialists?filter=${tag}`}
@@ -1983,7 +2021,7 @@ const Booking = () => {
                           setCustomDate(e.target.value)
                           setCustomTime('')
                         }}
-                        min={new Date().toISOString().split('T')[0]}
+                        min={toLocalDateStr(new Date())}
                         className="w-full bg-muted/50 border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
                         required
                       />
@@ -2003,7 +2041,7 @@ const Booking = () => {
                 )}
 
                 {/* Time Selection */}
-                {!useCustomTime && selectedDate && specialist.slots[selectedDate] && (
+                {!useCustomTime && selectedDate && specialist.slots?.[selectedDate]?.length > 0 && (
                   <div className="mt-6 animate-in fade-in slide-in-from-top duration-300">
                     <label className="block text-sm font-bold text-foreground mb-4">Выберите время (московское)</label>
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
@@ -2355,7 +2393,7 @@ const DashboardSelector = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 py-20">
       <div className="text-center mb-16">
-        <h1 className="text-4xl font-black text-foreground mb-4">Личный кабинет</h1>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-foreground mb-4">Личный кабинет</h1>
         <p className="text-muted-foreground font-medium">Выберите тип вашего кабинета</p>
       </div>
 
@@ -2658,7 +2696,7 @@ const ClientDashboard = () => {
     <div className="max-w-7xl mx-auto px-4 py-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
         <div>
-          <h1 className="text-4xl font-black text-foreground mb-2">Добрый день!</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-foreground mb-2">Добрый день!</h1>
           <p className="text-muted-foreground font-medium">Ваш личный кабинет клиента</p>
         </div>
         <div className="flex items-center gap-4 flex-wrap">
@@ -2934,7 +2972,7 @@ const SpecialistDashboard = () => {
     notes: ''
   })
   const [savingClient, setSavingClient] = useState(false)
-  const [editingDate, setEditingDate] = useState<string>(new Date().toISOString().split('T')[0])
+  const [editingDate, setEditingDate] = useState<string>(toLocalDateStr(new Date()))
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
   const [savingSlots, setSavingSlots] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
@@ -2956,10 +2994,10 @@ const SpecialistDashboard = () => {
     phone: '',
     email: ''
   })
-  const [creatingClientInBooking, setCreatingClientInBooking] = useState(false)
+  const [creatingClientInBooking, _setCreatingClientInBooking] = useState(false)
   const [bookingForm, setBookingForm] = useState({
     clientName: '',
-    date: new Date().toISOString().split('T')[0],
+    date: toLocalDateStr(new Date()),
     time: '10:00',
     status: 'confirmed'
   })
@@ -3007,7 +3045,7 @@ const SpecialistDashboard = () => {
   const goToToday = () => {
     const today = new Date()
     setCurrentMonth(today)
-    setEditingDate(today.toISOString().split('T')[0])
+    setEditingDate(toLocalDateStr(today))
   }
 
   const fetchData = async () => {
@@ -3048,7 +3086,7 @@ const SpecialistDashboard = () => {
         const slots: Record<string, string[]> = {}
         if (sp.timeSlots) {
           for (const ts of sp.timeSlots) {
-            const dateKey = new Date(ts.date).toISOString().split('T')[0]
+            const dateKey = toLocalDateStr(new Date(ts.date))
             if (!slots[dateKey]) slots[dateKey] = []
             slots[dateKey].push(ts.time)
           }
@@ -3393,7 +3431,7 @@ const SpecialistDashboard = () => {
         setShowCreateBookingForm(false)
         setBookingForm({
           clientName: '',
-          date: new Date().toISOString().split('T')[0],
+          date: toLocalDateStr(new Date()),
           time: '10:00',
           status: 'confirmed'
         })
@@ -3557,7 +3595,7 @@ const SpecialistDashboard = () => {
     <div className="max-w-7xl mx-auto px-4 py-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
         <div>
-          <h1 className="text-4xl font-black text-foreground mb-2">Добрый день, {specialist.name?.split(' ')[0] || user?.firstName || ''}!</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-foreground mb-2">Добрый день, {specialist.name?.split(' ')[0] || user?.firstName || ''}!</h1>
           <p className="text-muted-foreground font-medium">Управление вашим профилем и расписанием.</p>
         </div>
         <div className="flex flex-col lg:flex-row gap-4 w-full lg:w-auto">
@@ -4691,9 +4729,9 @@ const SpecialistDashboard = () => {
                     return <div key={`empty-${index}`} className="aspect-square" />
                   }
                   
-                  const iso = day.toISOString().split('T')[0]
+                  const iso = toLocalDateStr(day)
                   const isSelected = editingDate === iso
-                  const isToday = iso === new Date().toISOString().split('T')[0]
+                  const isToday = iso === toLocalDateStr(new Date())
                   const slotsCount = (specialist.slots[iso] || []).length
                   const dayBookings = getBookingsForDate(iso)
                   const bookingsCount = dayBookings.length
@@ -4741,7 +4779,7 @@ const SpecialistDashboard = () => {
 
             <div className="md:col-span-2 p-10">
               <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-black text-foreground">Свободные слоты на {new Date(editingDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}</h2>
+                <h2 className="text-2xl font-black text-foreground">Свободные слоты на {parseLocalDate(editingDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}</h2>
                 <div className="flex items-center gap-3">
                   {savingSlots && <span className="text-[10px] font-black uppercase text-primary animate-pulse">Сохранение...</span>}
                   <button
@@ -4773,7 +4811,7 @@ const SpecialistDashboard = () => {
                         setShowCreateBookingForm(false)
                         setBookingForm({
                           clientName: '',
-                          date: new Date().toISOString().split('T')[0],
+                          date: toLocalDateStr(new Date()),
                           time: '10:00',
                           status: 'confirmed'
                         })
@@ -4865,7 +4903,7 @@ const SpecialistDashboard = () => {
                           required
                           value={bookingForm.date}
                           onChange={(e) => setBookingForm({ ...bookingForm, date: e.target.value })}
-                          min={new Date().toISOString().split('T')[0]}
+                          min={toLocalDateStr(new Date())}
                           className="w-full bg-muted border-2 border-transparent focus:border-primary/20 rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all"
                         />
                       </div>
@@ -4910,7 +4948,7 @@ const SpecialistDashboard = () => {
                           setShowCreateBookingForm(false)
                           setBookingForm({
                             clientName: '',
-                            date: new Date().toISOString().split('T')[0],
+                            date: toLocalDateStr(new Date()),
                             time: '10:00',
                             status: 'confirmed'
                           })
