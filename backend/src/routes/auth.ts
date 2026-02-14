@@ -125,6 +125,38 @@ router.get('/verify-email/:token', async (req, res, next) => {
   }
 })
 
+// Повторная отправка письма верификации
+router.post('/resend-verification', async (req, res, next) => {
+  try {
+    const { email } = req.body
+
+    if (!email) {
+      throw new AppError('Email is required', 400)
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } })
+
+    if (!user || user.emailVerified) {
+      // Не раскрываем информацию о существовании аккаунта
+      return res.json({ message: 'If account exists and is not verified, a new email has been sent' })
+    }
+
+    // Генерируем новый токен
+    const verificationToken = crypto.randomBytes(32).toString('hex')
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { verificationToken }
+    })
+
+    await sendVerificationEmail(email, verificationToken)
+
+    res.json({ message: 'If account exists and is not verified, a new email has been sent' })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // Вход
 router.post('/login', async (req, res, next) => {
   try {
