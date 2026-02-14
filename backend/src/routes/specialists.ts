@@ -1,5 +1,7 @@
 import { Router, Response, NextFunction } from 'express'
+import jwt from 'jsonwebtoken'
 import { prisma } from '../config/database'
+import config from '../config/env'
 import { authenticate, AuthRequest } from '../middleware/auth'
 import { AppError } from '../middleware/errorHandler'
 
@@ -195,8 +197,20 @@ router.get('/:id', async (req, res, next) => {
       throw new AppError('Specialist not found', 404)
     }
 
-    // Скрываем некоторые данные для неодобренных специалистов
-    if (specialist.status !== 'APPROVED') {
+    // Allow the owner to view their own profile regardless of status
+    let isOwner = false
+    const authHeader = req.headers.authorization
+    if (authHeader?.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.substring(7)
+        const decoded = jwt.verify(token, config.jwtSecret) as any
+        isOwner = decoded.userId === specialist.userId
+      } catch {
+        // Invalid token, not the owner
+      }
+    }
+
+    if (specialist.status !== 'APPROVED' && !isOwner) {
       throw new AppError('Specialist profile is not available', 403)
     }
 

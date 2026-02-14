@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// Socket.IO needs base URL without /api path
+const SOCKET_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001/api').replace(/\/api\/?$/, '');
 
 interface SocketContextValue {
   socket: Socket | null;
@@ -53,7 +54,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     console.log('🔌 Initializing Socket.IO connection...');
 
     // Initialize Socket.IO client
-    const socketInstance = io(API_URL, {
+    const socketInstance = io(SOCKET_URL, {
       auth: {
         token
       },

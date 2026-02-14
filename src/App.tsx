@@ -3019,18 +3019,25 @@ const SpecialistDashboard = () => {
       const [statsRes, bookingsRes, specialistRes, reviewsRes] = await Promise.all([
         fetch(`${API_URL}/analytics/specialist/${specialistId}/dashboard`, { headers }),
         fetch(`${API_URL}/bookings`, { headers }),
-        fetch(`${API_URL}/specialists/${specialistId}`),
+        fetch(`${API_URL}/specialists/${specialistId}`, { headers }),
         fetch(`${API_URL}/reviews/specialist/${specialistId}?status=pending`, { headers }),
       ])
-      const statsData = await statsRes.json()
-      const bookingsData = await bookingsRes.json()
-      const specialistData = await specialistRes.json()
-      const reviewsData = await reviewsRes.json()
-
-      setStats(statsData)
-      setBookings(bookingsData.bookings || [])
-      setSpecialist(specialistData)
-      setPendingReviews(reviewsData.reviews || [])
+      if (statsRes.ok) {
+        const statsData = await statsRes.json()
+        setStats(statsData)
+      }
+      if (bookingsRes.ok) {
+        const bookingsData = await bookingsRes.json()
+        setBookings(bookingsData.bookings || [])
+      }
+      if (specialistRes.ok) {
+        const specialistData = await specialistRes.json()
+        setSpecialist(specialistData.specialist || specialistData)
+      }
+      if (reviewsRes.ok) {
+        const reviewsData = await reviewsRes.json()
+        setPendingReviews(reviewsData.reviews || [])
+      }
       setClients([])
     } catch (err) {
       console.error(err)
@@ -3498,13 +3505,20 @@ const SpecialistDashboard = () => {
     ? bookings 
     : bookings.filter(b => b.status === bookingStatusFilter)
 
-  if (loading || !specialist) return <div className="p-20 text-center">Загрузка кабинета...</div>
+  if (loading) return <div className="p-20 text-center">Загрузка кабинета...</div>
+
+  if (!specialist) return (
+    <div className="p-20 text-center">
+      <h2 className="text-2xl font-bold mb-4">Профиль специалиста не найден</h2>
+      <p className="text-muted-foreground">Пожалуйста, заполните профиль специалиста для начала работы.</p>
+    </div>
+  )
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
         <div>
-          <h1 className="text-4xl font-black text-foreground mb-2">Добрый день, {specialist.name.split(' ')[0]}!</h1>
+          <h1 className="text-4xl font-black text-foreground mb-2">Добрый день, {specialist.name?.split(' ')[0] || user?.firstName || ''}!</h1>
           <p className="text-muted-foreground font-medium">Управление вашим профилем и расписанием.</p>
         </div>
         <div className="flex flex-col lg:flex-row gap-4 w-full lg:w-auto">
