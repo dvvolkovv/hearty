@@ -21,6 +21,7 @@ import searchRoutes from './routes/search'
 import analyticsRoutes from './routes/analytics'
 import diagnosticRoutes from './routes/diagnostic'
 import usersRoutes from './routes/users'
+import clientsRoutes from './routes/clients'
 
 const app = express()
 const PORT = config.port
@@ -80,6 +81,7 @@ app.use('/api/search', searchRoutes)
 app.use('/api/analytics', analyticsRoutes)
 app.use('/api/diagnostic', diagnosticRoutes)
 app.use('/api/users', usersRoutes)
+app.use('/api/clients', clientsRoutes)
 
 // 404 handler
 app.use(notFoundHandler)

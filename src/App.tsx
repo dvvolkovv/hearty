@@ -57,7 +57,7 @@ const getUserFriendlyError = (error: any): string => {
 }
 
 const getImageUrl = (imagePath: string | null | undefined) => {
-  if (!imagePath) return 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23e5e7eb" width="100" height="100"/><text x="50" y="55" font-size="40" text-anchor="middle" fill="%239ca3af">?</text></svg>')
+  if (!imagePath) return 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="#e5e7eb" width="100" height="100"/><text x="50" y="55" font-size="40" text-anchor="middle" fill="#9ca3af">?</text></svg>')
   if (imagePath.startsWith('http')) return imagePath
   return `${BASE_URL}${imagePath}`
 }
@@ -186,7 +186,7 @@ const Navigation = () => {
 // Layout Component
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="min-h-screen bg-background font-sans text-foreground">
+    <div className="min-h-screen bg-background font-sans text-foreground overflow-x-hidden">
       <Navigation />
       <main>{children}</main>
 
@@ -241,7 +241,7 @@ const Landing = () => {
           <Sparkles className="h-4 w-4" />
           Подбор психолога с помощью ИИ
         </div>
-        <h1 className="text-5xl md:text-6xl font-black tracking-tight mb-6 leading-[1.1]">
+        <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight mb-6 leading-[1.1]">
           Найдите своего психолога на основе ценностей
         </h1>
         <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
@@ -3121,60 +3121,82 @@ const SpecialistDashboard = () => {
     }
   }
 
-  const loadClientNotes = async (clientName: string) => {
+  const loadClientNotes = async (clientId: string) => {
     setLoadingNotes(true)
     try {
-      // NOTES_DISABLED: Feature not implemented on backend
-      console.log('Notes feature disabled for client:', clientName)
-      setClientNotes([])
+      const res = await fetch(`${API_URL}/clients/${clientId}/notes`, {
+        headers: authHeaders()
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setClientNotes(data.notes || [])
+      } else {
+        setClientNotes([])
+      }
     } catch (err) {
       console.error(err)
+      setClientNotes([])
     } finally {
       setLoadingNotes(false)
     }
   }
 
   const handleSelectClient = async (client: any) => {
-    if (!client || !client.name) return
+    if (!client || !client.id) return
     setSelectedClient(client)
     setShowAddClientForm(false)
     setShowEditClientForm(false)
     setClientViewMode('notes')
-    await loadClientNotes(client.name)
+    await loadClientNotes(client.id)
   }
 
   const handleGoToMessages = async (client: any, e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!client || !client.name) return
+    if (!client || !client.id) return
     setSelectedClient(client)
     setShowAddClientForm(false)
     setShowEditClientForm(false)
     setClientViewMode('chat')
-    await loadClientNotes(client.name)
+    await loadClientNotes(client.id)
   }
 
   const handleAddNote = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newNote.trim() || !selectedClient || !selectedClient.name) return
+    if (!newNote.trim() || !selectedClient || !selectedClient.id) return
 
     try {
-      // NOTES_DISABLED: Feature not implemented on backend
-      console.log('Add note disabled:', newNote)
-      alert('Функция заметок временно недоступна')
+      const res = await fetch(`${API_URL}/clients/${selectedClient.id}/notes`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ text: newNote.trim() })
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setClientNotes([data.note, ...clientNotes])
+        setNewNote('')
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Ошибка при добавлении заметки')
+      }
     } catch (err) {
       console.error(err)
       alert('Ошибка при добавлении заметки')
     }
   }
 
-  const handleDeleteNote = async (noteId: number) => {
+  const handleDeleteNote = async (noteId: string) => {
     if (!confirm('Удалить эту заметку?')) return
-    if (!selectedClient || !selectedClient.name) return
 
     try {
-      // NOTES_DISABLED: Feature not implemented on backend
-      console.log('Delete note disabled:', noteId)
-      alert('Функция заметок временно недоступна')
+      const res = await fetch(`${API_URL}/clients/notes/${noteId}`, {
+        method: 'DELETE',
+        headers: authHeaders()
+      })
+      if (res.ok) {
+        setClientNotes(clientNotes.filter((n: any) => n.id !== noteId))
+      } else {
+        alert('Ошибка при удалении заметки')
+      }
     } catch (err) {
       console.error(err)
       alert('Ошибка при удалении заметки')
@@ -3190,9 +3212,24 @@ const SpecialistDashboard = () => {
 
     setSavingClient(true)
     try {
-      // NOTES_DISABLED: Feature not implemented on backend
-      console.log('Add client disabled:', clientForm)
-      alert('Функция управления клиентами временно недоступна')
+      const res = await fetch(`${API_URL}/clients`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          name: clientForm.name.trim(),
+          phone: clientForm.phone.trim(),
+          email: clientForm.email?.trim() || undefined
+        })
+      })
+      const data = await res.json()
+      if (res.ok && data.client) {
+        setClients([...clients, data.client])
+        setShowAddClientForm(false)
+        setClientForm({ name: '', phone: '', email: '', notes: '' })
+        alert('Клиент успешно добавлен')
+      } else {
+        alert(data.error || data.message || 'Ошибка при добавлении клиента')
+      }
     } catch (err) {
       console.error(err)
       alert('Ошибка при добавлении клиента')
@@ -3211,9 +3248,24 @@ const SpecialistDashboard = () => {
 
     setSavingClient(true)
     try {
-      // NOTES_DISABLED: Feature not implemented on backend
-      console.log('Edit client disabled:', clientForm)
-      alert('Функция управления клиентами временно недоступна')
+      const res = await fetch(`${API_URL}/clients/${selectedClient.id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          name: clientForm.name.trim(),
+          phone: clientForm.phone.trim(),
+          email: clientForm.email?.trim() || undefined
+        })
+      })
+      const data = await res.json()
+      if (res.ok && data.client) {
+        setClients(clients.map(c => c.id === selectedClient.id ? data.client : c))
+        setSelectedClient(data.client)
+        setShowEditClientForm(false)
+        alert('Клиент обновлён')
+      } else {
+        alert(data.error || data.message || 'Ошибка при обновлении клиента')
+      }
     } catch (err) {
       console.error(err)
       alert('Ошибка при обновлении клиента')
@@ -3399,10 +3451,35 @@ const SpecialistDashboard = () => {
       alert('Заполните имя клиента')
       return
     }
-    // Use the name directly in the booking form
-    setBookingForm({ ...bookingForm, clientName: newClientInBooking.name.trim() })
-    setShowNewClientInBooking(false)
-    setNewClientInBooking({ name: '', phone: '', email: '' })
+    _setCreatingClientInBooking(true)
+    try {
+      const res = await fetch(`${API_URL}/clients`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          name: newClientInBooking.name.trim(),
+          phone: newClientInBooking.phone.trim() || undefined,
+          email: newClientInBooking.email.trim() || undefined
+        })
+      })
+      const data = await res.json()
+      if (res.ok && data.client) {
+        // Add to clients list if not already there
+        if (!clients.find((c: any) => c.id === data.client.id)) {
+          setClients([...clients, data.client])
+        }
+        setBookingForm({ ...bookingForm, clientName: data.client.name })
+        setShowNewClientInBooking(false)
+        setNewClientInBooking({ name: '', phone: '', email: '' })
+      } else {
+        alert(data.error || data.message || 'Ошибка при создании клиента')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Ошибка при создании клиента')
+    } finally {
+      _setCreatingClientInBooking(false)
+    }
   }
 
   const handleCreateBooking = async (e: React.FormEvent) => {
@@ -3453,7 +3530,7 @@ const SpecialistDashboard = () => {
     if (!file || !specialist) return
 
     const formData = new FormData()
-    formData.append('photo', file)
+    formData.append('image', file)
 
     setUploadingPhoto(true)
     try {
@@ -3463,9 +3540,11 @@ const SpecialistDashboard = () => {
         body: formData
       })
       const data = await res.json()
-      if (data.success) {
-        setSpecialist({ ...specialist, image: data.image })
+      if (res.ok && data.data?.imageUrl) {
+        setSpecialist({ ...specialist, image: data.data.imageUrl })
         alert('Фото успешно обновлено!')
+      } else {
+        alert(data.error || data.message || 'Ошибка при загрузке фото')
       }
     } catch (err) {
       console.error(err)
