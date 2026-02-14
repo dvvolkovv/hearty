@@ -9,72 +9,123 @@ const router = Router()
 // Все routes требуют авторизации
 router.use(authenticate)
 
-// POST /api/bookings - Создать бронирование
+// POST /api/bookings - Создать бронирование (клиент или специалист)
 router.post('/', async (req: AuthRequest, res, next) => {
   try {
     const userId = req.user!.id
-    const { specialistId, date, time, clientMessage } = req.body
+    const { specialistId, date, time, clientMessage, clientId, clientName, status: requestedStatus } = req.body
 
     // Валидация
-    if (!specialistId || !date || !time) {
-      throw new AppError('Specialist ID, date, and time are required', 400)
+    if (!date || !time) {
+      throw new AppError('Date and time are required', 400)
     }
 
-    // Проверяем что пользователь - клиент
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: { client: true }
+      include: { client: true, specialist: true }
     })
 
-    if (!user?.client) {
-      throw new AppError('Only clients can create bookings', 403)
+    if (!user) {
+      throw new AppError('User not found', 404)
     }
 
-    // Проверяем что специалист существует и одобрен
-    const specialist = await prisma.specialist.findUnique({
-      where: { id: specialistId }
-    })
+    let resolvedClientId: string
+    let resolvedSpecialistId: string
+    let resolvedPrice: number
+    let bookingStatus: string = 'PENDING'
 
-    if (!specialist) {
-      throw new AppError('Specialist not found', 404)
+    if (user.specialist) {
+      // Specialist creating a booking
+      resolvedSpecialistId = user.specialist.id
+
+      // Find or resolve client
+      if (clientId) {
+        resolvedClientId = clientId
+      } else if (clientName) {
+        // Find client by name from previous bookings or all clients
+        const client = await prisma.client.findFirst({
+          where: {
+            OR: [
+              { name: { contains: clientName, mode: 'insensitive' } },
+              { user: { firstName: { contains: clientName.split(' ')[0], mode: 'insensitive' } } }
+            ]
+          }
+        })
+        if (client) {
+          resolvedClientId = client.id
+        } else {
+          throw new AppError('Client not found. Please ask the client to register first.', 400)
+        }
+      } else {
+        throw new AppError('Client ID or client name is required', 400)
+      }
+
+      resolvedPrice = user.specialist.price || 0
+      // Specialist can set initial status
+      if (requestedStatus && ['PENDING', 'CONFIRMED'].includes(requestedStatus.toUpperCase())) {
+        bookingStatus = requestedStatus.toUpperCase()
+      } else {
+        bookingStatus = 'CONFIRMED'
+      }
+    } else if (user.client) {
+      // Client creating a booking
+      if (!specialistId) {
+        throw new AppError('Specialist ID is required', 400)
+      }
+      resolvedClientId = user.client.id
+      resolvedSpecialistId = specialistId
+
+      const specialist = await prisma.specialist.findUnique({
+        where: { id: specialistId }
+      })
+      if (!specialist) {
+        throw new AppError('Specialist not found', 404)
+      }
+      if (specialist.status !== 'APPROVED') {
+        throw new AppError('Specialist is not available for booking', 400)
+      }
+      resolvedPrice = specialist.price
+    } else {
+      throw new AppError('Only clients and specialists can create bookings', 403)
     }
 
-    if (specialist.status !== 'APPROVED') {
-      throw new AppError('Specialist is not available for booking', 400)
-    }
-
-    // Проверяем что слот доступен
-    const timeSlot = await prisma.timeSlot.findFirst({
+    // Check time slot availability (optional — create slot if needed for specialist)
+    let timeSlot = await prisma.timeSlot.findFirst({
       where: {
-        specialistId,
+        specialistId: resolvedSpecialistId,
         date: new Date(date),
         time,
         isBooked: false
       }
     })
 
+    // If specialist creates booking and no slot exists, create one
+    if (!timeSlot && user.specialist) {
+      timeSlot = await prisma.timeSlot.create({
+        data: {
+          specialistId: resolvedSpecialistId,
+          date: new Date(date),
+          time,
+          isBooked: false
+        }
+      })
+    }
+
     if (!timeSlot) {
       throw new AppError('Time slot is not available', 400)
     }
 
-    // Проверяем что дата в будущем
-    const bookingDate = new Date(date)
-    if (bookingDate < new Date()) {
-      throw new AppError('Cannot book in the past', 400)
-    }
-
     // Создаем бронирование и обновляем слот в транзакции
     const booking = await prisma.$transaction(async (tx) => {
-      // Создаем бронирование
       const newBooking = await tx.booking.create({
         data: {
-          clientId: user.client.id,
-          specialistId,
+          clientId: resolvedClientId,
+          specialistId: resolvedSpecialistId,
           date: new Date(date),
           time,
-          price: specialist.price,
-          status: 'PENDING',
-          isPaid: false,
+          price: resolvedPrice,
+          status: bookingStatus as any,
+          isPaid: bookingStatus === 'CONFIRMED',
           clientMessage: clientMessage || null
         },
         include: {
@@ -102,9 +153,8 @@ router.post('/', async (req: AuthRequest, res, next) => {
         }
       })
 
-      // Обновляем слот как занятый
       await tx.timeSlot.update({
-        where: { id: timeSlot.id },
+        where: { id: timeSlot!.id },
         data: {
           isBooked: true,
           bookingId: newBooking.id
@@ -114,15 +164,22 @@ router.post('/', async (req: AuthRequest, res, next) => {
       return newBooking
     })
 
-    // Send notifications to both client and specialist
-    await notifyBookingCreated({
-      clientId: userId,
-      specialistId: specialist.userId,
-      bookingId: booking.id,
-      specialistName: specialist.name,
-      date: new Date(date).toLocaleDateString('ru-RU'),
-      time
-    })
+    // Send notifications
+    try {
+      const specialist = await prisma.specialist.findUnique({ where: { id: resolvedSpecialistId } })
+      if (specialist) {
+        await notifyBookingCreated({
+          clientId: userId,
+          specialistId: specialist.userId,
+          bookingId: booking.id,
+          specialistName: specialist.name,
+          date: new Date(date).toLocaleDateString('ru-RU'),
+          time
+        })
+      }
+    } catch (notifErr) {
+      console.error('Notification error:', notifErr)
+    }
 
     res.status(201).json({
       message: 'Booking created successfully',

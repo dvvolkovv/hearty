@@ -3035,9 +3035,11 @@ const SpecialistDashboard = () => {
       } else {
         setStats({ newRequests: 0, totalSessions: 0, rating: 0, earned: 0 })
       }
+      let loadedBookings: any[] = []
       if (bookingsRes.ok) {
         const bookingsData = await bookingsRes.json()
-        setBookings(bookingsData.bookings || [])
+        loadedBookings = bookingsData.bookings || []
+        setBookings(loadedBookings)
       }
       if (specialistRes.ok) {
         const specialistData = await specialistRes.json()
@@ -3061,7 +3063,19 @@ const SpecialistDashboard = () => {
         const reviewsData = await reviewsRes.json()
         setPendingReviews(reviewsData.reviews || [])
       }
-      setClients([])
+      // Extract unique clients from bookings
+      const clientMap = new Map<string, any>()
+      for (const b of loadedBookings) {
+        if (b.client && !clientMap.has(b.client.id)) {
+          clientMap.set(b.client.id, {
+            id: b.client.id,
+            name: b.client.name || b.client.user?.email || 'Клиент',
+            phone: b.client.user?.phone || '',
+            email: b.client.user?.email || '',
+          })
+        }
+      }
+      setClients(Array.from(clientMap.values()))
     } catch (err) {
       console.error(err)
     } finally {
@@ -3343,53 +3357,39 @@ const SpecialistDashboard = () => {
   }
 
   const handleCreateClientInBooking = async () => {
-    if (!newClientInBooking.name.trim() || !newClientInBooking.phone.trim()) {
-      alert('Заполните имя и телефон клиента')
+    if (!newClientInBooking.name.trim()) {
+      alert('Заполните имя клиента')
       return
     }
-
-    setCreatingClientInBooking(true)
-    try {
-      // NOTES_DISABLED: Feature not implemented on backend
-      console.log('Create client in booking disabled:', newClientInBooking)
-      alert('Функция управления клиентами временно недоступна')
-    } catch (err) {
-      console.error(err)
-      alert('Ошибка при создании клиента')
-    } finally {
-      setCreatingClientInBooking(false)
-    }
+    // Use the name directly in the booking form
+    setBookingForm({ ...bookingForm, clientName: newClientInBooking.name.trim() })
+    setShowNewClientInBooking(false)
+    setNewClientInBooking({ name: '', phone: '', email: '' })
   }
 
   const handleCreateBooking = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!bookingForm.clientName || !bookingForm.clientName.trim()) {
-      alert('Выберите клиента или создайте нового')
+      alert('Введите имя клиента')
       return
     }
-    
-    const clientName = bookingForm.clientName.trim()
 
     setCreatingBooking(true)
     try {
-      const newBooking = {
-        specialistId: specialistId,
-        clientName: clientName,
-        date: bookingForm.date,
-        time: bookingForm.time,
-        status: bookingForm.status,
-      }
-
-      // Отправляем на сервер
       const res = await fetch(`${API_URL}/bookings`, {
         method: 'POST',
         headers: authHeaders(),
-        body: JSON.stringify(newBooking)
+        body: JSON.stringify({
+          clientName: bookingForm.clientName.trim(),
+          date: bookingForm.date,
+          time: bookingForm.time,
+          status: bookingForm.status,
+        })
       })
-      
+
       if (res.ok) {
         const data = await res.json()
-        setBookings([...bookings, data.booking || newBooking])
+        setBookings([...bookings, data.booking])
         setShowCreateBookingForm(false)
         setBookingForm({
           clientName: '',
@@ -3397,11 +3397,10 @@ const SpecialistDashboard = () => {
           time: '10:00',
           status: 'confirmed'
         })
-        setShowNewClientInBooking(false)
-        setNewClientInBooking({ name: '', phone: '', email: '' })
         alert('Встреча успешно создана!')
       } else {
-        throw new Error('Ошибка при создании встречи')
+        const err = await res.json().catch(() => ({ error: 'Ошибка' }))
+        alert(err.error || 'Ошибка при создании встречи')
       }
     } catch (err) {
       console.error(err)
