@@ -26,7 +26,7 @@ const createTransporter = () => {
 
 const transporter = createTransporter()
 
-export const sendVerificationEmail = async (email: string, token: string) => {
+export const sendVerificationEmail = async (email: string, token: string, throwOnError = false) => {
   const verificationUrl = `${config.appUrl}/verify-email/${token}`
 
   try {
@@ -51,9 +51,11 @@ export const sendVerificationEmail = async (email: string, token: string) => {
       `,
     })
     console.log(`Verification email sent to ${email}`)
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to send verification email:', error)
-    // Не бросаем ошибку, чтобы не блокировать регистрацию
+    if (throwOnError) {
+      throw new Error(`SMTP error: ${error.message || error}`)
+    }
   }
 }
 

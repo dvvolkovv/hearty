@@ -149,9 +149,9 @@ router.post('/resend-verification', async (req, res, next) => {
       data: { verificationToken }
     })
 
-    await sendVerificationEmail(email, verificationToken)
+    await sendVerificationEmail(email, verificationToken, true)
 
-    res.json({ message: 'If account exists and is not verified, a new email has been sent' })
+    res.json({ message: 'Verification email sent successfully' })
   } catch (error) {
     next(error)
   }
