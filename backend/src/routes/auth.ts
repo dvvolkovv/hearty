@@ -185,18 +185,18 @@ router.post('/login', async (req, res, next) => {
       throw new AppError('Invalid credentials', 401)
     }
 
-    // Проверяем статус
-    if (user.status !== 'ACTIVE') {
-      if (user.status === 'PENDING') {
-        throw new AppError('Please verify your email first', 403)
-      }
+    // Блокируем только заблокированных (PENDING пропускаем — email верификация не обязательна)
+    if (user.status === 'SUSPENDED') {
       throw new AppError('Account suspended', 403)
     }
 
-    // Обновляем lastLoginAt
+    // Автоактивируем PENDING при логине
     await prisma.user.update({
       where: { id: user.id },
-      data: { lastLoginAt: new Date() }
+      data: {
+        lastLoginAt: new Date(),
+        ...(user.status === 'PENDING' && { status: 'ACTIVE', emailVerified: true }),
+      }
     })
 
     // Генерируем токен
