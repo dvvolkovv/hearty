@@ -29,12 +29,14 @@ export interface ChatRoom {
   id: string;
   specialist?: {
     id: string;
+    userId?: string;
     name: string;
     image: string | null;
     specialty: string;
   };
   client?: {
     id: string;
+    userId?: string;
     name: string;
     avatar: string | null;
   };

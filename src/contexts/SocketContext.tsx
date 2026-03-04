@@ -41,11 +41,22 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+
+  // Listen for login/logout to reconnect WebSocket
+  useEffect(() => {
+    const handleAuthChange = () => {
+      setToken(localStorage.getItem('token'));
+    };
+    window.addEventListener('auth:login', handleAuthChange);
+    window.addEventListener('auth:logout', handleAuthChange);
+    return () => {
+      window.removeEventListener('auth:login', handleAuthChange);
+      window.removeEventListener('auth:logout', handleAuthChange);
+    };
+  }, []);
 
   useEffect(() => {
-    // Get JWT token from localStorage
-    const token = localStorage.getItem('token');
-
     if (!token) {
       console.warn('🔌 No JWT token found, skipping Socket.IO connection');
       return;
@@ -111,7 +122,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
       console.log('🔌 Disconnecting Socket.IO...');
       socketInstance.disconnect();
     };
-  }, []); // Empty dependency array - only initialize once
+  }, [token]); // Reconnect when token changes (login/logout)
 
   return (
     <SocketContext.Provider value={{ socket, connected, error }}>

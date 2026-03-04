@@ -81,7 +81,7 @@ router.post('/', async (req: AuthRequest, res, next) => {
           professionalismRating: professionalismRating || null,
           empathyRating: empathyRating || null,
           resultRating: resultRating || null,
-          status: 'APPROVED' // Автоматическое одобрение (можно изменить на PENDING для модерации)
+          status: 'PENDING' // Требует модерации перед публикацией
         },
         include: {
           client: {

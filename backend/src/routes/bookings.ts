@@ -89,34 +89,34 @@ router.post('/', async (req: AuthRequest, res, next) => {
       throw new AppError('Only clients and specialists can create bookings', 403)
     }
 
-    // Check time slot availability (optional — create slot if needed for specialist)
-    let timeSlot = await prisma.timeSlot.findFirst({
-      where: {
-        specialistId: resolvedSpecialistId,
-        date: new Date(date),
-        time,
-        isBooked: false
-      }
-    })
-
-    // If specialist creates booking and no slot exists, create one
-    if (!timeSlot && user.specialist) {
-      timeSlot = await prisma.timeSlot.create({
-        data: {
+    // Создаем бронирование и обновляем слот в транзакции
+    const booking = await prisma.$transaction(async (tx) => {
+      // Re-check slot availability inside transaction to prevent race conditions
+      let slot = await tx.timeSlot.findFirst({
+        where: {
           specialistId: resolvedSpecialistId,
           date: new Date(date),
           time,
           isBooked: false
         }
       })
-    }
 
-    if (!timeSlot) {
-      throw new AppError('Time slot is not available', 400)
-    }
+      // If specialist creates booking and no slot exists, create one
+      if (!slot && user.specialist) {
+        slot = await tx.timeSlot.create({
+          data: {
+            specialistId: resolvedSpecialistId,
+            date: new Date(date),
+            time,
+            isBooked: false
+          }
+        })
+      }
 
-    // Создаем бронирование и обновляем слот в транзакции
-    const booking = await prisma.$transaction(async (tx) => {
+      if (!slot) {
+        throw new AppError('Time slot is not available', 400)
+      }
+
       const newBooking = await tx.booking.create({
         data: {
           clientId: resolvedClientId,
@@ -125,7 +125,7 @@ router.post('/', async (req: AuthRequest, res, next) => {
           time,
           price: resolvedPrice,
           status: bookingStatus as any,
-          isPaid: bookingStatus === 'CONFIRMED',
+          isPaid: false,
           clientMessage: clientMessage || null
         },
         include: {
@@ -154,7 +154,7 @@ router.post('/', async (req: AuthRequest, res, next) => {
       })
 
       await tx.timeSlot.update({
-        where: { id: timeSlot!.id },
+        where: { id: slot.id },
         data: {
           isBooked: true,
           bookingId: newBooking.id
@@ -167,9 +167,13 @@ router.post('/', async (req: AuthRequest, res, next) => {
     // Send notifications
     try {
       const specialist = await prisma.specialist.findUnique({ where: { id: resolvedSpecialistId } })
-      if (specialist) {
+      const client = await prisma.client.findUnique({
+        where: { id: resolvedClientId },
+        select: { userId: true }
+      })
+      if (specialist && client) {
         await notifyBookingCreated({
-          clientId: userId,
+          clientId: client.userId,
           specialistId: specialist.userId,
           bookingId: booking.id,
           specialistName: specialist.name,
@@ -263,6 +267,7 @@ router.get('/', async (req: AuthRequest, res, next) => {
               name: true,
               user: {
                 select: {
+                  id: true,
                   email: true,
                   phone: true
                 }
@@ -406,7 +411,6 @@ router.put('/:id/status', async (req: AuthRequest, res, next) => {
       where: { id },
       data: {
         status,
-        ...(status === 'CONFIRMED' && { isPaid: true }),
         updatedAt: new Date()
       },
       include: {
@@ -524,6 +528,35 @@ router.delete('/:id', async (req: AuthRequest, res, next) => {
           bookingId: null
         }
       })
+
+      // Создаем возврат если бронирование было оплачено
+      if (booking.isPaid) {
+        const originalTxn = await tx.transaction.findUnique({
+          where: { bookingId: id }
+        })
+        if (originalTxn) {
+          await tx.transaction.create({
+            data: {
+              type: 'REFUND',
+              status: 'COMPLETED',
+              amount: booking.price,
+              platformFee: 0,
+              clientId: booking.clientId,
+              specialistId: booking.specialistId,
+              metadata: {
+                originalTransactionId: originalTxn.id,
+                refundReason: cancellationReason || 'Booking cancelled'
+              }
+            }
+          })
+          // Уменьшаем баланс специалиста
+          const specialistEarnings = booking.price - (originalTxn.platformFee || 0)
+          await tx.specialist.update({
+            where: { id: booking.specialistId },
+            data: { balance: { decrement: specialistEarnings } }
+          })
+        }
+      }
 
       return updated
     })

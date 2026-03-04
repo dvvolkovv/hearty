@@ -48,7 +48,7 @@ export const registerNotificationHandlers = (io: SocketIOServer, socket: Socket)
       // Mark as read
       await prisma.notification.update({
         where: { id: notificationId },
-        data: { readAt: new Date() }
+        data: { isRead: true, readAt: new Date() }
       })
 
       socket.emit('notifications:read', { notificationId })
@@ -66,9 +66,10 @@ export const registerNotificationHandlers = (io: SocketIOServer, socket: Socket)
       await prisma.notification.updateMany({
         where: {
           userId,
-          readAt: null
+          isRead: false
         },
         data: {
+          isRead: true,
           readAt: new Date()
         }
       })
@@ -88,7 +89,7 @@ export const registerNotificationHandlers = (io: SocketIOServer, socket: Socket)
       const count = await prisma.notification.count({
         where: {
           userId,
-          readAt: null
+          isRead: false
         }
       })
 

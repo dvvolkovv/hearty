@@ -2,6 +2,8 @@ import { Router } from 'express'
 import { prisma } from '../config/database'
 import { authenticate, AuthRequest } from '../middleware/auth'
 import { AppError } from '../middleware/errorHandler'
+import crypto from 'crypto'
+import axios from 'axios'
 
 const router = Router()
 
@@ -54,9 +56,9 @@ router.post('/', authenticate, async (req: AuthRequest, res, next) => {
       throw new AppError('Booking is already paid', 400)
     }
 
-    // Проверяем что статус PENDING
-    if (booking.status !== 'PENDING') {
-      throw new AppError('Can only pay for pending bookings', 400)
+    // Проверяем что статус PENDING или CONFIRMED (specialist may confirm before payment)
+    if (!['PENDING', 'CONFIRMED'].includes(booking.status)) {
+      throw new AppError('Can only pay for pending or confirmed bookings', 400)
     }
 
     // Проверяем что транзакция еще не создана
@@ -107,16 +109,47 @@ router.post('/', authenticate, async (req: AuthRequest, res, next) => {
       }
     })
 
-    // В реальном приложении здесь был бы вызов API платежной системы
-    // Например, для ЮКassa:
-    // const yookassaPayment = await createYookassaPayment({
-    //   amount: { value: amount / 100, currency: 'RUB' },
-    //   confirmation: { type: 'redirect', return_url: '...' },
-    //   metadata: { transactionId: transaction.id }
-    // })
+    // Вызов YooKassa API для создания платежа
+    const YOOKASSA_SHOP_ID = process.env.YOOKASSA_SHOP_ID
+    const YOOKASSA_SECRET_KEY = process.env.YOOKASSA_SECRET_KEY
 
-    // Для тестирования возвращаем mock URL
-    const paymentUrl = `https://yookassa.ru/checkout/${transaction.id}`
+    let paymentUrl: string
+
+    if (YOOKASSA_SHOP_ID && YOOKASSA_SECRET_KEY) {
+      const idempotenceKey = crypto.randomUUID()
+      const yookassaResponse = await axios.post(
+        'https://api.yookassa.ru/v3/payments',
+        {
+          amount: {
+            value: amount.toFixed(2),
+            currency: 'RUB'
+          },
+          confirmation: {
+            type: 'redirect',
+            return_url: `${process.env.APP_URL || 'http://localhost:5173'}/bookings/${bookingId}`
+          },
+          capture: true,
+          description: `Оплата сессии #${bookingId}`,
+          metadata: {
+            transactionId: transaction.id
+          }
+        },
+        {
+          auth: {
+            username: YOOKASSA_SHOP_ID,
+            password: YOOKASSA_SECRET_KEY
+          },
+          headers: {
+            'Idempotence-Key': idempotenceKey,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+      paymentUrl = yookassaResponse.data.confirmation.confirmation_url
+    } else {
+      // Fallback для разработки без ключей YooKassa
+      paymentUrl = `https://yookassa.ru/checkout/${transaction.id}`
+    }
 
     res.status(201).json({
       message: 'Payment created successfully',
@@ -132,8 +165,19 @@ router.post('/', authenticate, async (req: AuthRequest, res, next) => {
 // POST /api/payments/webhook - Webhook от платежной системы (БЕЗ авторизации!)
 router.post('/webhook', async (req, res, next) => {
   try {
-    // В реальном приложении нужна проверка подписи от платежной системы
-    // Например, для ЮКassa проверяется заголовок X-Signature
+    // Verify YooKassa webhook signature
+    const signature = req.headers['x-signature'] as string
+    const yookassaSecretKey = process.env.YOOKASSA_SECRET_KEY || ''
+    if (yookassaSecretKey && signature) {
+      const body = JSON.stringify(req.body)
+      const expectedSignature = crypto
+        .createHmac('sha256', yookassaSecretKey)
+        .update(body)
+        .digest('hex')
+      if (signature !== expectedSignature) {
+        return res.status(401).json({ message: 'Invalid webhook signature' })
+      }
+    }
 
     const { event, object } = req.body
 
@@ -196,6 +240,28 @@ router.post('/webhook', async (req, res, next) => {
         }
       })
     })
+
+    // Notify specialist about payment
+    try {
+      const { notifyPaymentReceived } = await import('../services/notifications')
+      const txn = await prisma.transaction.findUnique({
+        where: { id: transactionId },
+        include: {
+          specialist: { select: { userId: true } },
+          client: { select: { name: true } }
+        }
+      })
+      if (txn?.specialist?.userId) {
+        await notifyPaymentReceived({
+          specialistId: txn.specialist.userId,
+          amount: txn.amount - txn.platformFee,
+          bookingId: txn.bookingId!,
+          clientName: txn.client?.name || 'Клиент'
+        })
+      }
+    } catch (notifErr) {
+      console.error('Payment notification error:', notifErr)
+    }
 
     res.json({ message: 'Payment processed successfully' })
   } catch (error) {

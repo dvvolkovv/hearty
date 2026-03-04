@@ -121,7 +121,24 @@ export const NotificationsDropdown = () => {
     <div className="relative" ref={dropdownRef}>
       {/* Bell Icon with Badge */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          const opening = !isOpen
+          setIsOpen(opening)
+          if (opening) {
+            const loadNotifications = async () => {
+              setLoading(true)
+              try {
+                const result = await getNotifications({ limit: 20 })
+                setInitialNotifications(result.data)
+              } catch (error) {
+                console.error('Failed to refresh notifications:', error)
+              } finally {
+                setLoading(false)
+              }
+            }
+            loadNotifications()
+          }
+        }}
         className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
         aria-label="Notifications"
       >

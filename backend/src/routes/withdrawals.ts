@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { prisma } from '../config/database'
 import { authenticate, AuthRequest } from '../middleware/auth'
 import { AppError } from '../middleware/errorHandler'
+import { notifyWithdrawalCompleted } from '../services/notifications'
 
 const router = Router()
 
@@ -304,6 +305,23 @@ router.put('/:id/approve', authenticate, async (req: AuthRequest, res, next) => 
 
       return updated
     })
+
+    // Notify specialist
+    try {
+      const specialistUser = await prisma.user.findFirst({
+        where: { specialist: { id: withdrawal.specialistId } },
+        select: { id: true }
+      })
+      if (specialistUser) {
+        await notifyWithdrawalCompleted({
+          specialistId: specialistUser.id,
+          amount: withdrawal.amount,
+          withdrawalId: withdrawalId
+        })
+      }
+    } catch (notifErr) {
+      console.error('Withdrawal notification error:', notifErr)
+    }
 
     res.json({
       message: 'Withdrawal approved successfully',

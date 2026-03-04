@@ -88,6 +88,36 @@ router.get('/unread-count', async (req: AuthRequest, res, next) => {
 })
 
 // ========================================
+// Mark All Notifications as Read
+// NOTE: This route MUST be defined before PUT /:id/read to prevent Express
+// from matching "read-all" as an :id parameter value.
+// ========================================
+router.put('/read-all', async (req: AuthRequest, res, next) => {
+  try {
+    const userId = req.user!.id
+
+    const result = await prisma.notification.updateMany({
+      where: {
+        userId,
+        type: 'IN_APP',
+        isRead: false
+      },
+      data: {
+        isRead: true,
+        readAt: new Date()
+      }
+    })
+
+    res.json({
+      message: 'All notifications marked as read',
+      data: { count: result.count }
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// ========================================
 // Mark Notification as Read
 // ========================================
 router.put('/:id/read', async (req: AuthRequest, res, next) => {
@@ -139,34 +169,6 @@ router.put('/:id/read', async (req: AuthRequest, res, next) => {
     res.json({
       message: 'Notification marked as read',
       data: updated
-    })
-  } catch (error) {
-    next(error)
-  }
-})
-
-// ========================================
-// Mark All Notifications as Read
-// ========================================
-router.put('/read-all', async (req: AuthRequest, res, next) => {
-  try {
-    const userId = req.user!.id
-
-    const result = await prisma.notification.updateMany({
-      where: {
-        userId,
-        type: 'IN_APP',
-        isRead: false
-      },
-      data: {
-        isRead: true,
-        readAt: new Date()
-      }
-    })
-
-    res.json({
-      message: 'All notifications marked as read',
-      data: { count: result.count }
     })
   } catch (error) {
     next(error)

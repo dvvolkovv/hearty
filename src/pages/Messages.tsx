@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { useSocket } from '../contexts/SocketContext'
 import { getChatRooms, getChatMessages, sendMessage, ChatRoom as ApiChatRoom, Message as ApiMessage, SendMessagePayload } from '../api/chat'
 import { MessageCircle, Send, User, ArrowLeft } from 'lucide-react'
 
@@ -26,7 +27,7 @@ const transformRoomForUI = (apiRoom: ApiChatRoom, currentUserRole: string): Chat
   const participant = currentUserRole === 'CLIENT' ? apiRoom.specialist : apiRoom.client
   return {
     id: apiRoom.id,
-    participantId: participant?.id || '',
+    participantId: (participant && 'userId' in participant && participant.userId) ? participant.userId : participant?.id || '',
     participantName: participant?.name || 'Неизвестный',
     participantAvatar: currentUserRole === 'CLIENT' ? apiRoom.specialist?.image : apiRoom.client?.avatar,
     lastMessage: apiRoom.lastMessage?.text || '',
@@ -46,12 +47,15 @@ const transformMessageForUI = (apiMsg: ApiMessage): Message => {
 
 export const Messages = () => {
   const { user } = useAuth()
+  const { socket } = useSocket()
   const [rooms, setRooms] = useState<ChatRoom[]>([])
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(true)
   const [sendingMessage, setSendingMessage] = useState(false)
+  const [isTyping, setIsTyping] = useState(false)
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -63,6 +67,50 @@ export const Messages = () => {
       loadMessages(selectedRoom.id)
     }
   }, [selectedRoom])
+
+  // Subscribe to real-time messages via WebSocket
+  useEffect(() => {
+    if (!socket || !selectedRoom) return
+
+    // Join the room
+    socket.emit('chat:join', { roomId: selectedRoom.id })
+
+    const handleNewMessage = (message: { id: string; chatRoomId: string; senderId: string; text: string; createdAt: string }) => {
+      if (message.chatRoomId === selectedRoom.id) {
+        const transformed: Message = {
+          id: message.id,
+          content: message.text,
+          senderId: message.senderId,
+          createdAt: message.createdAt
+        }
+        setMessages(prev => {
+          // Avoid duplicates
+          if (prev.some(m => m.id === message.id)) return prev
+          return [...prev, transformed]
+        })
+      }
+    }
+
+    const handleTyping = (data: { roomId: string; userId: string; isTyping: boolean }) => {
+      if (data.roomId === selectedRoom.id && data.userId !== user?.id) {
+        setIsTyping(data.isTyping)
+        if (data.isTyping) {
+          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+          typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 3000)
+        }
+      }
+    }
+
+    socket.on('chat:message:new', handleNewMessage)
+    socket.on('chat:typing', handleTyping)
+
+    return () => {
+      socket.emit('chat:leave', { roomId: selectedRoom.id })
+      socket.off('chat:message:new', handleNewMessage)
+      socket.off('chat:typing', handleTyping)
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+    }
+  }, [socket, selectedRoom, user?.id])
 
   useEffect(() => {
     scrollToBottom()
@@ -272,13 +320,25 @@ export const Messages = () => {
                 <div ref={messagesEndRef} />
               </div>
 
+              {/* Typing indicator */}
+              {isTyping && (
+                <div className="px-6 py-2 text-sm text-muted-foreground italic">
+                  {selectedRoom.participantName} печатает...
+                </div>
+              )}
+
               {/* Input */}
               <div className="p-6 border-t-2 border-border">
                 <div className="flex gap-3">
                   <input
                     type="text"
                     value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    onChange={(e) => {
+                      setInput(e.target.value)
+                      if (socket && selectedRoom) {
+                        socket.emit('chat:typing', { roomId: selectedRoom.id, isTyping: e.target.value.length > 0 })
+                      }
+                    }}
                     onKeyPress={handleKeyPress}
                     placeholder="Введите сообщение..."
                     className="flex-1 px-4 py-3 border-2 border-border rounded-2xl focus:outline-none focus:border-primary"

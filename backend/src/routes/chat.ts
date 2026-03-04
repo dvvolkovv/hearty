@@ -41,6 +41,7 @@ router.get('/rooms', async (req: AuthRequest, res, next) => {
           specialist: {
             select: {
               id: true,
+              userId: true,
               name: true,
               image: true,
               specialty: true
@@ -158,6 +159,7 @@ router.get('/rooms', async (req: AuthRequest, res, next) => {
           id: room.id,
           client: {
             id: room.client.id,
+            userId: room.client.user.id,
             name: room.client.name ||
                   `${room.client.user.firstName || ''} ${room.client.user.lastName || ''}`.trim() ||
                   'Клиент',
@@ -521,7 +523,7 @@ router.put('/rooms/:roomId/read-all', async (req: AuthRequest, res, next) => {
     const result = await prisma.message.updateMany({
       where: {
         chatRoomId: roomId,
-        senderRole: otherRole,
+        senderId: { not: userId },
         isRead: false
       },
       data: {

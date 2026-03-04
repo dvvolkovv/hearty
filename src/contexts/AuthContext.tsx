@@ -72,6 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('token', response.token)
     setToken(response.token)
     setUser(response.user)
+    window.dispatchEvent(new Event('auth:login'))
   }
 
   const register = async (data: RegisterData) => {
@@ -85,6 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('token')
     setToken(null)
     setUser(null)
+    window.dispatchEvent(new Event('auth:logout'))
   }
 
   const refreshUser = async () => {

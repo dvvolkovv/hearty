@@ -320,20 +320,12 @@ router.get('/:id/availability', async (req, res, next) => {
       isBooked: false,
     }
 
-    if (startDate) {
-      where.date = {
-        gte: new Date(startDate as string)
-      }
-    }
+    // Always filter past slots - default to today if no startDate provided
+    const minDate = startDate ? new Date(startDate as string) : new Date()
+    where.date = { gte: minDate }
 
     if (endDate) {
-      if (where.date) {
-        where.date.lte = new Date(endDate as string)
-      } else {
-        where.date = {
-          lte: new Date(endDate as string)
-        }
-      }
+      where.date.lte = new Date(endDate as string)
     }
 
     const timeSlots = await prisma.timeSlot.findMany({

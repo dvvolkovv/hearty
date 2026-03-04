@@ -34,13 +34,20 @@ export const registerChatHandlers = (io: SocketIOServer, socket: Socket) => {
     try {
       const { roomId } = data
 
-      // Verify user has access to this chat room
+      // Verify user has access to this chat room.
+      // ChatRoom.clientId references Client.id (not User.id), so we must
+      // resolve the Client/Specialist profile for this user first.
+      const [clientProfile, specialistProfile] = await Promise.all([
+        prisma.client.findUnique({ where: { userId }, select: { id: true } }),
+        prisma.specialist.findUnique({ where: { userId }, select: { id: true } })
+      ])
+
       const room = await prisma.chatRoom.findFirst({
         where: {
           id: roomId,
           OR: [
-            { clientId: userId },
-            { specialist: { userId } }
+            ...(clientProfile ? [{ clientId: clientProfile.id }] : []),
+            ...(specialistProfile ? [{ specialistId: specialistProfile.id }] : [])
           ]
         }
       })
@@ -89,13 +96,20 @@ export const registerChatHandlers = (io: SocketIOServer, socket: Socket) => {
     try {
       const { roomId, isTyping } = data
 
-      // Verify user has access to this chat room
+      // Verify user has access to this chat room.
+      // ChatRoom.clientId references Client.id (not User.id), so we must
+      // resolve the Client/Specialist profile for this user first.
+      const [clientProfileTyping, specialistProfileTyping] = await Promise.all([
+        prisma.client.findUnique({ where: { userId }, select: { id: true } }),
+        prisma.specialist.findUnique({ where: { userId }, select: { id: true } })
+      ])
+
       const room = await prisma.chatRoom.findFirst({
         where: {
           id: roomId,
           OR: [
-            { clientId: userId },
-            { specialist: { userId } }
+            ...(clientProfileTyping ? [{ clientId: clientProfileTyping.id }] : []),
+            ...(specialistProfileTyping ? [{ specialistId: specialistProfileTyping.id }] : [])
           ]
         },
         include: {
@@ -116,8 +130,9 @@ export const registerChatHandlers = (io: SocketIOServer, socket: Socket) => {
         return
       }
 
-      // Get user name
-      const userName = room.clientId === userId
+      // Get user name — compare against resolved profile IDs, not userId directly
+      const isClient = clientProfileTyping && room.clientId === clientProfileTyping.id
+      const userName = isClient
         ? `${room.client.user.firstName} ${room.client.user.lastName}`
         : `${room.specialist.user.firstName} ${room.specialist.user.lastName}`
 

@@ -44,7 +44,7 @@ export const ChatWindow = ({
 
   // Get recipient info (specialist or client depending on user role)
   const recipient = room.specialist || room.client;
-  const recipientId = recipient?.id || '';
+  const recipientId = (recipient && 'userId' in recipient && recipient.userId) ? recipient.userId : recipient?.id || '';
   const recipientName = recipient?.name || 'Пользователь';
   const recipientImage = (recipient && 'image' in recipient ? recipient.image : recipient && 'avatar' in recipient ? recipient.avatar : null);
 

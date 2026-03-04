@@ -190,7 +190,7 @@ export const notifyPaymentReceived = async (data: {
   await createInAppNotification({
     userId: data.specialistId,
     subject: 'Оплата получена',
-    message: `Получена оплата ${data.amount / 100} ₽ от ${data.clientName} за сессию.`,
+    message: `Получена оплата ${data.amount} ₽ от ${data.clientName} за сессию.`,
     actionUrl: `/bookings/${data.bookingId}`,
     data: { bookingId: data.bookingId, amount: data.amount, type: 'PAYMENT_RECEIVED' }
   })
@@ -207,7 +207,7 @@ export const notifyWithdrawalCompleted = async (data: {
   await createInAppNotification({
     userId: data.specialistId,
     subject: 'Вывод средств завершен',
-    message: `Вывод ${data.amount / 100} ₽ успешно завершен. Средства поступят на ваш счет в течение 1-3 рабочих дней.`,
+    message: `Вывод ${data.amount} ₽ успешно завершен. Средства поступят на ваш счет в течение 1-3 рабочих дней.`,
     actionUrl: `/withdrawals/${data.withdrawalId}`,
     data: { withdrawalId: data.withdrawalId, amount: data.amount, type: 'WITHDRAWAL_COMPLETED' }
   })

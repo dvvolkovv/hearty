@@ -1350,7 +1350,7 @@ const SpecialistProfile = () => {
         return res.json()
       })
       .then(data => {
-        const found = data.specialists.find((s: any) => s.id === parseInt(id || '0'))
+        const found = data.specialists.find((s: any) => s.id === id)
         if (!found) {
           setError('Специалист не найден')
         }
@@ -1373,13 +1373,13 @@ const SpecialistProfile = () => {
 
     setSubmittingReview(true)
     try {
-      const res = await fetch(`${API_URL}/specialists/${id}/reviews`, {
+      const res = await fetch(`${API_URL}/reviews`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(reviewForm)
+        body: JSON.stringify({ ...reviewForm, specialistId: id })
       })
       const data = await res.json()
-      if (data.success) {
+      if (data.review || data.message) {
         setReviewForm({ author: '', rating: 5, text: '' })
         setShowReviewForm(false)
         alert('Спасибо за отзыв! Он будет опубликован после проверки специалистом.')
@@ -1476,7 +1476,7 @@ const SpecialistProfile = () => {
             <div className="space-y-4 mb-8">
               <div className="flex justify-between items-center py-3 border-b border-border">
                 <span className="text-[10px] font-black uppercase text-muted-foreground">Стоимость</span>
-                <span className="font-black text-xl">{specialist.price} ₽</span>
+                <span className="font-black text-xl">{(specialist.price / 100).toLocaleString()} ₽</span>
               </div>
               <div className="flex justify-between items-center py-3 border-b border-border">
                 <span className="text-[10px] font-black uppercase text-muted-foreground">Формат</span>
@@ -1546,10 +1546,7 @@ const SpecialistProfile = () => {
             </div>
             
             <div className="space-y-6">
-              {(specialist.detailedReviews || [
-                { id: 1, author: 'Клиент', text: 'Замечательный специалист, очень помог.', rating: 5 },
-                { id: 2, author: 'Клиент', text: 'Профессионально и комфортно.', rating: 5 }
-              ]).map((review: any) => (
+              {(specialist.reviews || []).map((review: any) => (
                 <div key={review.id} className="bg-white rounded-[2.5rem] border border-border p-8 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -1708,14 +1705,14 @@ const Booking = () => {
     setLoading(true)
     setError(null)
 
-    fetch(`${API_URL}/specialists`)
+    fetch(`${API_URL}/specialists/${id}`)
       .then(res => {
         if (!res.ok) throw new Error('Не удалось загрузить данные')
         return res.json()
       })
       .then(data => {
-        const found = data.specialists.find((s: any) => s.id === parseInt(id || '0'))
-        if (!found) {
+        const found = data.specialist || data
+        if (!found || !found.id) {
           setError('Специалист не найден')
         }
         setSpecialist(found)
@@ -1750,7 +1747,10 @@ const Booking = () => {
     try {
       const res = await fetch(`${API_URL}/bookings`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
         body: JSON.stringify({
           ...formData,
           specialistId: id,
@@ -1892,7 +1892,7 @@ const Booking = () => {
               <p className="text-sm opacity-80 mb-4">{specialist.specialty}</p>
               <div className="flex items-center gap-2 text-sm font-bold">
                 <Calendar className="h-4 w-4" />
-                <span>{specialist.price} ₽ / сессия</span>
+                <span>{(specialist.price / 100).toLocaleString()} ₽ / сессия</span>
               </div>
             </div>
 
@@ -2176,7 +2176,7 @@ const Booking = () => {
                       </div>
                       <div>
                         <p className="text-xs font-black uppercase text-muted-foreground mb-1">Стоимость сессии</p>
-                        <p className="text-2xl font-black text-foreground">{specialist.price} ₽</p>
+                        <p className="text-2xl font-black text-foreground">{(specialist.price / 100).toLocaleString()} ₽</p>
                         <p className="text-xs text-muted-foreground mt-1">Оплата после подтверждения</p>
                       </div>
                     </div>
@@ -2667,7 +2667,7 @@ const ClientDashboard = () => {
       const res = await fetch(`${API_URL}/chat/messages`, {
         method: 'POST',
         headers: authHeaders(),
-        body: JSON.stringify({ roomId: selectedChat.id, text: messageText })
+        body: JSON.stringify({ recipientId: selectedChat.specialist?.userId, text: messageText })
       })
       const data = await res.json()
       if (data.data) {
@@ -2683,9 +2683,13 @@ const ClientDashboard = () => {
   const getStatusLabel = (status: string) => {
     const labels: { [key: string]: { text: string; color: string } } = {
       'confirmed': { text: 'Подтверждена', color: 'bg-green-100 text-green-600' },
+      'CONFIRMED': { text: 'Подтверждена', color: 'bg-green-100 text-green-600' },
       'pending': { text: 'Ожидает подтверждения', color: 'bg-orange-100 text-orange-600' },
+      'PENDING': { text: 'Ожидает подтверждения', color: 'bg-orange-100 text-orange-600' },
       'completed': { text: 'Завершена', color: 'bg-blue-100 text-blue-600' },
-      'cancelled': { text: 'Отменена', color: 'bg-gray-100 text-gray-600' }
+      'COMPLETED': { text: 'Завершена', color: 'bg-blue-100 text-blue-600' },
+      'cancelled': { text: 'Отменена', color: 'bg-gray-100 text-gray-600' },
+      'CANCELLED': { text: 'Отменена', color: 'bg-gray-100 text-gray-600' }
     }
     return labels[status] || { text: status, color: 'bg-muted text-muted-foreground' }
   }
@@ -2871,9 +2875,9 @@ const ClientDashboard = () => {
                   className="flex-1 p-6 overflow-y-auto space-y-4 scroll-smooth"
                 >
                   {chatMessages.map((msg) => (
-                    <div key={msg.id} className={`flex ${msg.sender === 'client' ? 'justify-end' : 'justify-start'}`}>
+                    <div key={msg.id} className={`flex ${msg.senderRole === 'CLIENT' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[75%] p-4 rounded-2xl font-medium text-sm leading-relaxed ${
-                        msg.sender === 'client'
+                        msg.senderRole === 'CLIENT'
                           ? 'bg-primary text-white rounded-tr-none'
                           : 'bg-muted text-foreground rounded-tl-none border border-border'
                       }`}>
@@ -3107,6 +3111,7 @@ const SpecialistDashboard = () => {
         if (b.client && !clientMap.has(b.client.id)) {
           clientMap.set(b.client.id, {
             id: b.client.id,
+            userId: b.client.user?.id || '',
             name: b.client.name || b.client.user?.email || 'Клиент',
             phone: b.client.user?.phone || '',
             email: b.client.user?.email || '',
@@ -3318,7 +3323,7 @@ const SpecialistDashboard = () => {
       const res = await fetch(`${API_URL}/chat/messages`, {
         method: 'POST',
         headers: authHeaders(),
-        body: JSON.stringify({ roomId: selectedClient.id, text: messageText })
+        body: JSON.stringify({ recipientId: selectedClient.userId, text: messageText })
       })
       const data = await res.json()
       if (data.data) {
@@ -3640,9 +3645,15 @@ const SpecialistDashboard = () => {
   const getStatusLabel = (status: string) => {
     const labels: { [key: string]: string } = {
       'new': 'Новая',
+      'NEW': 'Новая',
       'confirmed': 'Подтверждена',
+      'CONFIRMED': 'Подтверждена',
       'completed': 'Завершена',
-      'cancelled': 'Отменена'
+      'COMPLETED': 'Завершена',
+      'cancelled': 'Отменена',
+      'CANCELLED': 'Отменена',
+      'pending': 'Ожидает подтверждения',
+      'PENDING': 'Ожидает подтверждения'
     }
     return labels[status] || status
   }
@@ -3650,9 +3661,15 @@ const SpecialistDashboard = () => {
   const getStatusColor = (status: string) => {
     const colors: { [key: string]: { bg: string; text: string } } = {
       'new': { bg: 'bg-orange-100', text: 'text-orange-600' },
+      'NEW': { bg: 'bg-orange-100', text: 'text-orange-600' },
       'confirmed': { bg: 'bg-green-100', text: 'text-green-600' },
+      'CONFIRMED': { bg: 'bg-green-100', text: 'text-green-600' },
       'completed': { bg: 'bg-blue-100', text: 'text-blue-600' },
-      'cancelled': { bg: 'bg-gray-100', text: 'text-gray-600' }
+      'COMPLETED': { bg: 'bg-blue-100', text: 'text-blue-600' },
+      'cancelled': { bg: 'bg-gray-100', text: 'text-gray-600' },
+      'CANCELLED': { bg: 'bg-gray-100', text: 'text-gray-600' },
+      'pending': { bg: 'bg-orange-100', text: 'text-orange-600' },
+      'PENDING': { bg: 'bg-orange-100', text: 'text-orange-600' }
     }
     return colors[status] || { bg: 'bg-muted', text: 'text-muted-foreground' }
   }
@@ -4702,9 +4719,9 @@ const SpecialistDashboard = () => {
                           </div>
                         ) : (
                           chatMessages.map((msg) => (
-                            <div key={msg.id} className={`flex ${msg.sender === 'specialist' ? 'justify-end' : 'justify-start'}`}>
+                            <div key={msg.id} className={`flex ${msg.senderRole === 'SPECIALIST' ? 'justify-end' : 'justify-start'}`}>
                               <div className={`max-w-[75%] p-4 rounded-2xl font-medium text-sm leading-relaxed ${
-                                msg.sender === 'specialist'
+                                msg.senderRole === 'SPECIALIST'
                                   ? 'bg-primary text-white rounded-tr-none'
                                   : 'bg-muted text-foreground rounded-tl-none border border-border'
                               }`}>

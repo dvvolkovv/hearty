@@ -7,20 +7,33 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 interface Payment {
   id: string
   amount: number
+  platformFee: number
+  type: 'BOOKING_PAYMENT' | 'REFUND' | 'SPECIALIST_PAYOUT'
   status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED'
   createdAt: string
-  description?: string
   booking?: {
     id: string
-    service: {
-      title: string
+    date: string
+    time: string
+    status: string
+    service?: {
+      title?: string
     }
-    specialist: {
-      user: {
-        firstName: string
-        lastName: string
+    specialist?: {
+      user?: {
+        firstName?: string
+        lastName?: string
       }
     }
+  }
+  description?: string
+  specialist?: {
+    id: string
+    name: string
+  }
+  client?: {
+    id: string
+    name: string
   }
 }
 
@@ -52,7 +65,7 @@ export const Payments = () => {
       }
 
       const data = await response.json()
-      setPayments(data.payments || [])
+      setPayments(data.transactions || [])
     } catch (error) {
       console.error('Failed to load payments:', error)
       setPayments([])
@@ -217,14 +230,16 @@ export const Payments = () => {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-lg font-bold mb-1">
-                        {payment.booking
-                          ? payment.booking.service.title
-                          : payment.description || 'Платеж'}
+                        {payment.type === 'REFUND' ? 'Возврат средств' : payment.type === 'BOOKING_PAYMENT' ? 'Оплата сессии' : 'Операция'}
                       </h3>
+                      {payment.specialist && (
+                        <p className="text-sm text-muted-foreground">
+                          Специалист: {payment.specialist.name}
+                        </p>
+                      )}
                       {payment.booking && (
                         <p className="text-sm text-muted-foreground">
-                          Специалист: {payment.booking.specialist.user.firstName}{' '}
-                          {payment.booking.specialist.user.lastName}
+                          Дата: {new Date(payment.booking.date).toLocaleDateString('ru-RU')} в {payment.booking.time}
                         </p>
                       )}
                       <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">

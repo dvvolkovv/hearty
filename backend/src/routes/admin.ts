@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { prisma } from '../config/database'
 import { authenticate, AuthRequest } from '../middleware/auth'
 import { AppError } from '../middleware/errorHandler'
+import { notifySpecialistApproved, notifySpecialistRejected } from '../services/notifications'
 
 const router = Router()
 
@@ -120,6 +121,13 @@ router.put('/specialists/:id/approve', async (req: AuthRequest, res, next) => {
       }
     })
 
+    // Notify specialist
+    try {
+      await notifySpecialistApproved({ specialistId: updated.userId })
+    } catch (notifErr) {
+      console.error('Notification error:', notifErr)
+    }
+
     res.json({
       message: 'Specialist approved successfully',
       specialist: updated
@@ -161,6 +169,13 @@ router.put('/specialists/:id/reject', async (req: AuthRequest, res, next) => {
         }
       }
     })
+
+    // Notify specialist
+    try {
+      await notifySpecialistRejected({ specialistId: updated.userId, reason: moderationNote })
+    } catch (notifErr) {
+      console.error('Notification error:', notifErr)
+    }
 
     res.json({
       message: 'Specialist rejected successfully',
@@ -1003,12 +1018,10 @@ router.put('/bookings/:id/cancel', async (req: AuthRequest, res, next) => {
         }
       }
 
-      // Освобождаем тайм-слот
+      // Освобождаем тайм-слот по bookingId для надёжности
       await tx.timeSlot.updateMany({
         where: {
-          specialistId: booking.specialistId,
-          date: booking.date,
-          time: booking.time
+          bookingId: bookingId
         },
         data: {
           isBooked: false,

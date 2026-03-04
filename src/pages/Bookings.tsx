@@ -1,40 +1,31 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import { Calendar, Clock, MapPin, User, MessageCircle, X, CheckCircle, AlertCircle } from 'lucide-react'
+import { Calendar, Clock, User, MessageCircle, X, CheckCircle, AlertCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
 interface Booking {
   id: string
-  service: {
-    id: string
-    title: string
-    duration: number
-    price: number
-  }
   specialist: {
     id: string
-    user: {
-      firstName: string
-      lastName: string
-      avatar?: string
-    }
+    name: string
+    specialty?: string
+    image?: string | null
+    price?: number
   }
   client: {
     id: string
-    user: {
-      firstName: string
-      lastName: string
-      avatar?: string
+    name: string
+    user?: {
+      email?: string
     }
   }
   date: string
-  startTime: string
-  endTime: string
+  time: string
+  price: number
   status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED'
-  notes?: string
-  location?: string
+  clientMessage?: string | null
 }
 
 type FilterType = 'upcoming' | 'past' | 'cancelled'
@@ -83,17 +74,18 @@ export const Bookings = () => {
   }
 
   const handleCancelBooking = async (bookingId: string) => {
-    if (!confirm('Вы уверены, что хотите отменить эту запись?')) return
+    const reason = window.prompt('Укажите причину отмены (необязательно):') ?? ''
+    if (reason === null) return // user pressed Cancel on prompt
 
     setCancellingId(bookingId)
     try {
-      const response = await fetch(`${API_URL}/bookings/${bookingId}/status`, {
-        method: 'PUT',
+      const response = await fetch(`${API_URL}/bookings/${bookingId}`, {
+        method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ status: 'CANCELLED' })
+        body: JSON.stringify({ cancellationReason: reason || undefined })
       })
 
       if (!response.ok) {
@@ -112,7 +104,7 @@ export const Bookings = () => {
   const filterBookings = () => {
     const now = new Date()
     return bookings.filter(booking => {
-      const bookingDate = new Date(`${booking.date}T${booking.startTime}`)
+      const bookingDate = new Date(`${booking.date.split('T')[0]}T${booking.time || '00:00'}`)
 
       switch (filter) {
         case 'upcoming':
@@ -226,7 +218,7 @@ export const Bookings = () => {
         <div className="space-y-4">
           {filteredBookings.map(booking => {
             const otherPerson = user?.role === 'CLIENT' ? booking.specialist : booking.client
-            const otherPersonName = `${otherPerson.user.firstName} ${otherPerson.user.lastName}`
+            const otherPersonName = otherPerson.name || 'Пользователь'
 
             return (
               <div key={booking.id} className="bg-white border-2 border-border rounded-3xl p-6">
@@ -236,8 +228,8 @@ export const Bookings = () => {
                     <div className="flex items-start gap-4 mb-4">
                       {/* Avatar */}
                       <div className="w-16 h-16 rounded-full overflow-hidden bg-muted flex items-center justify-center flex-shrink-0">
-                        {otherPerson.user.avatar ? (
-                          <img src={otherPerson.user.avatar} alt={otherPersonName} className="w-full h-full object-cover" />
+                        {'image' in otherPerson && otherPerson.image ? (
+                          <img src={otherPerson.image} alt={otherPersonName} className="w-full h-full object-cover" />
                         ) : (
                           <User className="w-8 h-8 text-muted-foreground" />
                         )}
@@ -245,7 +237,7 @@ export const Bookings = () => {
 
                       {/* Details */}
                       <div className="flex-1">
-                        <h3 className="text-xl font-bold mb-1">{booking.service.title}</h3>
+                        <h3 className="text-xl font-bold mb-1">{booking.specialist.specialty || 'Сессия с психологом'}</h3>
                         <p className="text-muted-foreground mb-2">
                           {user?.role === 'CLIENT' ? 'Специалист:' : 'Клиент:'} {otherPersonName}
                         </p>
@@ -256,30 +248,23 @@ export const Bookings = () => {
                           </span>
                           <span className="flex items-center gap-1">
                             <Clock className="w-4 h-4" />
-                            {formatTime(booking.startTime)} - {formatTime(booking.endTime)}
+                            {formatTime(booking.time)}
                           </span>
-                          {booking.location && (
-                            <span className="flex items-center gap-1">
-                              <MapPin className="w-4 h-4" />
-                              {booking.location}
-                            </span>
-                          )}
                         </div>
                       </div>
                     </div>
 
-                    {/* Notes */}
-                    {booking.notes && (
+                    {/* Client message */}
+                    {booking.clientMessage && (
                       <div className="bg-muted/30 rounded-2xl p-4 mb-4">
                         <p className="text-sm font-bold text-muted-foreground mb-1">Комментарий:</p>
-                        <p className="text-sm">{booking.notes}</p>
+                        <p className="text-sm">{booking.clientMessage}</p>
                       </div>
                     )}
 
                     {/* Price */}
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl font-black text-primary">{booking.service.price} ₽</span>
-                      <span className="text-muted-foreground">• {booking.service.duration} мин</span>
+                      <span className="text-2xl font-black text-primary">{booking.price} ₽</span>
                     </div>
                   </div>
 
